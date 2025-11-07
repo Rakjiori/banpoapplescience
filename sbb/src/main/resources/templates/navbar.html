@@ -1,0 +1,7 @@
+<!— SBB처럼 프래그먼트로 분리 —>
+<nav th:fragment="nav">
+  <a th:href="@{/}">홈</a>
+  <a th:href="@{/document/upload}">PDF 업로드</a>
+  <a th:href="@{/question/list}">문제 보기</a>
+  <button onclick="subscribePush()">알림 허용</button>
+</nav>
