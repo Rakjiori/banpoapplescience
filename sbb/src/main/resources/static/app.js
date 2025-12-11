@@ -425,6 +425,61 @@ async function pollNotifications(){
   }
 }
 
+// =======================
+// Micro interactions
+// =======================
+function setupRevealAnimations(){
+  const targets = document.querySelectorAll('[data-anim="fade-up"]');
+  if(!targets.length) return;
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        const delay = entry.target.dataset.animDelay ? parseInt(entry.target.dataset.animDelay,10) : 0;
+        setTimeout(()=> entry.target.classList.add('is-visible'), delay || 0);
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  targets.forEach(el=>io.observe(el));
+}
+
+function setupRipple(){
+  document.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.btn, .btn-outline');
+    if(!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const ripple = document.createElement('span');
+    ripple.style.position = 'absolute';
+    ripple.style.borderRadius = '50%';
+    ripple.style.transform = 'scale(0)';
+    ripple.style.opacity = '0.3';
+    ripple.style.background = 'currentColor';
+    ripple.style.pointerEvents = 'none';
+    ripple.style.width = ripple.style.height = Math.max(rect.width, rect.height) + 'px';
+    ripple.style.left = (e.clientX - rect.left - rect.width) + 'px';
+    ripple.style.top = (e.clientY - rect.top - rect.width) + 'px';
+    ripple.style.transition = 'transform 0.4s ease, opacity 0.6s ease';
+    ripple.className = 'btn-ripple';
+    if(getComputedStyle(btn).position === 'static'){
+      btn.style.position = 'relative';
+    }
+    btn.appendChild(ripple);
+    requestAnimationFrame(()=>{
+      ripple.style.transform = 'scale(1.3)';
+      ripple.style.opacity = '0';
+    });
+    ripple.addEventListener('transitionend', ()=> ripple.remove());
+  });
+}
+
+function decorateBlueButtons(){
+  document.querySelectorAll('.btn:not(.btn-outline)').forEach(btn=>{
+    if(!btn.classList.contains('square-spin')){
+      btn.classList.add('square-spin');
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', ()=>{
   if('Notification' in window){
     // 한 번만 요청
@@ -441,4 +496,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   setupNotificationBell();
   setupFriendDropdown();
   setupProfileDropdown();
+  setupRevealAnimations();
+  setupRipple();
+  decorateBlueButtons();
 });

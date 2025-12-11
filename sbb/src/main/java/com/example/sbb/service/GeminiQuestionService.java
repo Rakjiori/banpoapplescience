@@ -186,6 +186,42 @@ public class GeminiQuestionService {
         return generateQuestionsFromText(null, text);
     }
 
+    // =========================
+    // PDF/텍스트 요약
+    // =========================
+    public String summarizeText(String text, String originalName) {
+        if (text == null || text.isBlank()) {
+            return "⚠ 요약할 텍스트가 없습니다.";
+        }
+
+        String titlePart = (originalName != null && !originalName.isBlank())
+                ? "자료 제목: " + originalName + "\n\n"
+                : "";
+
+        String prompt = """
+                너는 대학 강의자료나 PDF를 간단하게 요약해주는 도우미야.
+
+                아래 텍스트를 기반으로 핵심만 5줄 이내의 bullet 형태로 요약해줘.
+                - 가장 중요한 개념, 정의, 공식, 수치를 중심으로 적어줘.
+                - 너무 긴 문장보다는 짧고 명확한 포인트로 정리해줘.
+                """;
+
+        String fullPrompt = prompt + "\n" + titlePart + "텍스트:\n" + text;
+
+        Map<String, Object> body = Map.of(
+                "contents", List.of(
+                        Map.of(
+                                "role", "user",
+                                "parts", List.of(
+                                        Map.of("text", fullPrompt)
+                                )
+                        )
+                )
+        );
+
+        return callGemini(body);
+    }
+
     public String generateQuestionsFromTexts(List<String> texts,
                                              List<String> originalNames,
                                              String stylePrompt) {

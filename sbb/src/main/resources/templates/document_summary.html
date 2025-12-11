@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout :: layout (~{::body})"
+      th:with="content='this :: content'">
+
+<body>
+<div th:fragment="content">
+
+    <section class="hero-panel" data-anim="fade-up">
+        <div>
+            <p class="eyebrow">PDF Insight</p>
+            <h1 class="page-title" style="margin:4px 0;">요약 결과</h1>
+            <p class="muted">업로드한 PDF를 Gemini에 보내 핵심만 뽑아봤어요.</p>
+            <div class="chip-row">
+                <span class="chip chip-ghost" th:text="${summarySource}">Gemini 요약</span>
+                <span class="chip chip-soft" th:if="${file.folder != null}" th:text="${file.folder.name}">폴더</span>
+            </div>
+        </div>
+        <div class="action-row">
+            <a class="btn glow-btn" th:href="@{/document/upload(folderId=${folderId})}">
+                ➕ 새 PDF 올리기
+            </a>
+            <a class="btn btn-outline" th:href="${folderId} != null ? @{/document/list(folderId=${folderId})} : @{/document/list}">
+                ← 목록으로 돌아가기
+            </a>
+        </div>
+    </section>
+
+    <div class="card motion-lift" style="margin-top:14px;" data-anim="fade-up" data-anim-delay="80">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+            <div>
+                <div class="title-lg"
+                     th:text="${file.originalFilename}">파일명</div>
+                <div class="muted" style="font-size:13px; margin-top:4px;">
+                    <span th:text="${#numbers.formatDecimal(file.fileSize / 1048576.0, 1, 1)} + ' MB'"></span>
+                    ·
+                    <span th:text="${#temporals.format(file.uploadedAt, 'yy-MM-dd HH:mm')}"></span>
+                </div>
+            </div>
+            <div class="status-badge status-warning" th:if="${usedFallback}">
+                네트워크 이슈로 로컬 요약을 표시했어요.
+            </div>
+            <div class="status-badge status-success" th:if="${!usedFallback}">
+                Gemini 응답을 사용했어요.
+            </div>
+        </div>
+    </div>
+
+    <div class="card motion-lift" style="margin-top:12px;" data-anim="fade-up" data-anim-delay="140">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;">
+            <div class="title-lg">요약 결과</div>
+            <div class="pulse-dot" title="실시간 생성"></div>
+        </div>
+        <div class="summary-box" th:text="${summary}">요약 내용</div>
+    </div>
+
+    <div class="card motion-lift" style="margin-top:12px;"
+         th:if="${previewText != null && !previewText.isEmpty()}"
+         data-anim="fade-up" data-anim-delay="200">
+        <div class="title-md" style="margin-bottom:8px;">원문 미리보기 (일부)</div>
+        <div class="preview-box" th:text="${previewText}">미리보기</div>
+    </div>
+
+</div>
+</body>
+</html>

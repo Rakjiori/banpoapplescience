@@ -91,12 +91,12 @@
         <table class="table" style="min-width:720px; white-space:nowrap;">
             <thead>
             <tr>
-                <th>#</th>
-                <th>원본 파일명</th>
-                <th>파일 크기 (MB)</th>
-                <th>업로드 시각</th>
-                <th>본문 보기</th>
-                <th style="width:110px; text-align:center;">액션</th>
+                <th class="text-center col-compact">#</th>
+                <th class="text-left filename-cell">원본 파일명</th>
+                <th class="text-right col-compact mono">파일 크기 (MB)</th>
+                <th class="text-center mono">업로드 시각</th>
+                <th class="text-center col-wide">내용 요약</th>
+                <th class="text-center col-compact">액션</th>
             </tr>
             </thead>
             <tbody>
@@ -106,18 +106,16 @@
                 </td>
             </tr>
             <tr th:each="file, stat : ${files}">
-                <td th:text="${stat.index + 1}"></td>
-                <td th:text="${file.originalFilename}"></td>
-                <td th:text="${#numbers.formatDecimal(file.fileSize / 1048576.0, 1, 1)} + ' MB'"></td>
-                <td th:text="${#temporals.format(file.uploadedAt, 'yy-MM-dd HH:mm')}"></td>
-                <td>
-                    <button type="button"
-                            class="btn btn-outline"
-                            data-role="preview-btn"
-                            th:data-title="${file.originalFilename}"
-                            th:data-text="${file.extractedText}">
-                        내용 보기
-                    </button>
+                <td class="text-center mono" th:text="${stat.index + 1}"></td>
+                <td class="filename-cell" th:text="${file.originalFilename}"></td>
+                <td class="text-right mono" th:text="${#numbers.formatDecimal(file.fileSize / 1048576.0, 1, 1)} + ' MB'"></td>
+                <td class="text-center mono" th:text="${#temporals.format(file.uploadedAt, 'yy-MM-dd HH:mm')}"></td>
+                <td class="summary-cell col-wide">
+                    <a class="btn summary-btn motion-lift"
+                       th:href="@{/document/summary/{id}(id=${file.id}, folderId=${selectedFolder != null ? selectedFolder.id : null})}">
+                        <span class="summary-icon">📝</span>
+                        <span>내용 요약</span>
+                    </a>
                 </td>
                 <td style="text-align:center;">
                     <!-- 삭제 버튼 (POST + CSRF) -->
@@ -301,51 +299,6 @@
             });
         }
 
-        const modal = document.createElement('div');
-        modal.id = 'textPreviewModal';
-        modal.style.position = 'fixed';
-        modal.style.inset = '0';
-        modal.style.background = 'rgba(17,24,39,0.55)';
-        modal.style.display = 'none';
-        modal.style.alignItems = 'center';
-        modal.style.justifyContent = 'center';
-        modal.style.zIndex = '10000';
-        modal.innerHTML = `
-            <div style="
-                background:#fff;
-                padding:18px;
-                border-radius:14px;
-                width: min(900px, 90vw);
-                max-height:80vh;
-                display:flex;
-                flex-direction:column;
-                box-shadow:0 18px 40px rgba(0,0,0,0.28);
-            ">
-                <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-                    <strong id="previewTitle" style="font-size:16px;"></strong>
-                    <button type="button" class="btn btn-outline" id="previewCloseBtn" style="padding:6px 12px;">닫기</button>
-                </div>
-                <div id="previewBody" style="margin-top:12px; padding:12px; border:1px solid #e5e7eb; border-radius:10px; overflow:auto; white-space:pre-wrap; background:#f9fafb; flex:1;"></div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-
-        const closeModal = () => modal.style.display = 'none';
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
-        });
-        modal.querySelector('#previewCloseBtn').addEventListener('click', closeModal);
-
-        document.querySelectorAll('[data-role="preview-btn"]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const text = btn.dataset.text || '추출된 텍스트가 없습니다.';
-                const title = btn.dataset.title || 'PDF 내용';
-                document.getElementById('previewTitle').textContent = title;
-                document.getElementById('previewBody').textContent = text;
-                modal.style.display = 'flex';
-            });
-        });
-
         // 업로드 모달
         const uploadModal = document.getElementById('uploadModal');
         const openUploadBtn = document.getElementById('openUploadModal');
@@ -372,17 +325,17 @@
         });
         uploadModal?.addEventListener('click', (e) => {
             if (e.target === uploadModal) closeUploadModal();
+    });
+    document.querySelectorAll('[data-role="upload-close"]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeUploadModal();
         });
-        document.querySelectorAll('[data-role="upload-close"]').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                closeUploadModal();
-            });
-        });
-        if (uploadForm && uploadSubmitButton) {
-            uploadForm.addEventListener('submit', () => {
-                uploadSubmitButton.disabled = true;
-                uploadSubmitButton.textContent = '업로드 중...';
+    });
+    if (uploadForm && uploadSubmitButton) {
+        uploadForm.addEventListener('submit', () => {
+            uploadSubmitButton.disabled = true;
+            uploadSubmitButton.textContent = '업로드 중...';
             });
         }
         if (uploadFileInput && filePickerLabel) {
@@ -398,6 +351,22 @@
                 folderSelect.closest('form')?.submit();
             });
         }
+
+        // 요약 버튼에 라이트 애니메이션
+        const summaryButtons = document.querySelectorAll('.summary-btn');
+        summaryButtons.forEach(btn => {
+            btn.addEventListener('mousemove', (e) => {
+                const rect = btn.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                btn.style.setProperty('--x', `${x}px`);
+                btn.style.setProperty('--y', `${y}px`);
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.removeProperty('--x');
+                btn.style.removeProperty('--y');
+            });
+        });
     });
 </script>
 </body>

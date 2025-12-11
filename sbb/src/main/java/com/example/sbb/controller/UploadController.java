@@ -31,6 +31,7 @@ import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/document")
@@ -167,6 +168,76 @@ public class UploadController {
         model.addAttribute("selectedFolder", selectedFolder);
         model.addAttribute("files", files);
         return "document_list";
+    }
+
+    // ===========================
+    // PDF 내용 요약
+    // ===========================
+    @GetMapping("/summary/{id}")
+    public String summary(@PathVariable Long id,
+                          @RequestParam(value = "folderId", required = false) Long folderId,
+                          Principal principal,
+                          Model model,
+                          RedirectAttributes rttr) {
+
+        if (principal == null) {
+            return "redirect:/user/login";
+        }
+
+        DocumentFile file = documentFileRepository.findById(id).orElse(null);
+        if (file == null) {
+            rttr.addFlashAttribute("error", "요약할 파일을 찾을 수 없습니다.");
+            return redirectToList(folderId);
+        }
+        if (file.getUser() == null ||
+                !principal.getName().equals(file.getUser().getUsername())) {
+            rttr.addFlashAttribute("error", "이 PDF에 접근할 권한이 없습니다.");
+            return redirectToList(folderId);
+        }
+
+        String text = file.getExtractedText();
+        if (text == null || text.isBlank()) {
+            try {
+                Path path = Paths.get(System.getProperty("user.dir"), "uploads", file.getStoredFilename());
+                if (Files.exists(path)) {
+                    text = documentService.extractText(path);
+                    file.setExtractedText(text);
+                    documentFileRepository.save(file);
+                }
+            } catch (Exception e) {
+                text = null;
+            }
+        }
+
+        String summary;
+        boolean usedFallback = false;
+        String summarySource = "Gemini 요약";
+
+        if (text == null || text.isBlank()) {
+            summary = "PDF에서 텍스트를 읽을 수 없어 요약할 수 없습니다.";
+            usedFallback = true;
+            summarySource = "텍스트 없음";
+        } else {
+            summary = geminiQuestionService.summarizeText(text, file.getOriginalFilename());
+            if (geminiQuestionService.isFailure(summary)) {
+                summary = buildLocalSummary(text);
+                usedFallback = true;
+                summarySource = "로컬 요약 (오프라인)";
+            }
+        }
+
+        Long backFolderId = (folderId != null)
+                ? folderId
+                : (file.getFolder() != null ? file.getFolder().getId() : null);
+
+        model.addAttribute("file", file);
+        model.addAttribute("summary", summary);
+        model.addAttribute("usedFallback", usedFallback);
+        model.addAttribute("summarySource", summarySource);
+        model.addAttribute("folderId", backFolderId);
+        model.addAttribute("previewText", buildPreview(text));
+
+        return "document_summary";
     }
 
     // ===========================
@@ -374,6 +445,39 @@ public class UploadController {
 
         String suffix = (file.getFolder() != null) ? "?folderId=" + file.getFolder().getId() : "";
         return "redirect:/document/list" + suffix;
+    }
+
+    private String redirectToList(Long folderId) {
+        return "redirect:/document/list" + (folderId != null ? "?folderId=" + folderId : "");
+    }
+
+    private String buildLocalSummary(String text) {
+        if (text == null || text.isBlank()) {
+            return "요약할 텍스트가 없습니다.";
+        }
+        String[] sentences = text.split("(?<=[.!?\\n])");
+        List<String> picked = new ArrayList<>();
+        for (String sentence : sentences) {
+            String trimmed = sentence.trim();
+            if (trimmed.length() < 20) continue;
+            picked.add(trimmed);
+            if (picked.size() >= 5) break;
+        }
+        if (picked.isEmpty()) {
+            String trimmed = text.trim();
+            return trimmed.length() > 200 ? trimmed.substring(0, 200) + "..." : trimmed;
+        }
+        return picked.stream()
+                .map(line -> "- " + line)
+                .collect(Collectors.joining("\n"));
+    }
+
+    private String buildPreview(String text) {
+        if (text == null || text.isBlank()) {
+            return "";
+        }
+        String cleaned = text.trim();
+        return (cleaned.length() > 1200) ? cleaned.substring(0, 1200) + "..." : cleaned;
     }
 
 }
