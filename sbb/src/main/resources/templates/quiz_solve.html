@@ -80,6 +80,7 @@
 
             <input type="hidden" name="folderId"
                    th:value="${selectedFolder != null ? selectedFolder.id : (question.folder != null ? question.folder.id : null)}">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
             <div th:if="${choiceList != null && !#lists.isEmpty(choiceList)}">
                 <p style="font-size:14px; color:#6b7280; margin-bottom:12px;">

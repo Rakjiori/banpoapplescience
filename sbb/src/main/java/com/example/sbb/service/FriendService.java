@@ -4,14 +4,12 @@ import com.example.sbb.domain.user.Friend;
 import com.example.sbb.domain.user.SiteUser;
 import com.example.sbb.domain.user.FriendRequest;
 import com.example.sbb.domain.user.FriendShareRequest;
-import com.example.sbb.domain.user.FriendShareComment;
 import com.example.sbb.repository.FriendRepository;
 import com.example.sbb.repository.FriendRequestRepository;
 import com.example.sbb.domain.user.UserRepository;
 import com.example.sbb.repository.QuizQuestionRepository;
 import com.example.sbb.repository.FolderRepository;
 import com.example.sbb.repository.FriendShareRequestRepository;
-import com.example.sbb.repository.FriendShareCommentRepository;
 import com.example.sbb.domain.quiz.QuizQuestion;
 import com.example.sbb.domain.Folder;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +29,6 @@ public class FriendService {
     private final QuizQuestionRepository quizQuestionRepository;
     private final FolderRepository folderRepository;
     private final FriendShareRequestRepository friendShareRequestRepository;
-    private final FriendShareCommentRepository friendShareCommentRepository;
 
     public List<Friend> myFriends(SiteUser user) {
         return friendRepository.findByFrom(user);
@@ -260,20 +257,4 @@ public class FriendService {
         return true;
     }
 
-    @Transactional
-    public FriendShareComment addShareComment(Long reqId, SiteUser me, String content) {
-        var reqOpt = friendShareRequestRepository.findById(reqId);
-        if (reqOpt.isEmpty() || content == null || content.isBlank()) return null;
-        FriendShareComment c = new FriendShareComment();
-        c.setShareRequest(reqOpt.get());
-        c.setUser(me);
-        c.setContent(content.trim());
-        return friendShareCommentRepository.save(c);
-    }
-
-    public List<FriendShareComment> shareComments(Long reqId) {
-        var reqOpt = friendShareRequestRepository.findById(reqId);
-        if (reqOpt.isEmpty()) return List.of();
-        return friendShareCommentRepository.findByShareRequestOrderByCreatedAtAsc(reqOpt.get());
-    }
 }

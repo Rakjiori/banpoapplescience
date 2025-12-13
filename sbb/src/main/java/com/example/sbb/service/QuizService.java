@@ -31,10 +31,10 @@ public class QuizService {
                                               List<DocumentFile> sourceDocs,
                                               com.example.sbb.domain.Folder defaultFolder) {
 
-        List<QuizQuestion> result = new ArrayList<>();
+        List<QuizQuestion> parsed = new ArrayList<>();
 
         if (rawText == null || rawText.isBlank()) {
-            return result;
+            return parsed;
         }
 
         String[] lines = rawText.split("\\R"); // 개행 기준 split
@@ -96,7 +96,7 @@ public class QuizService {
                 Matcher matcher = QUESTION_LINE_PATTERN.matcher(trimmed);
                 if (matcher.matches()) {
                     if (current != null) {
-                        finalizeQuestion(current, questionBuffer, choiceBuffer, result);
+                        finalizeQuestion(current, questionBuffer, choiceBuffer, parsed);
                     }
 
                     current = new QuizQuestion();
@@ -132,10 +132,13 @@ public class QuizService {
 
         // 마지막 문제 마무리
         if (current != null) {
-            finalizeQuestion(current, questionBuffer, choiceBuffer, result);
+            finalizeQuestion(current, questionBuffer, choiceBuffer, parsed);
         }
 
-        return result;
+        // ✅ 무조건 6개 객관식 + 4개 단답형(주관식)만 저장
+        List<QuizQuestion> normalized = normalizeCount(parsed);
+        normalized.forEach(quizQuestionRepository::save);
+        return normalized;
     }
 
     private void finalizeQuestion(QuizQuestion current,
@@ -153,9 +156,80 @@ public class QuizService {
             current.setMultipleChoice(true);
             current.setChoices(choiceBuffer.toString().trim());
         }
-        quizQuestionRepository.save(current);
         result.add(current);
         questionBuffer.setLength(0);
         choiceBuffer.setLength(0);
+    }
+
+    /**
+     * 결과를 6개 객관식 + 4개 단답형으로 맞춰 반환한다.
+     * 부족한 단답형은 남는 객관식을 단답형으로 변환해서 채운다.
+     */
+    private List<QuizQuestion> normalizeCount(List<QuizQuestion> parsed) {
+        List<QuizQuestion> mc = new ArrayList<>();
+        List<QuizQuestion> shortAns = new ArrayList<>();
+        for (QuizQuestion q : parsed) {
+            if (q.isMultipleChoice()) mc.add(q);
+            else shortAns.add(q);
+        }
+
+        List<QuizQuestion> result = new ArrayList<>();
+
+        // 6개 객관식 우선
+        for (QuizQuestion q : mc) {
+            if (result.size() >= 6) break;
+            result.add(q);
+        }
+
+        // 단답형 확보
+        int shortAdded = 0;
+        for (QuizQuestion q : shortAns) {
+            if (shortAdded >= 4 || result.size() >= 10) break;
+            result.add(q);
+            shortAdded++;
+        }
+
+        // 단답형 부족분을 남은 객관식으로 변환
+        int shortNeeded = 4 - shortAdded;
+        if (shortNeeded > 0) {
+            for (QuizQuestion q : mc) {
+                if (result.contains(q)) continue;
+                if (shortNeeded <= 0) break;
+                q.setMultipleChoice(false);
+                q.setChoices(null);
+                result.add(q);
+                shortNeeded--;
+                shortAdded++;
+            }
+        }
+
+        // 만약 여전히 부족하면 남은 주관식/객관식에서 추가하되 총 10개로 제한
+        if (result.size() < 10) {
+            for (QuizQuestion q : parsed) {
+                if (result.contains(q)) continue;
+                result.add(q);
+                if (result.size() >= 10) break;
+            }
+        }
+
+        // 최종 10개로 슬라이스
+        if (result.size() > 10) {
+            result = new ArrayList<>(result.subList(0, 10));
+        }
+
+        // 단답형이 4개 미만일 때 추가 변환 (안전망)
+        long shortCount = result.stream().filter(q -> !q.isMultipleChoice()).count();
+        if (shortCount < 4) {
+            for (QuizQuestion q : result) {
+                if (shortCount >= 4) break;
+                if (q.isMultipleChoice()) {
+                    q.setMultipleChoice(false);
+                    q.setChoices(null);
+                    shortCount++;
+                }
+            }
+        }
+
+        return result;
     }
 }

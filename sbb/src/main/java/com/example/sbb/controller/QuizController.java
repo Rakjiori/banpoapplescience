@@ -83,8 +83,9 @@ public class QuizController {
     model.addAttribute("folders", folders);
     model.addAttribute("selectedFolder", folder);
     model.addAttribute("friends", friendService.myFriends(user));
-    if (!pageData.isEmpty() && pageData.getContent().get(0).isMultipleChoice()) {
-        model.addAttribute("firstChoiceList", extractChoices(pageData.getContent().get(0).getChoices()));
+    if (!pageData.isEmpty()) {
+        QuizQuestion first = pageData.getContent().get(0);
+        model.addAttribute("firstChoiceList", extractChoices(first.getChoices()));
     }
     String folderQuery = (folder != null) ? "?folderId=" + folder.getId() : "";
     model.addAttribute("folderQuery", folderQuery);

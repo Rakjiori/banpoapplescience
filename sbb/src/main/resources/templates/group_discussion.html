@@ -10,20 +10,45 @@
     </p>
 
     <div class="card">
-        <h3 style="margin:0 0 8px;">댓글</h3>
+        <div style="padding-bottom:10px; border-bottom:1px solid #e5e7eb; margin-bottom:10px;">
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                <span style="display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; background:#eef2ff; color:#3730a3; font-weight:700; font-size:12px;"
+                      th:text="${question.numberTag != null ? '문제 ' + question.numberTag : '문제'}">문제</span>
+                <span style="color:#9ca3af; font-size:11px;" th:text="${question.createdAtFormatted}"></span>
+                <a th:href="@{/quiz/solve/{id}(id=${question.id}, groupId=${group.id}, discussionQuestionId=${question.id})}"
+                   class="btn btn-outline" style="padding:6px 10px; font-size:12px; white-space:nowrap;">풀기</a>
+            </div>
+            <p style="margin:8px 0 0; font-weight:600; white-space:pre-wrap; font-size:13px; line-height:1.4;" th:text="${question.questionText}">문제 내용</p>
+
+            <div th:if="${choiceList != null and !#lists.isEmpty(choiceList)}"
+                 style="margin-top:8px; display:flex; flex-direction:column; gap:6px; font-size:12px;">
+                <div th:each="choice : ${choiceList}"
+                     style="padding:8px; border:1px solid #e5e7eb; border-radius:8px; display:flex; gap:8px; align-items:flex-start; background:#f8fafc;">
+                    <strong style="min-width:22px;"
+                            th:text="${choice.number != null ? choice.number + '.' : '보기'}">보기</strong>
+                    <span style="white-space:pre-wrap; color:#111827;" th:text="${choice.text}"></span>
+                </div>
+            </div>
+            <div th:if="${choiceList == null or #lists.isEmpty(choiceList)}" style="margin-top:6px; color:#6b7280; font-size:12px;">
+                객관식 보기가 없는 주관식 문제입니다.
+            </div>
+            <!-- 정답/해설은 토론 페이지에서는 숨김 -->
+        </div>
+
+        <h3 style="margin:0 0 8px; font-size:15px;">댓글</h3>
         <div style="display:flex; flex-direction:column; gap:8px;">
             <div th:each="item : ${comments}"
-                 style="padding:10px; border:1px solid #e5e7eb; border-radius:10px; display:flex; gap:10px; align-items:flex-start;">
-                <div style="font-size:20px;"> 
+                 style="padding:10px; border:1px solid #e5e7eb; border-radius:10px; display:flex; gap:8px; align-items:flex-start; font-size:13px;">
+                <div style="font-size:18px;"> 
                     <span th:text="${item.user.avatar != null ? item.user.avatar : '🧑'}">🧑</span>
                 </div>
                 <div style="flex:1;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <strong class="comment-username" th:text="${item.user.username}">user</strong>
-                        <span style="color:#9ca3af; font-size:12px;"
+                        <strong class="comment-username" th:text="${item.user.username}" style="font-size:13px;">user</strong>
+                        <span style="color:#9ca3af; font-size:11px;"
                           th:text="${#temporals.format(item.createdAt, 'yyyy.MM.dd HH:mm')}">date</span>
                     </div>
-                    <div style="margin-top:6px; white-space:pre-wrap;" th:text="${item.content}"></div>
+                    <div style="margin-top:4px; white-space:pre-wrap; font-size:12px;" th:text="${item.content}"></div>
                 </div>
             </div>
             <div th:if="${#lists.isEmpty(comments)}" style="color:#6b7280;">첫 댓글을 남겨 보세요.</div>
@@ -34,7 +59,7 @@
               style="margin-top:12px; display:flex; gap:8px; align-items:flex-start;">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
             <textarea name="content" rows="2" required
-                      style="flex:1; padding:10px; border:1px solid #d1d5db; border-radius:10px; resize:vertical;"
+                      style="flex:1; padding:12px; border:1px solid #cbd5e1; border-radius:12px; resize:vertical; font-size:14px; font-family:'Segoe UI','Noto Sans KR',sans-serif;"
                       placeholder="그룹원들과 생각을 나눠 보세요"></textarea>
             <button type="submit" class="btn" style="padding:10px 14px;">등록</button>
         </form>
