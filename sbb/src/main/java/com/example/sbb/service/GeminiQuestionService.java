@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class GeminiQuestionService {
 
-    @Value("${gemini.api.key}")
+    @Value("${gemini.api.key:}")
     private String apiKey;
 
     // 멀티모달(이미지/PDF) 지원 모델 사용 (예: gemini-1.5-flash, gemini-1.5-pro 등)
@@ -30,6 +30,10 @@ public class GeminiQuestionService {
     // 1) 단일 PDF → 문제 생성
     // =========================
     public String generateQuestionsFromPdf(byte[] pdfBytes, String originalName) {
+
+        if (apiKey == null || apiKey.isBlank()) {
+            return "⚠ Gemini API 키가 설정되지 않았습니다.";
+        }
 
         if (pdfBytes == null || pdfBytes.length == 0) {
             return "⚠ 전달된 PDF 데이터가 비어 있습니다.";
@@ -99,6 +103,10 @@ public class GeminiQuestionService {
     public String generateQuestionsFromMultiplePdfs(List<byte[]> pdfBytesList,
                                                     List<String> originalNames,
                                                     String stylePrompt) {
+
+        if (apiKey == null || apiKey.isBlank()) {
+            return "⚠ Gemini API 키가 설정되지 않았습니다.";
+        }
 
         if (pdfBytesList == null || pdfBytesList.isEmpty()) {
             return "⚠ 전달된 PDF가 없습니다.";
@@ -183,6 +191,9 @@ public class GeminiQuestionService {
     // 3) (옵션) 텍스트만 직접 넣어서 문제 생성
     // =========================
     public String generateQuestionsFromText(String text) {
+        if (apiKey == null || apiKey.isBlank()) {
+            return "⚠ Gemini API 키가 설정되지 않았습니다.";
+        }
         return generateQuestionsFromText(null, text);
     }
 
@@ -225,6 +236,9 @@ public class GeminiQuestionService {
     public String generateQuestionsFromTexts(List<String> texts,
                                              List<String> originalNames,
                                              String stylePrompt) {
+        if (apiKey == null || apiKey.isBlank()) {
+            return "⚠ Gemini API 키가 설정되지 않았습니다.";
+        }
         if (texts == null || texts.isEmpty()) {
             return "⚠ 전달된 텍스트가 없습니다.";
         }
@@ -288,6 +302,10 @@ public class GeminiQuestionService {
     }
 
     private String generateQuestionsFromText(String originalName, String text) {
+
+        if (apiKey == null || apiKey.isBlank()) {
+            return "⚠ Gemini API 키가 설정되지 않았습니다.";
+        }
 
         if (text == null || text.isBlank()) {
             return "⚠ 전달된 텍스트가 비어 있습니다.";

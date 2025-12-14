@@ -47,13 +47,12 @@ public class UserService {
     );
 
     /**
-     * 회원 가입용 유저 생성
+     * 회원 가입용 유저 생성 (이메일 입력 없이 생성)
      */
-    public void createUser(String username, String password, String email) {
+    public void createUser(String username, String password) {
         SiteUser user = new SiteUser();
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password)); // 비밀번호 암호화
-        user.setEmail(email);
         user.setRole("ROLE_USER"); // Spring Security에서 쓰는 기본 형태
 
         userRepository.save(user);
