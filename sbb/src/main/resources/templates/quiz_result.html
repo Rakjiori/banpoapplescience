@@ -101,26 +101,31 @@
     </div>
 
     <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-        <a th:href="${selectedFolder != null} ? @{/quiz/list(folderId=${selectedFolder.id})} : '/quiz/list'"
-           class="btn btn-outline">문제 목록 보기</a>
-        <a th:if="${nextQuestionId != null}"
-           th:href="${selectedFolder != null} ? @{/quiz/solve/{id}(id=${nextQuestionId}, folderId=${selectedFolder.id})} : @{/quiz/solve/{id}(id=${nextQuestionId})}"
-           class="btn">
-            다음 문제 풀기 →
-        </a>
-        <span th:if="${nextQuestionId == null}"
-              class="pill pill-muted">
-            모든 문제를 풀었습니다!
-        </span>
+        <a th:if="${groupId != null}"
+           th:href="@{/groups/{id}(id=${groupId})}"
+           class="btn">그룹 홈으로 가기</a>
+        <th:block th:if="${groupId == null}">
+            <a th:href="${selectedFolder != null} ? @{/quiz/list(folderId=${selectedFolder.id})} : '/quiz/list'"
+               class="btn btn-outline">문제 목록 보기</a>
+            <a th:if="${nextQuestionId != null}"
+               th:href="${selectedFolder != null} ? @{/quiz/solve/{id}(id=${nextQuestionId}, folderId=${selectedFolder.id})} : @{/quiz/solve/{id}(id=${nextQuestionId})}"
+               class="btn">
+                다음 문제 풀기 →
+            </a>
+            <span th:if="${nextQuestionId == null}"
+                  class="pill pill-muted">
+                모든 문제를 풀었습니다!
+            </span>
+        </th:block>
     </div>
 
-    <button type="button"
+    <button th:if="${groupId == null}" type="button"
             class="sheet-toggle-btn"
             id="questionSheetToggle">
         문제 목록
     </button>
 
-    <div class="question-sheet" id="questionSheet">
+    <div th:if="${groupId == null}" class="question-sheet" id="questionSheet">
         <div class="question-sheet__header">
             <div>
                 <strong>전체 문제</strong>

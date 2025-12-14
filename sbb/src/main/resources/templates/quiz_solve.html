@@ -80,6 +80,7 @@
 
             <input type="hidden" name="folderId"
                    th:value="${selectedFolder != null ? selectedFolder.id : (question.folder != null ? question.folder.id : null)}">
+            <input type="hidden" name="groupId" th:value="${groupId}">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
             <div th:if="${choiceList != null && !#lists.isEmpty(choiceList)}">
@@ -140,7 +141,7 @@
            class="btn btn-outline">토론</a>
     </div>
 
-    <div class="question-sheet" id="questionSheet">
+    <div th:if="${groupId == null}" class="question-sheet" id="questionSheet">
         <div class="question-sheet__header">
             <div>
                 <strong>전체 문제</strong>

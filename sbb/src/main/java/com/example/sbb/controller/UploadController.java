@@ -87,7 +87,7 @@ public class UploadController {
 
             // 파일 체크
             if (file == null || file.isEmpty()) {
-                return "redirect:/document/upload";
+                return redirectToList(folderId);
             }
 
             // 업로드 폴더 준비
@@ -138,7 +138,7 @@ public class UploadController {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return "redirect:/document/upload";
+            return redirectToList(folderId);
         }
     }
 

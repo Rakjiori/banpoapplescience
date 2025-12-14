@@ -7,6 +7,38 @@
 <body>
 <div th:fragment="content">
 
+<style>
+    .upload-bar {
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        flex-wrap:wrap;
+        background:#1d2a44;
+        color:#fff;
+        padding:14px 16px;
+        border-radius:14px;
+        box-shadow:0 14px 36px rgba(15,23,42,0.35);
+    }
+    .upload-bar h2 { margin:0; font-size:18px; }
+    .upload-btn-primary {
+        background:#22d3ee;
+        color:#0f172a;
+        border:none;
+        padding:10px 14px;
+        border-radius:10px;
+        font-weight:700;
+        cursor:pointer;
+        box-shadow:0 10px 24px rgba(34,211,238,0.35);
+    }
+    .upload-btn-primary:hover { filter:brightness(0.95); }
+    .table.sleek { width:100%; border-collapse:separate; border-spacing:0; }
+    .table.sleek th, .table.sleek td { padding:12px 10px; border-bottom:1px solid #e5e7eb; text-align:left; }
+    .table.sleek th { background:#f8fafc; font-weight:700; color:#0f172a; }
+    .file-row:hover { background:#f9fafb; }
+    .pill-soft { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; background:#eef2ff; color:#312e81; font-weight:700; }
+</style>
+
     <h1 class="page-title">내가 업로드한 PDF 목록</h1>
     <p th:if="${selectedFolder != null}"
        style="margin-top:-6px; color:#6b7280; font-size:14px;">
@@ -42,14 +74,13 @@
     <div class="card" style="margin-bottom: 16px;">
         <div style="
             display:flex;
-            justify-content:space-between;
-            align-items:center;
+            flex-direction:column;
             gap:12px;
-            flex-wrap:wrap;
         ">
             <form th:action="@{/document/list}" method="get" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                 <select name="folderId"
-                        style="min-width:200px; padding:8px 10px; border-radius:8px; border:1px solid #d1d5db;">
+                        style="min-width:200px; padding:8px 10px; border-radius:8px; border:1px solid #d1d5db;"
+                        onchange="this.form.submit();">
                     <option value="" th:selected="${selectedFolder == null}">전체 폴더</option>
                     <option th:each="folder : ${folders}"
                             th:value="${folder.id}"
@@ -57,79 +88,69 @@
                             th:selected="${selectedFolder != null and selectedFolder.id == folder.id}">
                     </option>
                 </select>
-                <button type="submit" class="btn btn-outline" style="padding:6px 12px;">
-                    폴더 적용
-                </button>
+                <input type="hidden" name="folderId_hidden" value="">
             </form>
-            <div style="display:flex; gap:8px; align-items:center;">
-                <span style="color:#555; font-size:14px;">
-                    총 <span th:text="${#lists.size(files)}">0</span>개
-                </span>
-                <a th:href="@{/folders}" class="btn btn-outline" style="white-space:nowrap;">
-                    📂 폴더 관리
-                </a>
-                <a th:href="${selectedFolder != null} ? @{/document/upload(folderId=${selectedFolder.id})} : @{/document/upload}"
-                   class="btn" style="white-space:nowrap;">
-                    ➕ 새 PDF 업로드
-                </a>
+            <div class="upload-bar">
+                <div>
+                    <h2>PDF 업로드</h2>
+                    <div class="pill-soft">총 <span th:text="${#lists.size(files)}">0</span>개</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <a th:href="@{/folders}" class="btn btn-outline" style="white-space:nowrap; background:#fff; color:#0f172a; border-color:rgba(255,255,255,0.3);">
+                        📂 폴더 관리
+                    </a>
+                    <button type="button"
+                            class="upload-btn-primary"
+                            id="instantUploadButton">
+                        ➕ 새 PDF 업로드
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- 목록 테이블 카드 -->
     <div class="card">
-        <table class="table">
+        <table class="table sleek">
             <thead>
             <tr>
-                <th>ID</th>
                 <th>원본 파일명</th>
-                <th>저장 파일명</th>
-                <th>파일 크기 (byte)</th>
-                <th>업로드 시각</th>
-                <th>본문 보기</th>
-                <th style="width:110px; text-align:center;">액션</th>
+                <th style="width:120px;">용량(MB)</th>
+                <th style="width:160px;">업로드 시각</th>
+                <th>요약 / 관리</th>
             </tr>
             </thead>
             <tbody>
             <tr th:if="${#lists.isEmpty(files)}">
-                <td colspan="7" style="text-align:center; padding:24px 0; color:#777;">
+                <td colspan="5" style="text-align:center; padding:24px 0; color:#777;">
                     업로드된 PDF가 없습니다. 먼저 파일을 업로드해 주세요.
                 </td>
             </tr>
-            <tr th:each="file : ${files}">
-                <td th:text="${file.id}"></td>
+            <tr th:each="file : ${files}" class="file-row">
                 <td th:text="${file.originalFilename}"></td>
-                <td th:text="${file.storedFilename}"></td>
-                <td th:text="${file.fileSize}"></td>
-                <td th:text="${file.uploadedAt}"></td>
+                <td th:text="${#numbers.formatDecimal(file.fileSize / 1048576.0, 1, 1)}"></td>
+                <td th:text="${#temporals.format(file.uploadedAt, 'yy-MM-dd HH:mm')}"></td>
                 <td>
-                    <button type="button"
-                            class="btn btn-outline"
-                            data-role="preview-btn"
-                            th:data-title="${file.originalFilename}"
-                            th:data-text="${file.extractedText}">
-                        내용 보기
-                    </button>
-                </td>
-                <td style="text-align:center;">
-                    <!-- 삭제 버튼 (POST + CSRF) -->
-                    <form th:action="@{/document/delete/{id}(id=${file.id})}"
-                          method="post"
-                          style="display:inline;"
-                          onsubmit="return confirm('정말 이 PDF를 삭제할까요?');">
-
-                        <input type="hidden"
-                               th:name="${_csrf.parameterName}"
-                               th:value="${_csrf.token}" />
-                        <input type="hidden" name="folderId"
-                               th:value="${selectedFolder != null ? selectedFolder.id : null}" />
-
-                        <button type="submit"
-                                class="btn btn-outline"
-                                style="padding:4px 10px; font-size:12px;">
-                            🗑 삭제
-                        </button>
-                    </form>
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <a class="btn btn-outline" th:href="@{/document/summary/{id}(id=${file.id}, folderId=${selectedFolder != null ? selectedFolder.id : null})}">
+                            📝 내용 요약
+                        </a>
+                        <form th:action="@{/document/delete/{id}(id=${file.id})}"
+                              method="post"
+                              style="display:inline;"
+                              onsubmit="return confirm('정말 이 PDF를 삭제할까요?');">
+                            <input type="hidden"
+                                   th:name="${_csrf.parameterName}"
+                                   th:value="${_csrf.token}" />
+                            <input type="hidden" name="folderId"
+                                   th:value="${selectedFolder != null ? selectedFolder.id : null}" />
+                            <button type="submit"
+                                    class="btn btn-outline"
+                                    style="padding:4px 10px; font-size:12px;">
+                                🗑 삭제
+                            </button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             </tbody>
@@ -191,6 +212,31 @@
     </div>
 
 </div>
+
+<form id="instantUploadForm"
+      th:action="@{/document/upload}"
+      method="post"
+      enctype="multipart/form-data"
+      style="display:none;">
+    <input type="file" name="pdfFile" id="instantUploadInput" accept="application/pdf">
+    <input type="hidden" name="folderId" th:value="${selectedFolder != null ? selectedFolder.id : ''}">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+</form>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('instantUploadButton');
+        const input = document.getElementById('instantUploadInput');
+        const form = document.getElementById('instantUploadForm');
+        if (btn && input && form) {
+            btn.addEventListener('click', () => input.click());
+            input.addEventListener('change', () => {
+                if (input.files && input.files.length > 0) {
+                    form.submit();
+                }
+            });
+        }
+    });
+</script>
 <style>
     @keyframes spin { to { transform: rotate(360deg); } }
 </style>

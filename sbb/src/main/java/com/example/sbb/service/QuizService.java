@@ -18,9 +18,11 @@ public class QuizService {
 
     private final QuizQuestionRepository quizQuestionRepository;
     private static final Pattern QUESTION_LINE_PATTERN =
-            Pattern.compile("^\\s*\\[?(\\d+)\\]?\\s*[\\.:\\)\\-]?\\s*(.*)$");
+            Pattern.compile("^\\s*Q?\\[?(\\d+)\\]?\\s*[\\.:\\)]?\\s*(\\d+\\)\\s+)?(.+)$");
     private static final Pattern ANSWER_LINE_PATTERN =
-            Pattern.compile("^\\s*\\[?정답]?\\s*[:\\-\\.]?\\s*(.*)$", Pattern.CASE_INSENSITIVE);
+            Pattern.compile("^\\s*\\[?정답]?\\s*[:\\-\\.\\)]?\\s*(.*)$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern EXPLANATION_LINE_PATTERN =
+            Pattern.compile("^\\s*\\[?해설]?\\s*[:\\-\\.\\)]?\\s*(.*)$", Pattern.CASE_INSENSITIVE);
 
     /**
      * Gemini가 반환한 전체 텍스트를 파싱해서
@@ -37,7 +39,13 @@ public class QuizService {
             return parsed;
         }
 
-        String[] lines = rawText.split("\\R"); // 개행 기준 split
+        String cleaned = rawText.replace("**", "").replace("\r", "\n");
+        // 구분자 기반 응답을 Qn: 형태로 치환
+        cleaned = cleaned.replaceAll("<<<END>>>", "\n\n");
+        cleaned = cleaned.replaceAll("<<<Q(\\d+)>>>", "\nQ$1:");
+        // 강제로 질문 시작(Qn:) 앞에 줄바꿈 삽입
+        cleaned = cleaned.replaceAll("(?<!\\n)(Q\\d+[:\\.])", "\n$1");
+        String[] lines = cleaned.split("\\R"); // 개행 기준 split
         QuizQuestion current = null;
         StringBuilder questionBuffer = new StringBuilder();
         StringBuilder choiceBuffer = new StringBuilder();
@@ -48,7 +56,9 @@ public class QuizService {
 
             if (readingChoices &&
                     !trimmed.startsWith("[정답]") &&
-                    !trimmed.startsWith("[해설]")) {
+                    !trimmed.toLowerCase().startsWith("정답") &&
+                    !trimmed.startsWith("[해설]") &&
+                    !trimmed.toLowerCase().startsWith("해설")) {
                 if (current != null && !trimmed.isEmpty()) {
                     choiceBuffer.append(trimmed);
                     if (!trimmed.endsWith("\n")) {
@@ -58,7 +68,23 @@ public class QuizService {
                 continue;
             }
 
-            if (trimmed.startsWith("(보기)")) {
+            // "(보기)" 없이 바로 "1) ..." 이 나오면 선택지로 처리
+            if (current != null && !readingChoices && trimmed.matches("^\\d+[).]\\s+.+$")) {
+                current.setMultipleChoice(true);
+                choiceBuffer.setLength(0);
+                choiceBuffer.append(trimmed);
+                if (!trimmed.endsWith("\n")) choiceBuffer.append("\n");
+                readingChoices = true;
+                continue;
+            }
+
+            if (trimmed.equalsIgnoreCase("보기:")) {
+                if (current != null) {
+                    current.setMultipleChoice(true);
+                    choiceBuffer.setLength(0);
+                    readingChoices = true;
+                }
+            } else if (trimmed.startsWith("(보기)")) {
                 if (current != null) {
                     current.setMultipleChoice(true);
                     choiceBuffer.setLength(0);
@@ -69,7 +95,7 @@ public class QuizService {
                     }
                     readingChoices = true;
                 }
-            } else if (ANSWER_LINE_PATTERN.matcher(trimmed).matches()) {
+            } else if (ANSWER_LINE_PATTERN.matcher(trimmed).matches() || trimmed.toLowerCase().startsWith("정답")) {
                 if (current != null) {
                     if (choiceBuffer.length() > 0) {
                         current.setMultipleChoice(true);
@@ -79,17 +105,24 @@ public class QuizService {
                     if (ansMatcher.find()) {
                         String ans = ansMatcher.group(1).trim();
                         current.setAnswer(ans);
+                    } else {
+                        String ans = trimmed.replaceFirst("(?i)^정답\\s*[:\\-\\.]?\\s*", "").trim();
+                        current.setAnswer(ans);
                     }
                 }
                 readingChoices = false;
-            } else if (trimmed.startsWith("[해설]")) {
+            } else if (EXPLANATION_LINE_PATTERN.matcher(trimmed).matches() || trimmed.toLowerCase().startsWith("해설")) {
                 if (current != null) {
                     if (choiceBuffer.length() > 0 && current.getChoices() == null) {
                         current.setMultipleChoice(true);
                         current.setChoices(choiceBuffer.toString().trim());
                     }
-                    String exp = trimmed.replaceFirst("^\\[해설]\\s*", "");
-                    current.setExplanation(exp);
+                    Matcher expMatcher = EXPLANATION_LINE_PATTERN.matcher(trimmed);
+                    if (expMatcher.find()) {
+                        current.setExplanation(expMatcher.group(1).trim());
+                    } else {
+                        current.setExplanation(trimmed.replaceFirst("(?i)^해설\\s*[:\\-\\.]?\\s*", "").trim());
+                    }
                 }
                 readingChoices = false;
             } else {
@@ -119,12 +152,30 @@ public class QuizService {
                         current.setNumberTag(null);
                     }
 
-                    String afterNumber = matcher.group(2);
+                    // group(2)는 "1) "처럼 잘못 붙은 선택지 숫자 제거
+                    String afterNumber = matcher.group(3);
+                    if (afterNumber == null) afterNumber = "";
                     readingChoices = false;
                     choiceBuffer.setLength(0);
                     questionBuffer.append(afterNumber).append(" ");
 
                 } else if (current != null) {
+                    questionBuffer.append(trimmed).append(" ");
+                } else if (!trimmed.isEmpty()) {
+                    // 번호가 없더라도 새 질문으로 시작
+                    current = new QuizQuestion();
+                    current.setUser(user);
+                    if (sourceDocs != null && !sourceDocs.isEmpty()) {
+                        DocumentFile firstDoc = sourceDocs.get(0);
+                        current.setDocument(firstDoc);
+                        current.setFolder(firstDoc.getFolder());
+                    } else if (defaultFolder != null) {
+                        current.setFolder(defaultFolder);
+                    }
+                    current.setNumberTag(parsed.size() + 1);
+                    questionBuffer.setLength(0);
+                    choiceBuffer.setLength(0);
+                    readingChoices = false;
                     questionBuffer.append(trimmed).append(" ");
                 }
             }
@@ -162,74 +213,28 @@ public class QuizService {
     }
 
     /**
-     * 결과를 6개 객관식 + 4개 단답형으로 맞춰 반환한다.
-     * 부족한 단답형은 남는 객관식을 단답형으로 변환해서 채운다.
+     * 결과를 모두 객관식으로 제한하고 최대 10개만 남긴다.
      */
     private List<QuizQuestion> normalizeCount(List<QuizQuestion> parsed) {
-        List<QuizQuestion> mc = new ArrayList<>();
-        List<QuizQuestion> shortAns = new ArrayList<>();
-        for (QuizQuestion q : parsed) {
-            if (q.isMultipleChoice()) mc.add(q);
-            else shortAns.add(q);
-        }
-
         List<QuizQuestion> result = new ArrayList<>();
-
-        // 6개 객관식 우선
-        for (QuizQuestion q : mc) {
-            if (result.size() >= 6) break;
+        for (QuizQuestion q : parsed) {
+            // 객관식만 유지 (보기 없으면 건너뜀)
+            if (q.getChoices() == null || q.getChoices().isBlank()) continue;
+            // 보기 4개까지만 허용
+            String[] choiceLines = q.getChoices().split("\\R");
+            List<String> filtered = new ArrayList<>();
+            for (String line : choiceLines) {
+                String t = line.trim();
+                if (t.isBlank()) continue;
+                if (filtered.size() >= 4) break;
+                filtered.add(t);
+            }
+            if (filtered.size() < 2) continue; // 보기 최소 2개 미만이면 스킵
+            q.setChoices(String.join("\n", filtered));
+            q.setMultipleChoice(true);
             result.add(q);
+            if (result.size() >= 10) break;
         }
-
-        // 단답형 확보
-        int shortAdded = 0;
-        for (QuizQuestion q : shortAns) {
-            if (shortAdded >= 4 || result.size() >= 10) break;
-            result.add(q);
-            shortAdded++;
-        }
-
-        // 단답형 부족분을 남은 객관식으로 변환
-        int shortNeeded = 4 - shortAdded;
-        if (shortNeeded > 0) {
-            for (QuizQuestion q : mc) {
-                if (result.contains(q)) continue;
-                if (shortNeeded <= 0) break;
-                q.setMultipleChoice(false);
-                q.setChoices(null);
-                result.add(q);
-                shortNeeded--;
-                shortAdded++;
-            }
-        }
-
-        // 만약 여전히 부족하면 남은 주관식/객관식에서 추가하되 총 10개로 제한
-        if (result.size() < 10) {
-            for (QuizQuestion q : parsed) {
-                if (result.contains(q)) continue;
-                result.add(q);
-                if (result.size() >= 10) break;
-            }
-        }
-
-        // 최종 10개로 슬라이스
-        if (result.size() > 10) {
-            result = new ArrayList<>(result.subList(0, 10));
-        }
-
-        // 단답형이 4개 미만일 때 추가 변환 (안전망)
-        long shortCount = result.stream().filter(q -> !q.isMultipleChoice()).count();
-        if (shortCount < 4) {
-            for (QuizQuestion q : result) {
-                if (shortCount >= 4) break;
-                if (q.isMultipleChoice()) {
-                    q.setMultipleChoice(false);
-                    q.setChoices(null);
-                    shortCount++;
-                }
-            }
-        }
-
         return result;
     }
 }

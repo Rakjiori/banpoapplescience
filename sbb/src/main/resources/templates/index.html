@@ -12,7 +12,7 @@
             position:relative;
             overflow:hidden;
             border-radius:24px;
-            background:linear-gradient(135deg,#0f172a,#3b4b8f,#60a5fa);
+            background:linear-gradient(135deg, var(--group-hero-start), var(--group-hero-mid), var(--group-hero-end));
             color:#fff;
             padding:28px;
             min-height:180px;
@@ -42,23 +42,35 @@
             transition:transform 0.15s ease, box-shadow 0.15s ease;
         }
         .btn-strong:hover { transform:translateY(-1px); box-shadow:0 14px 32px rgba(250,204,21,0.35); }
-        .stat-grid {
+        .home-tiles {
             display:grid;
-            grid-template-columns:repeat(auto-fit, minmax(160px,1fr));
-            gap:12px;
+            grid-template-columns:repeat(auto-fit, minmax(200px,1fr));
+            gap:14px;
             margin-top:14px;
         }
-        .stat-card {
-            background:#fff;
+        .home-tile {
+            position:relative;
+            overflow:hidden;
             border-radius:14px;
-            padding:14px;
-            box-shadow:0 10px 24px rgba(0,0,0,0.06);
+            border:1px solid #d6e3ff;
+            background:linear-gradient(135deg, rgba(63,113,228,0.08), rgba(63,113,228,0.14));
+            box-shadow:0 16px 34px rgba(12,74,110,0.12);
+            padding:16px;
             display:flex;
-            gap:10px;
-            align-items:center;
-            border:1px solid #e5e7eb;
+            flex-direction:column;
+            gap:8px;
         }
-        .stat-icon { font-size:20px; width:36px; height:36px; display:grid; place-items:center; border-radius:12px; }
+        .home-tile__icon {
+            width:40px;
+            height:40px;
+            border-radius:12px;
+            background:rgba(255,255,255,0.8);
+            display:grid;
+            place-items:center;
+            font-size:20px;
+            color:#1d4ed8;
+            box-shadow:0 8px 20px rgba(63,113,228,0.2);
+        }
         .ranking-card { display:flex; align-items:center; gap:12px; margin:8px 0; padding:10px; border-radius:12px; border:1px solid #e5e7eb; background:#fff; }
         .rank-medal { width:42px; text-align:center; font-weight:700; font-size:16px; }
         @keyframes float { 0%,100% { transform:translateY(0);} 50% { transform:translateY(-6px);} }
@@ -77,46 +89,39 @@
                         <a th:href="@{/document/upload}" class="btn btn-outline" style="background:#fff; color:#0f172a; width:44px; text-align:center;">⬆️</a>
                     </div>
                 </div>
-                <div class="card" style="flex:0 0 240px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); color:#fff;">
-                    <div style="font-weight:700; margin-bottom:6px;">오늘의 진행</div>
-                    <div style="display:flex; flex-direction:column; gap:8px;">
-                        <div>오늘 푼 문제: <span id="todaySolved" th:text="${todaySolvedCount != null ? todaySolvedCount : 0}">0</span>개</div>
-                        <div>연속 일일풀이: <span th:text="${sessionUser != null ? sessionUser.streak : 0}">0</span>일</div>
-                        <div>보유 포인트: <span th:text="${sessionUser != null ? sessionUser.points : 0}">0</span>P</div>
-                    </div>
+                <div class="surface-card stack" style="flex:0 0 240px; background:rgba(255,255,255,0.92); border:1px solid rgba(214,227,255,0.9); color:#0f172a; box-shadow:0 10px 28px rgba(12,74,110,0.14);">
+                    <div class="metric-label">오늘의 진행</div>
+                    <div class="selection-meta">오늘 푼 문제: <span id="todaySolved" th:text="${todaySolvedCount != null ? todaySolvedCount : 0}">0</span>개</div>
+                    <div class="selection-meta">연속 일일풀이: <span th:text="${sessionUser != null ? sessionUser.streak : 0}">0</span>일</div>
+                    <div class="selection-meta">보유 포인트: <span th:text="${sessionUser != null ? sessionUser.points : 0}">0</span>P</div>
                 </div>
             </div>
         </div>
 
-        <div class="stat-grid">
-            <div class="stat-card">
-                <div class="stat-icon" style="background:#eef2ff;">💎</div>
-                <div>
-                    <div style="font-size:12px; color:#6b7280;">포인트</div>
-                    <div style="font-weight:800;" th:text="${sessionUser != null ? sessionUser.points : 0}">0</div>
-                    <a class="btn btn-outline" href="/shop" style="margin-top:6px; padding:6px 10px;">상점으로</a>
-                </div>
+        <div class="home-tiles">
+            <div class="home-tile">
+                <div class="home-tile__icon">💎</div>
+                <div class="metric-label">포인트</div>
+                <div class="metric-value" th:text="${sessionUser != null ? sessionUser.points : 0}">0</div>
+                <a class="ghost-link" href="/shop" style="width:max-content;">상점으로</a>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon" style="background:#ecfccb;">🔥</div>
-                <div>
-                    <div style="font-size:12px; color:#6b7280;">연속 풀이</div>
-                    <div style="font-weight:800;" th:text="${sessionUser != null ? sessionUser.streak : 0}">0</div>
-                </div>
+            <div class="home-tile">
+                <div class="home-tile__icon">🔥</div>
+                <div class="metric-label">연속 풀이</div>
+                <div class="metric-value" th:text="${sessionUser != null ? sessionUser.streak : 0}">0</div>
+                <div class="metric-sub">매일 조금씩 쌓아보세요.</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon" style="background:#e0f2fe;">📌</div>
-                <div>
-                    <div style="font-size:12px; color:#6b7280;">오늘 푼 문제</div>
-                    <div style="font-weight:800;" id="statTodaySolved" th:text="${todaySolvedCount != null ? todaySolvedCount : 0}">0</div>
-                </div>
+            <div class="home-tile">
+                <div class="home-tile__icon">📌</div>
+                <div class="metric-label">오늘 푼 문제</div>
+                <div class="metric-value" id="statTodaySolved" th:text="${todaySolvedCount != null ? todaySolvedCount : 0}">0</div>
+                <div class="metric-sub">My Questions에서 계속 풀기</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon" style="background:#fef3c7;">👤</div>
-                <div>
-                    <div style="font-size:12px; color:#6b7280;">내 페이지</div>
-                    <a class="btn btn-outline" href="/profile" style="padding:6px 10px;">바로 가기</a>
-                </div>
+            <div class="home-tile">
+                <div class="home-tile__icon">👤</div>
+                <div class="metric-label">내 페이지</div>
+                <div class="metric-sub">프로필과 통계를 확인하세요.</div>
+                <a class="ghost-link" href="/profile" style="width:max-content;">바로 가기</a>
             </div>
         </div>
 

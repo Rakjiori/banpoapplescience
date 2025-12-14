@@ -76,7 +76,13 @@ public class QuizController {
 
     int totalPages = pageData.getTotalPages() == 0 ? 1 : pageData.getTotalPages();
 
-    model.addAttribute("questions", pageData.getContent());
+    List<QuizQuestion> questionList = pageData.getContent();
+    QuizQuestion firstQuestion = questionList.stream()
+            .filter(q -> !q.isSolved())
+            .findFirst()
+            .orElse(questionList.isEmpty() ? null : questionList.get(0));
+
+    model.addAttribute("questions", questionList);
     model.addAttribute("currentPage", pageData.getNumber());
     model.addAttribute("totalPages", totalPages);
     model.addAttribute("hasPrevious", pageData.hasPrevious());
@@ -85,9 +91,9 @@ public class QuizController {
     model.addAttribute("folders", folders);
     model.addAttribute("selectedFolder", folder);
     model.addAttribute("friends", friendService.myFriends(user));
-    if (!pageData.isEmpty()) {
-        QuizQuestion first = pageData.getContent().get(0);
-        model.addAttribute("firstChoiceList", extractChoices(first.getChoices()));
+    if (firstQuestion != null) {
+        model.addAttribute("firstQuestion", firstQuestion);
+        model.addAttribute("firstChoiceList", extractChoices(firstQuestion.getChoices()));
     }
     String folderQuery = (folder != null) ? "?folderId=" + folder.getId() : "";
     model.addAttribute("folderQuery", folderQuery);
@@ -156,6 +162,7 @@ public class QuizController {
         model.addAttribute("questionList", loadQuestionList(user, folder));
         model.addAttribute("discussionGroupId", groupId);
         model.addAttribute("discussionQuestionId", discussionQuestionId);
+        model.addAttribute("groupId", groupId);
         model.addAttribute("currentUserId", user.getId());
         model.addAttribute("currentUserAvatar", user.getAvatar());
         return "quiz_solve";
@@ -239,6 +246,7 @@ public class QuizController {
     public String submitQuiz(@PathVariable Long id,
                              @RequestParam("answer") String userAnswer,
                              @RequestParam(value = "folderId", required = false) Long folderId,
+                             @RequestParam(value = "groupId", required = false) Long groupId,
                              Principal principal,
                              Model model,
                              RedirectAttributes rttr) {
@@ -281,6 +289,7 @@ public class QuizController {
         model.addAttribute("selectedFolder", folder);
         model.addAttribute("folders", folderRepository.findByUserOrderByCreatedAtAsc(user));
         model.addAttribute("questionList", loadQuestionList(user, folder));
+        model.addAttribute("groupId", groupId);
 
         QuizQuestion next = findNextPendingQuestion(user, folder);
         if (next != null) {
@@ -318,17 +327,6 @@ public class QuizController {
 
         q.setSolved(true);
         q.setCorrect(isCorrect);
-
-        // 맞은 문제/틀린 문제 폴더로 자동 분류
-        String targetFolderName = isCorrect ? "맞은 문제" : "틀린 문제";
-        Folder targetFolder = folderRepository.findByUserAndName(user, targetFolderName)
-                .orElseGet(() -> {
-                    Folder f = new Folder();
-                    f.setName(targetFolderName);
-                    f.setUser(user);
-                    return folderRepository.save(f);
-                });
-        q.setFolder(targetFolder);
         quizQuestionRepository.save(q);
         userService.recordSolve(user, isCorrect);
 
