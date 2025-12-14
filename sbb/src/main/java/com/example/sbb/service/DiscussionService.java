@@ -40,6 +40,25 @@ public class DiscussionService {
         return discussionRepository.findByQuestionOrderByCreatedAtAsc(question);
     }
 
+    @Transactional(readOnly = true)
+    public QuestionDiscussion getComment(Long id) {
+        if (id == null) return null;
+        return discussionRepository.findById(id).orElse(null);
+    }
+
+    @Transactional
+    public QuestionDiscussion updateComment(QuestionDiscussion comment, String content) {
+        if (comment == null || content == null || content.isBlank()) return null;
+        comment.setContent(content.trim());
+        return discussionRepository.save(comment);
+    }
+
+    @Transactional
+    public void deleteComment(QuestionDiscussion comment) {
+        if (comment == null) return;
+        discussionRepository.delete(comment);
+    }
+
     @Transactional
     public QuestionDiscussion addComment(QuizQuestion question, SiteUser user, String content) {
         if (question == null || user == null || content == null || content.isBlank()) return null;

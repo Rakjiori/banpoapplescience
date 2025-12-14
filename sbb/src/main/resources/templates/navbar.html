@@ -1,7 +1,10 @@
 <!-- templates/navbar.html -->
 <nav class="navbar" th:fragment="nav">
   <div class="navbar-inner">
-    <a class="brand" href="/">PD FAI</a>
+    <a class="brand" th:href="@{/}">
+      <img th:src="@{/image/logo.jpg}" alt="PD FAI 로고" class="brand-logo">
+      PD FAI
+    </a>
 
     <ul class="nav-links">
       <li><a href="/">Home</a></li>

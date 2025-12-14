@@ -156,6 +156,8 @@ public class QuizController {
         model.addAttribute("questionList", loadQuestionList(user, folder));
         model.addAttribute("discussionGroupId", groupId);
         model.addAttribute("discussionQuestionId", discussionQuestionId);
+        model.addAttribute("currentUserId", user.getId());
+        model.addAttribute("currentUserAvatar", user.getAvatar());
         return "quiz_solve";
     }
 

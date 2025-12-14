@@ -65,7 +65,7 @@
     <div class="card" th:if="${question != null}">
         <div class="question-header-banner">
             <div class="question-number-box"
-                 th:classappend="${ans} ? ' success' : ' danger'">
+                 th:classappend="${correct} ? ' success' : ' danger'">
                 <span th:text="'문제 ' + ${question.numberTag}">문제 1</span>
             </div>
             <span th:if="${correct}" class="question-tag success">정답! 🎉</span>
