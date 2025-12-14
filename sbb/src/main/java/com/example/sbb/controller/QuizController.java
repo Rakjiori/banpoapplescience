@@ -1,6 +1,7 @@
 package com.example.sbb.controller;
 
 import com.example.sbb.domain.Folder;
+import com.example.sbb.domain.quiz.QuestionDiscussion;
 import com.example.sbb.domain.quiz.QuizQuestion;
 import com.example.sbb.domain.user.SiteUser;
 import com.example.sbb.domain.user.UserService;
@@ -22,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 
 import java.security.Principal;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -188,6 +190,46 @@ public class QuizController {
         }
         discussionService.addComment(q, user, content);
         return "redirect:/quiz/discussion/" + id;
+    }
+
+    @GetMapping("/discussion/{id}/list")
+    @ResponseBody
+    public ResponseEntity<?> listDiscussionInline(@PathVariable Long id,
+                                                  Principal principal) {
+        if (principal == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        SiteUser user = userService.getUser(principal.getName());
+        QuizQuestion q = discussionService.getOwnedQuestion(user, id);
+        if (q == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).body("no question");
+        List<QuestionDiscussion> comments = discussionService.list(q);
+        List<DiscussionDto> dto = comments.stream()
+                .map(c -> new DiscussionDto(
+                        c.getId(),
+                        c.getUser().getUsername(),
+                        c.getContent(),
+                        c.getCreatedAt() != null ? c.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm")) : ""
+                ))
+                .toList();
+        return ResponseEntity.ok(dto);
+    }
+
+    @PostMapping("/discussion/{id}/add")
+    @ResponseBody
+    public ResponseEntity<?> addDiscussionInline(@PathVariable Long id,
+                                                 @RequestParam("content") String content,
+                                                 Principal principal) {
+        if (principal == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        SiteUser user = userService.getUser(principal.getName());
+        QuizQuestion q = discussionService.getOwnedQuestion(user, id);
+        if (q == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).body("no question");
+        QuestionDiscussion saved = discussionService.addComment(q, user, content);
+        if (saved == null) return ResponseEntity.badRequest().body("invalid");
+        DiscussionDto dto = new DiscussionDto(
+                saved.getId(),
+                saved.getUser().getUsername(),
+                saved.getContent(),
+                saved.getCreatedAt() != null ? saved.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm")) : ""
+        );
+        return ResponseEntity.ok(dto);
     }
 
     // 답 제출
@@ -386,4 +428,6 @@ public class QuizController {
             return normalizedValue;
         }
     }
+
+    public record DiscussionDto(Long id, String username, String content, String createdAt) {}
 }

@@ -113,12 +113,30 @@
         </form>
     </div>
 
-    <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-start;">
-        <a th:if="${discussionGroupId != null and discussionQuestionId != null}"
-           th:href="@{/groups/{gid}/discussion/{qid}(gid=${discussionGroupId},qid=${discussionQuestionId})}"
-           class="btn btn-outline">토론</a>
-        <a th:if="${discussionGroupId == null or discussionQuestionId == null}"
-           th:href="@{/quiz/discussion/{id}(id=${question.id})}"
+    <div th:if="${discussionGroupId != null and discussionQuestionId != null}"
+         class="card"
+         style="margin-top:16px; padding:12px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:12px;"
+         th:attr="data-group-id=${discussionGroupId}, data-question-id=${discussionQuestionId}"
+         data-role="group-discussion">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="font-weight:700;">그룹 토론</div>
+            <small style="color:#6b7280;">버튼 없이 바로 댓글을 남길 수 있어요.</small>
+        </div>
+        <div data-role="list" style="display:flex; flex-direction:column; gap:8px;"></div>
+        <div data-role="empty" style="color:#6b7280;">첫 댓글을 남겨 보세요.</div>
+        <form data-role="form" style="display:flex; gap:8px; margin-top:10px; align-items:flex-start;">
+            <textarea data-role="input"
+                      rows="2"
+                      style="flex:1; padding:10px; border:1px solid #d1d5db; border-radius:10px; resize:vertical; font-family:'Noto Sans KR','Segoe UI',sans-serif;"
+                      placeholder="생각을 공유해 보세요"></textarea>
+            <button type="submit" class="btn" style="padding:10px 14px; flex:0 0 auto;">등록</button>
+        </form>
+        <div data-role="error" style="display:none; margin-top:6px; color:#dc2626; font-size:13px;"></div>
+    </div>
+
+    <div th:if="${discussionGroupId == null or discussionQuestionId == null}"
+         style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-start;">
+        <a th:href="@{/quiz/discussion/{id}(id=${question.id})}"
            class="btn btn-outline">토론</a>
     </div>
 
@@ -192,6 +210,118 @@
                 if (link) window.location.href = link;
             });
         });
+
+        // 그룹 인라인 토론 (그룹 풀 때만 존재)
+        const discussionCard = document.querySelector('[data-role="group-discussion"]');
+        if (discussionCard) {
+            const groupId = discussionCard.dataset.groupId;
+            const questionId = discussionCard.dataset.questionId;
+            const listEl = discussionCard.querySelector('[data-role="list"]');
+            const emptyEl = discussionCard.querySelector('[data-role="empty"]');
+            const formEl = discussionCard.querySelector('[data-role="form"]');
+            const inputEl = discussionCard.querySelector('[data-role="input"]');
+            const errorEl = discussionCard.querySelector('[data-role="error"]');
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.content || '';
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
+
+            const myName = document.querySelector('meta[name=\"author\"]')?.content || '';
+            const render = (items = []) => {
+                if (!listEl || !emptyEl) return;
+                listEl.innerHTML = '';
+                if (!items.length) {
+                    emptyEl.style.display = 'block';
+                    return;
+                }
+                emptyEl.style.display = 'none';
+                items.forEach(item => {
+                    const isMine = myName && item.username === myName;
+                    const wrapper = document.createElement('div');
+                    wrapper.style.cssText = 'display:flex; gap:8px; justify-content:' + (isMine ? 'flex-end' : 'flex-start') + ';';
+
+                    const bubble = document.createElement('div');
+                    bubble.style.cssText = [
+                        'max-width:76%',
+                        'padding:8px 10px',
+                        'border-radius:12px',
+                        isMine ? 'border:1px solid #c7d2fe; background:#eef2ff;' : 'border:1px solid #e5e7eb; background:#fff;',
+                        'font-family:"Noto Sans KR","Segoe UI",sans-serif',
+                        'box-shadow:0 6px 12px rgba(0,0,0,0.05)'
+                    ].join(';');
+
+                    const avatarIcon = (item.avatar || '').trim() || localStorage.getItem('profileAvatar') || '😊';
+                    const avatar = document.createElement('div');
+                    avatar.style.cssText = 'width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:#f3f4f6;font-size:20px;';
+                    avatar.textContent = avatarIcon;
+
+                    bubble.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                            <strong style="font-size:13px; color:${isMine ? '#3730a3' : '#111827'};">${item.username || 'user'}</strong>
+                            <span style="color:#9ca3af; font-size:11px;">${item.createdAt || ''}</span>
+                        </div>
+                        <div style="margin-top:4px; white-space:pre-wrap; color:#374151; font-size:14px; line-height:1.45;">${item.content || ''}</div>
+                    `;
+
+                    if (isMine) {
+                        wrapper.append(bubble, avatar);
+                    } else {
+                        wrapper.append(avatar, bubble);
+                    }
+                    listEl.appendChild(wrapper);
+                });
+            };
+
+            const load = async () => {
+                if (!groupId || !questionId) return;
+                if (listEl) listEl.innerHTML = '<div style="color:#6b7280;">댓글을 불러오는 중...</div>';
+                if (errorEl) {
+                    errorEl.style.display = 'none';
+                    errorEl.textContent = '';
+                }
+                try {
+                    const res = await fetch(`/groups/${groupId}/discussion/${questionId}/list`, {
+                        headers: csrfToken ? { [csrfHeader]: csrfToken } : {}
+                    });
+                    if (!res.ok) throw new Error();
+                    const data = await res.json();
+                    render(Array.isArray(data) ? data : []);
+                } catch (e) {
+                    if (errorEl) {
+                        errorEl.style.display = 'block';
+                        errorEl.textContent = '댓글을 불러오지 못했습니다.';
+                    }
+                    render([]);
+                }
+            };
+
+            if (formEl && inputEl) {
+                formEl.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const content = inputEl.value.trim();
+                    if (!content) return;
+                    const body = new URLSearchParams();
+                    body.append('content', content);
+                    const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+                    if (csrfToken) headers[csrfHeader] = csrfToken;
+                    try {
+                        const res = await fetch(`/groups/${groupId}/discussion/${questionId}/add`, {
+                            method: 'POST',
+                            headers,
+                            body: body.toString()
+                        });
+                        if (!res.ok) throw new Error();
+                        inputEl.value = '';
+                        await load();
+                    } catch (err) {
+                        if (errorEl) {
+                            errorEl.style.display = 'block';
+                            errorEl.textContent = '댓글 등록에 실패했습니다.';
+                        }
+                    }
+                });
+            }
+
+            load();
+        }
     });
 </script>
 </body>

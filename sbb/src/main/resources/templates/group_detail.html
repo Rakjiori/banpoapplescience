@@ -18,22 +18,18 @@
                     공유자: <span th:text="${item.sharedBy.username}"></span>
                     · <span th:text="${#temporals.format(item.sharedAt, 'yyyy.MM.dd HH:mm')}"></span>
                 </span>
-                <form th:action="@{/groups/use-shared/{id}(id=${item.id})}" method="post" style="margin:0;">
+                <form th:action="@{/groups/use-shared/{id}(id=${item.id})}" method="post" style="margin:0; display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                    <div style="display:flex; gap:6px;">
-                        <button type="submit" class="btn btn-outline" style="padding:6px 12px;">풀기</button>
-                        <a th:href="@{/groups/{groupId}/discussion/{questionId}(groupId=${group.id},questionId=${item.question.id})}"
-                           class="btn btn-outline"
-                           style="padding:6px 12px;">토론</a>
-                        <button th:if="${isOwner}"
-                                th:formaction="@{/groups/shared/{id}/delete(id=${item.id})}"
-                                formmethod="post"
-                                class="btn btn-outline"
-                                style="padding:6px 12px;"
-                                onclick="return confirm('공유된 문제를 삭제할까요?');">삭제</button>
-                    </div>
+                    <button type="submit" class="btn btn-outline" style="padding:6px 12px;">풀기</button>
+                    <button th:if="${isOwner}"
+                            th:formaction="@{/groups/shared/{id}/delete(id=${item.id})}"
+                            formmethod="post"
+                            class="btn btn-outline"
+                            style="padding:6px 12px;"
+                            onclick="return confirm('공유된 문제를 삭제할까요?');">삭제</button>
                 </form>
             </div>
+
         </div>
     </div>
 

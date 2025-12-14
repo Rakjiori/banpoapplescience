@@ -401,6 +401,8 @@
         </div>
 
         <p id="inlineResultMessage" style="margin-top:10px; font-size:14px;"></p>
+        <div id="inlineExplanation" style="display:none; margin-top:6px; padding:10px; border-radius:8px; background:#f9fafb; color:#374151; font-size:14px; white-space:pre-wrap;"></div>
+
     </div>
 
     <div th:if="${memberships != null and !#lists.isEmpty(memberships) and firstQuestion != null}" class="card" style="margin-top:14px;">
@@ -465,6 +467,7 @@
                  th:data-answer="${q.answer}"
                  th:data-multiple-choice="${q.multipleChoice or (q.choices != null and !#strings.isEmpty(q.choices))}"
                  th:data-choices="${q.choices}"
+                 th:data-explanation="${q.explanation}"
                  th:data-correct-state="${q.correct == null ? 'pending' : (q.correct ? 'correct' : 'wrong')}"
                  th:data-folder-id="${q.folder != null ? q.folder.id : ''}">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -601,6 +604,7 @@
                 date: card.dataset.date || '',
                 text: card.dataset.text || '',
                 answer: card.dataset.answer || '',
+                explanation: card.dataset.explanation || '',
                 multipleChoice: card.dataset.multipleChoice === 'true' || hasChoices,
                 choices: parseChoices(card.dataset.choices || ''),
                 correctState: solvedState[id] || card.dataset.correctState || 'pending',
@@ -619,6 +623,7 @@
         const dateLabel = document.getElementById('questionDateLabel');
         const textEl = document.getElementById('questionTextContent');
         const resultMsg = document.getElementById('inlineResultMessage');
+        const explanationEl = document.getElementById('inlineExplanation');
         const checkBtn = document.getElementById('interactiveCheck');
         const nextBtn = document.getElementById('nextQuestionButton');
         const bookmarkButton = document.getElementById('bookmarkButton');
@@ -649,8 +654,6 @@
             if (Number.isNaN(date.getTime())) return '';
             return date.toLocaleString();
         };
-
-        // (My Questions에서는 토론 기능 제거)
 
         let currentIndex = 0;
         let selectedValue = '';
@@ -691,6 +694,10 @@
             if (resultMsg) {
                 resultMsg.textContent = '';
                 resultMsg.style.color = '#111827';
+            }
+            if (explanationEl) {
+                explanationEl.style.display = 'none';
+                explanationEl.textContent = '';
             }
             if (subjectiveInput) subjectiveInput.value = '';
            if (bookmarkButton && bookmarkLabel) {
@@ -783,6 +790,14 @@
             if (resultMsg) {
                 resultMsg.style.color = isCorrect ? '#16a34a' : '#dc2626';
                 resultMsg.textContent = isCorrect ? '정답입니다! 👏' : '아쉬워요! 정답을 확인해 보세요.';
+            }
+            if (!isCorrect && explanationEl) {
+                const explanation = (q.explanation || '').trim();
+                explanationEl.style.display = 'block';
+                explanationEl.textContent = explanation ? `해설: ${explanation}` : '해설이 아직 등록되지 않았어요.';
+            } else if (explanationEl) {
+                explanationEl.style.display = 'none';
+                explanationEl.textContent = '';
             }
 
             if (csrfToken && q.id) {
@@ -886,6 +901,14 @@
             alert('함께 풀기 요청을 보냈습니다.');
             toggleShareModal(false);
         });
+        // 공유 대상 없으면 버튼 비활성화
+        if (shareFriendList && sendShareButton) {
+            const hasOption = shareFriendList.querySelector('input[name="shareFriendIds"]');
+            if (!hasOption) {
+                sendShareButton.disabled = true;
+                sendShareButton.textContent = '친구가 없습니다';
+            }
+        }
 
         const renderList = (container, listEl, items, color) => {
             if (!container || !listEl) return;
