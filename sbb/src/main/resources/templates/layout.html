@@ -5,7 +5,7 @@
 
 <head>
   <meta charset="utf-8">
-  <title>PD FAI - PDF 기반 문제 생성 서비스</title>
+  <title>애플과학 | 과학 전문 학원</title>
   <meta name="_csrf" th:content="${_csrf.token}"/>
   <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
   <meta name="author" th:content="${#authentication != null ? #authentication.name : ''}"/>
@@ -21,7 +21,7 @@
   <div th:replace="navbar :: nav"></div>
 
   <!-- 메인 컨텐츠 영역 -->
-  <main class="container">
+  <main class="container" th:classappend="${pageClass} != null ? ' ' + pageClass : ''">
       <th:block th:replace="${body}"></th:block>
   </main>
 
@@ -30,13 +30,12 @@
     <div class="footer-inner">
 
       <div class="footer-left">
-        <div class="footer-title">PD FAI</div>
+        <div class="footer-title">애플과학</div>
         <div class="footer-line">
-          문의사항:
-          <a href="mailto:ericrak@naver.com">ericrak@naver.com</a>
+          문의: <a href="tel:02-532-1706">02-532-1706</a>
         </div>
         <div class="footer-line">
-          개발자: 최봉규 · 김성락
+          서울 서초구 신반포로 189 반포쇼핑타운 4동 402호
         </div>
       </div>
 
@@ -44,7 +43,7 @@
         <a class="footer-link"
            href="https://github.com/grapebongbongs/TeamOpenSource_Springboot"
            target="_blank" rel="noopener noreferrer">
-          GitHub Repository
+          학습 포털 바로가기
         </a>
       </div>
 

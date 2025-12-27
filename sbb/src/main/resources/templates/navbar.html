@@ -2,22 +2,23 @@
 <nav class="navbar" th:fragment="nav">
   <div class="navbar-inner">
     <a class="brand" th:href="@{/}">
-      <img th:src="@{/image/logo.jpg}" alt="PD FAI 로고" class="brand-logo">
-      PD FAI
+      <span class="brand-mark">🍏</span>
+      <div class="brand-text">
+        <div class="brand-name">애플과학</div>
+        <div class="brand-sub">Banpo Apple Science</div>
+      </div>
     </a>
 
     <ul class="nav-links">
-      <li><a href="/">Home</a></li>
-      <li><a href="/folders">My Folders</a></li>
-      <li><a href="/quiz/list">My Questions</a></li>
-      <li><a href="/groups">Study Groups</a></li>
-      <li><a href="/shop">Shop</a></li>
-      <li><a href="/stats">Stats</a></li>
-      
+      <li><a th:href="@{/#schedule}" data-scroll>시간표</a></li>
+      <li><a th:href="@{/#notice}" data-scroll>공지사항</a></li>
+      <li><a th:href="@{/#reviews}" data-scroll>수강후기</a></li>
+      <li><a th:href="@{/#location}" data-scroll>오시는길</a></li>
     </ul>
 
     <!-- 우측 로그인/상태 -->
-    <div class="user-status">
+    <div class="user-status nav-actions">
+      <a class="nav-pill ghost" th:href="@{/quiz/list}">학습 포털</a>
       <div class="notif-wrapper" th:if="${#authorization.expression('isAuthenticated()')}">
         <button type="button" class="icon-button" id="notificationBell">
           <span class="bell-icon" aria-hidden="true">🔔</span>
@@ -67,9 +68,10 @@
           </div>
         </div>
       </div>
-      <span th:if="${#authorization.expression('!isAuthenticated()')}">
-        <a href="/login">로그인</a> | <a href="/signup">회원가입</a>
-      </span>
+      <div class="nav-auth" th:if="${#authorization.expression('!isAuthenticated()')}">
+        <a class="nav-pill solid" href="/login">Login</a>
+        <a class="nav-pill outline" href="/signup">회원가입</a>
+      </div>
     </div>
   </div>
 </nav>
