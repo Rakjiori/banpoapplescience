@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko"
+      th:replace="layout :: layout(~{::body})">
+<body>
+<div>
+    <section class="group-hero">
+        <div class="group-hero__eyebrow">Progress</div>
+        <div class="group-hero__heading">
+            <h1 class="page-title">내 통계</h1>
+            <p class="group-hero__text">과목별 정확도, 약점, 뱃지와 레벨을 한눈에 확인하세요.</p>
+        </div>
+        <div class="group-hero__stats">
+            <div class="stat-chip">
+                레벨 <strong th:text="${level}">1</strong> · <span th:text="${tier}">Rookie</span>
+            </div>
+            <div class="stat-chip stat-chip--ghost">
+                총 풀이 <strong th:text="${stats.totalSolved()}">0</strong>개
+            </div>
+            <div class="stat-chip stat-chip--ghost">
+                연속 풀이 <strong th:text="${stats.currentStreak()}">0</strong>일
+            </div>
+        </div>
+    </section>
+
+    <div class="metric-grid">
+        <div class="metric-card">
+            <div class="metric-label">총 풀이</div>
+            <div class="metric-value" th:text="${stats.totalSolved()}">0</div>
+            <div class="metric-sub">정답: <span th:text="${stats.totalCorrect()}">0</span></div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">오늘 푼 문제</div>
+            <div class="metric-value" th:text="${stats.todaySolved()}">0</div>
+            <div class="metric-sub">오늘 학습 시간: <span th:text="${stats.todaySeconds() / 60} + 'm'">0m</span></div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">연속 풀이</div>
+            <div class="metric-value" th:text="${stats.currentStreak()}">0</div>
+            <div class="metric-sub">최대 연속 정답: <span th:text="${stats.maxCorrectStreak()}">0</span></div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">활성 뱃지</div>
+            <div class="metric-value" th:text="${activeBadgeName != null ? activeBadgeName : '자라나는 새싹'}">자라나는 새싹</div>
+            <div class="metric-sub">필요 조건을 채우면 자동 해금</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">경험치</div>
+            <div class="metric-value" th:text="|${xpGraph[0]} XP|">0 XP</div>
+            <div class="metric-sub">다음 레벨까지: <span th:text="|${xpGraph[1]}%|">0%</span></div>
+            <div class="progress-track">
+                <div class="progress-fill" th:style="|width:${xpGraph[1]}%;|"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="surface-grid">
+        <div class="surface-card stack">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+                <div>
+                    <div class="group-action__title">과목별 정확도</div>
+                    <p class="group-action__desc" style="margin:2px 0 0;">폴더별 풀이/정답 현황을 확인하세요.</p>
+                </div>
+                <div class="pill-soft" th:text="${weakness != null ? '약점: ' + weakness.folderName : '데이터 수집 중'}">약점</div>
+            </div>
+            <table class="stats-table">
+                <thead>
+                <tr><th>과목</th><th>풀이</th><th>정답</th><th>정확도</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="f : ${stats.folderStats()}">
+                    <td th:text="${f.folderName}">folder</td>
+                    <td th:text="${f.solved}">0</td>
+                    <td th:text="${f.correct}">0</td>
+                    <td th:text="${f.accuracy + '%'}">0%</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(stats.folderStats())}">
+                    <td colspan="4" style="color:#6b7280;">아직 데이터가 없습니다.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="surface-card stack">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+                <div class="group-action__title">보유 뱃지</div>
+                <a class="ghost-link" href="/shop">상점으로 이동</a>
+            </div>
+            <div class="badge-grid">
+                <div th:each="b : ${badges}"
+                     th:if="${b.unlocked()}"
+                     class="badge-chip"
+                     th:classappend="${b.equipped()} ? ' is-active' : ''">
+                    <div style="display:flex; justify-content:space-between; gap:8px; align-items:center;">
+                        <div style="font-weight:700;" th:text="${b.name()}">이름</div>
+                        <span class="pill-soft" th:if="${b.equipped()}" style="background:#eef2ff; color:#111827;">장착중</span>
+                    </div>
+                    <div class="selection-meta" th:text="${b.desc()}">설명</div>
+                </div>
+            </div>
+            <div th:if="${#lists.isEmpty(badges)}" class="selection-meta">아직 보유한 뱃지가 없습니다.</div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

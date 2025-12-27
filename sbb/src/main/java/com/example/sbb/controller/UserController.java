@@ -22,9 +22,8 @@ public class UserController {
     @PostMapping("/signup")
     public String signupSubmit(@RequestParam String username,
                                @RequestParam String password,
-                               @RequestParam String email,
                                Model model) {
-        userService.createUser(username, password, email);
+        userService.createUser(username, password);
         model.addAttribute("msg", "회원가입 완료!");
         return "redirect:/login";
     }

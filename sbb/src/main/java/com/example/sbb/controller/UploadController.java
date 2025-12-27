@@ -1,43 +1,73 @@
 package com.example.sbb.controller;
 
 import com.example.sbb.domain.document.DocumentFile;
+import com.example.sbb.domain.document.DocumentService;
+import com.example.sbb.domain.Folder;
+import com.example.sbb.domain.quiz.QuizQuestion;
 import com.example.sbb.domain.user.SiteUser;
 import com.example.sbb.domain.user.UserService;
 import com.example.sbb.repository.DocumentFileRepository;
+import com.example.sbb.repository.FolderRepository;
+import com.example.sbb.repository.GroupSharedQuestionRepository;
+import com.example.sbb.repository.ProblemRepository;
+import com.example.sbb.repository.QuizQuestionRepository;
+import com.example.sbb.repository.PendingNotificationRepository;
+import com.example.sbb.repository.FriendShareRequestRepository;
 import com.example.sbb.service.GeminiQuestionService;
+import com.example.sbb.service.QuizService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/document")
 @RequiredArgsConstructor
 public class UploadController {
 
-    // 업로드 경로
+    // 프로젝트 루트 기준 uploads 폴더
     private static final String DIR =
             System.getProperty("user.dir") + File.separator + "uploads";
 
     private final DocumentFileRepository documentFileRepository;
     private final UserService userService;
     private final GeminiQuestionService geminiQuestionService;
+    private final QuizService quizService;
+    private final QuizQuestionRepository quizQuestionRepository;
+    private final DocumentService documentService;
+    private final FolderRepository folderRepository;
+    private final ProblemRepository problemRepository;
+    private final GroupSharedQuestionRepository sharedQuestionRepository;
+    private final PendingNotificationRepository pendingNotificationRepository;
+    private final FriendShareRequestRepository friendShareRequestRepository;
 
     // ===========================
-    // 업로드 FORM
+    // 업로드 폼
     // ===========================
     @GetMapping("/upload")
-    public String form() {
+    public String form(@RequestParam(value = "folderId", required = false) Long folderId,
+                       Model model,
+                       Principal principal) {
+        if (principal == null) {
+            return "redirect:/user/login";
+        }
+
+        SiteUser user = userService.getUser(principal.getName());
+        model.addAttribute("folders", folderRepository.findByUserOrderByCreatedAtAsc(user));
+        model.addAttribute("selectedFolderId", folderId);
         return "document_upload";
     }
 
@@ -46,133 +76,408 @@ public class UploadController {
     // ===========================
     @PostMapping("/upload")
     public String upload(@RequestParam("pdfFile") MultipartFile file,
+                         @RequestParam(value = "folderId", required = false) Long folderId,
                          Principal principal) {
 
         try {
-            if (principal == null) return "redirect:/login";
+            // 로그인 체크
+            if (principal == null) {
+                return "redirect:/user/login";
+            }
 
-            if (file == null || file.isEmpty()) return "redirect:/document/upload";
+            // 파일 체크
+            if (file == null || file.isEmpty()) {
+                return redirectToList(folderId);
+            }
 
-            // 업로드 폴더 생성
+            // 업로드 폴더 준비
             File dir = new File(DIR);
             if (!dir.exists()) dir.mkdirs();
 
+            // 파일명 구성
             String originalName = file.getOriginalFilename();
             String storedName = System.currentTimeMillis() + "_" + originalName;
+            byte[] fileBytes = file.getBytes();
 
+            // 실제 저장
             File dest = new File(dir, storedName);
             file.transferTo(dest);
 
-            // DB 저장
+            // 현재 유저 조회
             SiteUser user = userService.getUser(principal.getName());
-            String relativePath = "uploads" + File.separator + storedName;
+            Folder selectedFolder = null;
+            if (folderId != null) {
+                selectedFolder = folderRepository.findByIdAndUser(folderId, user).orElse(null);
+            }
 
+            // DocumentFile 엔티티 생성 및 저장
             DocumentFile doc = new DocumentFile(
-                    originalName, storedName, relativePath, file.getSize(), user
+                    originalName,
+                    storedName,
+                    file.getSize(),
+                    user
             );
             doc.setUploadedAt(LocalDateTime.now());
+            if (selectedFolder != null) {
+                doc.setFolder(selectedFolder);
+            }
 
-            documentFileRepository.save(doc);
+            DocumentFile saved = documentFileRepository.save(doc);
 
-            return "redirect:/document/list";
+            // PDF 텍스트 추출 → 스케줄러가 활용할 수 있도록 DB에 저장
+            try {
+                String extracted = documentService.extractText(fileBytes);
+                saved.setExtractedText(extracted);
+                documentFileRepository.save(saved);
+            } catch (Exception extractEx) {
+                extractEx.printStackTrace();
+            }
+
+            String redirectSuffix = (selectedFolder != null) ? "?folderId=" + selectedFolder.getId() : "";
+            return "redirect:/document/list" + redirectSuffix;
 
         } catch (Exception e) {
             e.printStackTrace();
-            return "redirect:/document/upload";
+            return redirectToList(folderId);
         }
     }
 
     // ===========================
-    // PDF 목록 보기
+    // 내 PDF 목록
     // ===========================
     @GetMapping("/list")
-    public String list(Model model, Principal principal) {
+    public String list(@RequestParam(value = "folderId", required = false) Long folderId,
+                       Model model,
+                       Principal principal) {
 
-        if (principal == null) return "redirect:/login";
+        if (principal == null) {
+            return "redirect:/user/login";
+        }
 
         SiteUser user = userService.getUser(principal.getName());
-        List<DocumentFile> files = documentFileRepository.findByUser(user);
+        Folder selectedFolder = null;
+        if (folderId != null) {
+            selectedFolder = folderRepository.findByIdAndUser(folderId, user).orElse(null);
+        }
 
+        List<DocumentFile> files = (selectedFolder != null)
+                ? documentFileRepository.findByUserAndFolder(user, selectedFolder)
+                : documentFileRepository.findByUser(user);
+
+        model.addAttribute("folders", folderRepository.findByUserOrderByCreatedAtAsc(user));
+        model.addAttribute("selectedFolder", selectedFolder);
         model.addAttribute("files", files);
         return "document_list";
     }
 
     // ===========================
-    // PDF 삭제
+    // PDF 내용 요약
+    // ===========================
+    @GetMapping("/summary/{id}")
+    public String summary(@PathVariable Long id,
+                          @RequestParam(value = "folderId", required = false) Long folderId,
+                          Principal principal,
+                          Model model,
+                          RedirectAttributes rttr) {
+
+        if (principal == null) {
+            return "redirect:/user/login";
+        }
+
+        DocumentFile file = documentFileRepository.findById(id).orElse(null);
+        if (file == null) {
+            rttr.addFlashAttribute("error", "요약할 파일을 찾을 수 없습니다.");
+            return redirectToList(folderId);
+        }
+        if (file.getUser() == null ||
+                !principal.getName().equals(file.getUser().getUsername())) {
+            rttr.addFlashAttribute("error", "이 PDF에 접근할 권한이 없습니다.");
+            return redirectToList(folderId);
+        }
+
+        String text = file.getExtractedText();
+        if (text == null || text.isBlank()) {
+            try {
+                Path path = Paths.get(System.getProperty("user.dir"), "uploads", file.getStoredFilename());
+                if (Files.exists(path)) {
+                    text = documentService.extractText(path);
+                    file.setExtractedText(text);
+                    documentFileRepository.save(file);
+                }
+            } catch (Exception e) {
+                text = null;
+            }
+        }
+
+        String summary;
+        boolean usedFallback = false;
+        String summarySource = "Gemini 요약";
+
+        if (text == null || text.isBlank()) {
+            summary = "PDF에서 텍스트를 읽을 수 없어 요약할 수 없습니다.";
+            usedFallback = true;
+            summarySource = "텍스트 없음";
+        } else {
+            summary = geminiQuestionService.summarizeText(text, file.getOriginalFilename());
+            if (geminiQuestionService.isFailure(summary)) {
+                summary = buildLocalSummary(text);
+                usedFallback = true;
+                summarySource = "로컬 요약 (오프라인)";
+            }
+        }
+
+        Long backFolderId = (folderId != null)
+                ? folderId
+                : (file.getFolder() != null ? file.getFolder().getId() : null);
+
+        model.addAttribute("file", file);
+        model.addAttribute("summary", summary);
+        model.addAttribute("usedFallback", usedFallback);
+        model.addAttribute("summarySource", summarySource);
+        model.addAttribute("folderId", backFolderId);
+        model.addAttribute("previewText", buildPreview(text));
+
+        return "document_summary";
+    }
+
+    // ===========================
+    // PDF 삭제 (관련 퀴즈도 같이 삭제)
     // ===========================
     @PostMapping("/delete/{id}")
+    @Transactional
     public String deleteDocument(@PathVariable Long id,
+                                 @RequestParam(value = "folderId", required = false) Long folderId,
                                  Principal principal,
                                  RedirectAttributes rttr) {
 
-        if (principal == null) return "redirect:/login";
+        if (principal == null) {
+            return "redirect:/user/login";
+        }
 
         DocumentFile file = documentFileRepository.findById(id).orElse(null);
-
         if (file == null) {
             rttr.addFlashAttribute("error", "삭제할 파일이 없습니다.");
             return "redirect:/document/list";
         }
 
-        // 실제 파일 삭제
-        try {
-            Path path = Paths.get(System.getProperty("user.dir"), "uploads", file.getStoredFilename());
-
-            if (Files.exists(path)) {
-                Files.delete(path);
-            }
-        } catch (Exception e) {
-            rttr.addFlashAttribute("error", "파일 삭제 오류: " + e.getMessage());
+        if (file.getUser() == null ||
+                !principal.getName().equals(file.getUser().getUsername())) {
+            rttr.addFlashAttribute("error", "삭제 권한이 없습니다.");
             return "redirect:/document/list";
         }
 
-        // DB 삭제
-        documentFileRepository.delete(file);
-
-        rttr.addFlashAttribute("message", "🗑 삭제되었습니다.");
-        return "redirect:/document/list";
+        return forceDeleteDocument(id, folderId, principal, rttr);
     }
 
-
     // ===========================
-    // 📌 리스트에 있는 PDF 전부를 이용하여 즉시 문제 생성
+    // 🔥 리스트에 있는 모든 PDF 기반으로 문제 생성
     // ===========================
     @GetMapping("/makeprob")
-    public String makeProblemFromList(Principal principal, Model model) {
+    public String makeProblemFromList(@RequestParam(value = "stylePrompt", required = false) String stylePrompt,
+                                      @RequestParam(value = "folderId", required = false) Long folderId,
+                                      Principal principal,
+                                      Model model) {
 
-        if (principal == null) return "redirect:/login";
+        if (principal == null) {
+            return "redirect:/user/login";
+        }
 
         SiteUser user = userService.getUser(principal.getName());
-        List<DocumentFile> files = documentFileRepository.findByUser(user);
+        Folder selectedFolder = null;
+        if (folderId != null) {
+            selectedFolder = folderRepository.findByIdAndUser(folderId, user).orElse(null);
+        }
+        List<DocumentFile> files = (selectedFolder != null)
+                ? documentFileRepository.findByUserAndFolder(user, selectedFolder)
+                : documentFileRepository.findByUser(user);
 
         if (files.isEmpty()) {
             model.addAttribute("error", "PDF가 존재하지 않습니다. 먼저 업로드해 주세요.");
+            model.addAttribute("files", files);
+            model.addAttribute("folders", folderRepository.findByUserOrderByCreatedAtAsc(user));
+            model.addAttribute("selectedFolder", selectedFolder);
+            model.addAttribute("stylePrompt", stylePrompt);
             return "document_list";
         }
 
-        List<byte[]> pdfBytesList = new ArrayList<>();
         List<String> names = new ArrayList<>();
+        List<String> textList = new ArrayList<>();
 
-        try {
-            for (DocumentFile file : files) {
-                Path path = Paths.get(System.getProperty("user.dir"), "uploads", file.getStoredFilename());
-                byte[] bytes = Files.readAllBytes(path);
+        for (DocumentFile file : files) {
+            try {
+                String extracted = file.getExtractedText();
 
-                pdfBytesList.add(bytes);
+                // 텍스트가 비어 있으면 업로드된 파일로부터 한 번만 재추출 시도
+                if (extracted == null || extracted.isBlank()) {
+                    Path path = Paths.get(System.getProperty("user.dir"), "uploads", file.getStoredFilename());
+                    if (Files.exists(path)) {
+                        extracted = documentService.extractText(path);
+                        file.setExtractedText(extracted);
+                        documentFileRepository.save(file); // 재추출한 텍스트를 DB에 저장
+                    }
+                }
+
+                if (extracted == null || extracted.isBlank()) {
+                    model.addAttribute("error", "PDF 텍스트를 읽을 수 없습니다: " + file.getOriginalFilename());
+                    model.addAttribute("errorFileId", file.getId());
+                    model.addAttribute("errorFileName", file.getOriginalFilename());
+                    model.addAttribute("files", files);
+                    model.addAttribute("folders", folderRepository.findByUserOrderByCreatedAtAsc(user));
+                    model.addAttribute("selectedFolder", selectedFolder);
+                    model.addAttribute("stylePrompt", stylePrompt);
+                    return "document_list";
+                }
+
+                textList.add(extracted);
                 names.add(file.getOriginalFilename());
+            } catch (Exception e) {
+                model.addAttribute("error", "텍스트 읽기 오류: " + file.getOriginalFilename() + " - " + e.getMessage());
+                model.addAttribute("errorFileId", file.getId());
+                model.addAttribute("errorFileName", file.getOriginalFilename());
+                model.addAttribute("files", files);
+                model.addAttribute("folders", folderRepository.findByUserOrderByCreatedAtAsc(user));
+                model.addAttribute("selectedFolder", selectedFolder);
+                model.addAttribute("stylePrompt", stylePrompt);
+                return "document_list";
             }
-        } catch (Exception e) {
-            model.addAttribute("error", "PDF 읽기 오류: " + e.getMessage());
+        }
+
+        if (textList.isEmpty()) {
+            model.addAttribute("error", "PDF 텍스트가 비어 있어 문제를 만들 수 없습니다.");
+            model.addAttribute("files", files);
+            model.addAttribute("folders", folderRepository.findByUserOrderByCreatedAtAsc(user));
+            model.addAttribute("selectedFolder", selectedFolder);
+            model.addAttribute("stylePrompt", stylePrompt);
             return "document_list";
         }
 
-        // Gemini 문제 생성
-        String questions =
-                geminiQuestionService.generateQuestionsFromMultiplePdfs(pdfBytesList, names);
+        // 1) Gemini에게 저장된 텍스트를 보내서 "문제 텍스트" 생성
+        String rawQuestions =
+                geminiQuestionService.generateQuestionsFromTexts(textList, names, stylePrompt);
 
+        boolean geminiFailed = geminiQuestionService.isFailure(rawQuestions);
+        if (rawQuestions == null || rawQuestions.isBlank()) {
+            model.addAttribute("error", "문제 생성에 실패했습니다. (응답이 비어 있음)");
+            model.addAttribute("files", files);
+            model.addAttribute("folders", folderRepository.findByUserOrderByCreatedAtAsc(user));
+            model.addAttribute("selectedFolder", selectedFolder);
+            model.addAttribute("stylePrompt", stylePrompt);
+            return "document_list";
+        }
+
+        // 2) 그 텍스트를 파싱해서 QuizQuestion 엔티티로 저장
+        List<QuizQuestion> savedQuestions =
+                quizService.saveFromRawText(rawQuestions, user, files, selectedFolder);
+
+        if (savedQuestions.isEmpty()) {
+            String reason = geminiFailed ? rawQuestions : "응답 파싱 실패";
+            if (reason.length() > 400) reason = reason.substring(0, 400) + "...";
+            model.addAttribute("error", "문제 생성 결과를 저장하지 못했습니다. (사유: " + reason + ")");
+            model.addAttribute("files", files);
+            model.addAttribute("folders", folderRepository.findByUserOrderByCreatedAtAsc(user));
+            model.addAttribute("selectedFolder", selectedFolder);
+            model.addAttribute("stylePrompt", stylePrompt);
+            return "document_list";
+        }
+
+        if (geminiFailed) {
+            String snippet = rawQuestions.length() > 200 ? rawQuestions.substring(0, 200) + "..." : rawQuestions;
+            model.addAttribute("message", "Gemini 오류 응답을 기반으로 문제를 저장했습니다. (응답 일부: " + snippet + ")");
+        }
+
+        // 3) 결과 화면으로 전달
         model.addAttribute("originalName", "총 " + names.size() + "개 문서");
-        model.addAttribute("questions", questions);
+        model.addAttribute("questionsRaw", rawQuestions);
+        model.addAttribute("savedCount", savedQuestions.size());
+        model.addAttribute("stylePrompt", stylePrompt);
+        model.addAttribute("selectedFolder", selectedFolder);
 
         return "document_makeprob_result";
     }
+
+    // ===========================
+    // 강제 삭제 (문제 포함)
+    // ===========================
+    @PostMapping("/force-delete/{id}")
+    @Transactional
+    public String forceDeleteDocument(@PathVariable Long id,
+                                      @RequestParam(value = "folderId", required = false) Long folderId,
+                                      Principal principal,
+                                      RedirectAttributes rttr) {
+
+        if (principal == null) {
+            return "redirect:/user/login";
+        }
+
+        DocumentFile file = documentFileRepository.findById(id).orElse(null);
+        if (file == null) {
+            rttr.addFlashAttribute("error", "삭제할 파일이 없습니다.");
+            return "redirect:/document/list";
+        }
+
+        if (file.getUser() == null ||
+                !principal.getName().equals(file.getUser().getUsername())) {
+            rttr.addFlashAttribute("error", "삭제 권한이 없습니다.");
+            return "redirect:/document/list";
+        }
+
+        try {
+            Path path = Paths.get(System.getProperty("user.dir"), "uploads", file.getStoredFilename());
+            Files.deleteIfExists(path);
+
+            // 관련 문제/퀴즈 모두 삭제
+            List<QuizQuestion> docQuestions = quizQuestionRepository.findByDocument(file);
+            if (docQuestions != null && !docQuestions.isEmpty()) {
+                List<Long> qIds = docQuestions.stream().map(QuizQuestion::getId).toList();
+                pendingNotificationRepository.deleteAllByQuestion_IdIn(qIds);
+                friendShareRequestRepository.deleteAllByQuestion_IdIn(qIds);
+                sharedQuestionRepository.deleteAllByQuestion_IdIn(qIds);
+                quizQuestionRepository.deleteAll(docQuestions);
+            }
+            problemRepository.deleteAllByDocumentFile(file);
+            documentFileRepository.delete(file);
+
+            rttr.addFlashAttribute("message", "문제와 함께 강제로 삭제했습니다.");
+        } catch (Exception e) {
+            rttr.addFlashAttribute("error", "강제 삭제 중 오류: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        String suffix = (file.getFolder() != null) ? "?folderId=" + file.getFolder().getId() : "";
+        return "redirect:/document/list" + suffix;
+    }
+
+    private String redirectToList(Long folderId) {
+        return "redirect:/document/list" + (folderId != null ? "?folderId=" + folderId : "");
+    }
+
+    private String buildLocalSummary(String text) {
+        if (text == null || text.isBlank()) {
+            return "요약할 텍스트가 없습니다.";
+        }
+        String[] sentences = text.split("(?<=[.!?\\n])");
+        List<String> picked = new ArrayList<>();
+        for (String sentence : sentences) {
+            String trimmed = sentence.trim();
+            if (trimmed.length() < 20) continue;
+            picked.add(trimmed);
+            if (picked.size() >= 5) break;
+        }
+        if (picked.isEmpty()) {
+            String trimmed = text.trim();
+            return trimmed.length() > 200 ? trimmed.substring(0, 200) + "..." : trimmed;
+        }
+        return picked.stream()
+                .map(line -> "- " + line)
+                .collect(Collectors.joining("\n"));
+    }
+
+    private String buildPreview(String text) {
+        if (text == null || text.isBlank()) {
+            return "";
+        }
+        String cleaned = text.trim();
+        return (cleaned.length() > 1200) ? cleaned.substring(0, 1200) + "..." : cleaned;
+    }
+
 }

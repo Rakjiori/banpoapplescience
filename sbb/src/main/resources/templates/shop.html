@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko"
+      th:replace="layout :: layout(~{::body})">
+<body>
+<div>
+    <section class="group-hero">
+        <div class="group-hero__eyebrow">Shop</div>
+        <div class="group-hero__heading">
+            <h1 class="page-title">상점</h1>
+            <p class="group-hero__text">아바타·배너·뱃지·부스트를 모아 나만의 학습 공간을 꾸며보세요.</p>
+        </div>
+        <div class="group-hero__stats">
+            <div class="stat-chip">
+                포인트 <strong th:text="${user.points}">0</strong>P
+            </div>
+            <div class="stat-chip stat-chip--ghost">
+                연속 풀이 <strong th:text="${user.streak}">0</strong>일
+            </div>
+            <div class="stat-chip stat-chip--ghost">
+                쉴드 <strong th:text="${user.shieldItems}">0</strong> · 추가 토큰 <strong th:text="${user.extraProblemTokens}">0</strong>
+            </div>
+        </div>
+    </section>
+
+    <div class="action-row" style="margin:12px 0 16px;">
+        <a class="ghost-link" href="/profile">프로필로 돌아가기</a>
+        <a class="ghost-link" href="/stats">통계 보기</a>
+    </div>
+
+    <div class="surface-grid">
+        <div class="surface-card stack">
+            <div class="group-action__title">아바타</div>
+            <form th:action="@{/shop/avatar}" method="post" id="avatarForm" class="stack">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <div class="option-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
+                    <label th:each="opt,iter : ${avatarOptions}"
+                           class="selection-tile"
+                           th:classappend="${ownedAvatars.contains(opt.value())} ? ' owned' : ''">
+                        <input type="radio" name="avatar" th:id="|avatar_${iter.index}|" th:value="${opt.value()}" style="position:absolute; opacity:0; pointer-events:none;">
+                        <div class="metric-label" th:text="${opt.label()}">이름</div>
+                        <div class="selection-meta">
+                            <span th:text="${opt.value()}">avatar</span> ·
+                            <span th:text="${ownedAvatars.contains(opt.value()) ? '보유' : opt.cost() + 'P'}">가격</span>
+                        </div>
+                    </label>
+                </div>
+                <div style="display:flex; justify-content:flex-end;">
+                    <button class="btn" type="submit">구매 / 적용</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="surface-card stack">
+            <div class="group-action__title">배너</div>
+            <form th:action="@{/shop/banner}" method="post" id="bannerForm" class="stack">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <div class="option-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">
+                    <label th:each="opt,iter : ${bannerOptions}"
+                           class="selection-tile"
+                           th:classappend="${ownedBanners.contains(opt.value())} ? ' owned' : ''"
+                           th:style="|color:#fff; background:${opt.gradient()};|">
+                        <input type="radio" name="banner" th:id="|banner_${iter.index}|" th:value="${opt.value()}" style="position:absolute; opacity:0; pointer-events:none;">
+                        <div class="metric-label" th:text="${opt.label()}">배너</div>
+                        <div class="selection-meta" style="color:#f8fafc;"
+                             th:text="${ownedBanners.contains(opt.value()) ? '보유' : opt.cost() + 'P'}">가격</div>
+                    </label>
+                </div>
+                <div style="display:flex; justify-content:flex-end;">
+                    <button class="btn" type="submit">구매 / 적용</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="surface-card stack" style="grid-column:span 2;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+                <div class="group-action__title">뱃지</div>
+                <div class="selection-meta">조건 달성 시 자동 해금</div>
+            </div>
+            <div class="badge-grid">
+                <form th:each="b : ${badges}"
+                      th:action="@{/shop/badge}"
+                      method="post"
+                      class="badge-chip"
+                      th:classappend="${b.unlocked()} ? '' : ' locked'">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <input type="hidden" name="badgeId" th:value="${b.id()}">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                        <div class="metric-label" th:text="${b.name()}">배지</div>
+                        <span class="pill-soft" th:if="${b.equipped()}" style="background:#eef2ff; color:#111827;">장착중</span>
+                    </div>
+                    <div class="selection-meta" th:text="${b.desc()}">설명</div>
+                    <div class="selection-meta" th:text="${b.unlocked() ? '해금됨' : b.requirement()}">조건</div>
+                    <button class="btn btn-outline" type="submit"
+                            th:disabled="${!b.unlocked()}"
+                            th:text="${b.unlocked() ? '장착하기' : '해금 필요'}"></button>
+                </form>
+            </div>
+        </div>
+
+        <div class="surface-card stack">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="group-action__title">부스트 아이템</div>
+                <div class="selection-meta">포인트로 구매</div>
+            </div>
+            <form th:action="@{/shop/boost}" method="post" class="option-grid">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <div class="badge-chip">
+                    <div class="metric-label">연속 보호</div>
+                    <div class="selection-meta">연속일이 끊길 때 한번 보호</div>
+                    <button class="btn btn-outline" type="submit" name="boostId" value="shield"
+                            th:text="|${boostPrices.get('shield')}P|">20P</button>
+                </div>
+                <div class="badge-chip">
+                    <div class="metric-label">추가 문제 +10</div>
+                    <div class="selection-meta">하루 생성 한도를 +10 확장</div>
+                    <button class="btn btn-outline" type="submit" name="boostId" value="extra10"
+                            th:text="|${boostPrices.get('extra10')}P|">15P</button>
+                </div>
+                <div class="badge-chip">
+                    <div class="metric-label">추가 문제 +20</div>
+                    <div class="selection-meta">하루 생성 한도를 +20 확장</div>
+                    <button class="btn btn-outline" type="submit" name="boostId" value="extra20"
+                            th:text="|${boostPrices.get('extra20')}P|">25P</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', ()=>{
+        const selectFirst = (formId) => {
+            const form = document.getElementById(formId);
+            if (!form) return;
+            const radios = Array.from(form.querySelectorAll('input[type="radio"]'));
+            if (radios.length && !radios.some(r=>r.checked)) {
+                radios[0].checked = true;
+                radios[0].parentElement.classList.add('active');
+            }
+            radios.forEach(r=>{
+                const parent = r.parentElement;
+                parent.addEventListener('click', (e)=>{
+                    e.preventDefault();
+                    radios.forEach(x=>x.parentElement.classList.remove('active'));
+                    r.checked = true;
+                    parent.classList.add('active');
+                });
+            });
+        };
+        selectFirst('avatarForm');
+        selectFirst('bannerForm');
+    });
+</script>
+</body>
+</html>

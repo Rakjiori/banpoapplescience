@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout :: layout (~{::body})"
+      th:with="content='this :: content'">
+
+<body>
+<div th:fragment="content">
+
+    <style>
+        .summary-grid { display:grid; grid-template-columns: 2fr 1fr; gap:14px; }
+        .summary-card { padding:16px; border-radius:12px; background:#0f172a; color:#e5e7eb; box-shadow:0 12px 28px rgba(15,23,42,0.35); }
+        .summary-card h1 { margin:0 0 6px; color:#fff; }
+        .summary-chip { display:inline-flex; gap:8px; align-items:center; padding:6px 10px; border-radius:999px; background:rgba(255,255,255,0.1); color:#cbd5e1; font-weight:700; }
+        .info-card { background:#fff; border-radius:12px; padding:14px; box-shadow:0 10px 24px rgba(0,0,0,0.08); }
+        .info-row { display:flex; gap:10px; flex-wrap:wrap; }
+        .info-pill { flex:1 1 140px; background:#f8fafc; border-radius:10px; padding:10px; border:1px solid #e5e7eb; }
+        .summary-box { background:#ffffff; border-radius:12px; padding:16px; box-shadow:0 10px 24px rgba(0,0,0,0.08); line-height:1.6; color:#0f172a; }
+        .preview-box { background:#0b1120; color:#e5e7eb; border-radius:12px; padding:14px; font-size:14px; line-height:1.5; white-space:pre-wrap; }
+        @media(max-width:960px){ .summary-grid { grid-template-columns:1fr; } }
+    </style>
+
+    <div class="summary-grid">
+        <div class="summary-card">
+            <p class="eyebrow" style="margin:0;">PDF Insight</p>
+            <h1 class="page-title" style="margin:4px 0 10px;">요약 결과</h1>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                <span class="summary-chip" th:text="${summarySource}">Gemini 요약</span>
+                <span class="summary-chip" th:if="${file.folder != null}" th:text="${file.folder.name}">폴더</span>
+            </div>
+            <div style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap;">
+                <button type="button" class="btn glow-btn" id="summaryUploadButton">
+                    ➕ 새 PDF 올리기
+                </button>
+                <a class="btn btn-outline" th:href="${folderId} != null ? @{/document/list(folderId=${folderId})} : @{/document/list}">
+                    ← 목록으로 돌아가기
+                </a>
+            </div>
+        </div>
+        <div class="info-card">
+            <div class="title-md" style="margin-bottom:8px;">파일 정보</div>
+            <div class="info-row">
+                <div class="info-pill">
+                    <div style="font-size:12px; color:#6b7280;">원본 파일명</div>
+                    <div style="font-weight:700;" th:text="${file.originalFilename}">파일명</div>
+                </div>
+                <div class="info-pill">
+                    <div style="font-size:12px; color:#6b7280;">파일 용량</div>
+                    <div style="font-weight:700;" th:text="${#numbers.formatDecimal(file.fileSize / 1048576.0, 1, 1)} + ' MB'">0.0 MB</div>
+                </div>
+                <div class="info-pill">
+                    <div style="font-size:12px; color:#6b7280;">업로드 시간</div>
+                    <div style="font-weight:700;" th:text="${#temporals.format(file.uploadedAt, 'yy-MM-dd HH:mm')}">24-01-01 10:00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card motion-lift" style="margin-top:14px;" data-anim="fade-up" data-anim-delay="80">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+            <div>
+                <div class="title-lg"
+                     th:text="${file.originalFilename}">파일명</div>
+                <div class="muted" style="font-size:13px; margin-top:4px;">
+                    <span th:text="${#numbers.formatDecimal(file.fileSize / 1048576.0, 1, 1)} + ' MB'"></span>
+                    ·
+                    <span th:text="${#temporals.format(file.uploadedAt, 'yy-MM-dd HH:mm')}"></span>
+                </div>
+            </div>
+            <div class="status-badge status-warning" th:if="${usedFallback}">
+                네트워크 이슈로 로컬 요약을 표시했어요.
+            </div>
+            <div class="status-badge status-success" th:if="${!usedFallback}">
+                Gemini 응답을 사용했어요.
+            </div>
+        </div>
+    </div>
+
+    <div class="card motion-lift" style="margin-top:12px;" data-anim="fade-up" data-anim-delay="140">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;">
+            <div class="title-lg">요약 결과</div>
+            <div class="pulse-dot" title="실시간 생성"></div>
+        </div>
+        <div class="summary-box" th:text="${summary}">요약 내용</div>
+    </div>
+
+    <div class="card motion-lift" style="margin-top:12px;"
+         th:if="${previewText != null && !previewText.isEmpty()}"
+         data-anim="fade-up" data-anim-delay="200">
+        <div class="title-md" style="margin-bottom:8px;">원문 미리보기 (일부)</div>
+        <div class="preview-box" th:text="${previewText}">미리보기</div>
+    </div>
+
+</div>
+<form id="summaryUploadForm"
+      th:action="@{/document/upload}"
+      method="post"
+      enctype="multipart/form-data"
+      style="display:none;">
+    <input type="file" name="pdfFile" id="summaryUploadInput" accept="application/pdf">
+    <input type="hidden" name="folderId" th:value="${folderId != null ? folderId : ''}">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+</form>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('summaryUploadButton');
+        const input = document.getElementById('summaryUploadInput');
+        const form = document.getElementById('summaryUploadForm');
+        if (btn && input && form) {
+            btn.addEventListener('click', () => input.click());
+            input.addEventListener('change', () => {
+                if (input.files && input.files.length > 0) form.submit();
+            });
+        }
+    });
+</script>
+</body>
+</html>

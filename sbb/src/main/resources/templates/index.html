@@ -2,58 +2,323 @@
 <html lang="ko"
       xmlns:th="http://www.thymeleaf.org"
       th:replace="layout :: layout (~{::body})"
-      th:with="content='this :: content'">
+      th:with="content='this :: content', pageClass='landing-shell'">
 
 <body>
 <div th:fragment="content">
 
+    <style>
+        .landing-hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: 22px;
+            background: linear-gradient(135deg, rgba(14,59,79,0.9), rgba(15,118,110,0.92), rgba(22,198,144,0.9));
+            color: #f0fdf4;
+            padding: 28px 26px;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.22);
+        }
+        .landing-hero::after,
+        .landing-hero::before {
+            content:'';
+            position:absolute;
+            border-radius: 50%;
+            filter: blur(26px);
+            opacity: 0.7;
+        }
+        .landing-hero::after { width: 180px; height: 180px; background: rgba(255,255,255,0.18); inset: -60px auto auto 16%; animation: float 9s ease-in-out infinite; }
+        .landing-hero::before { width: 220px; height: 220px; background: rgba(255,255,255,0.12); inset: auto -60px -80px auto; animation: float 10s ease-in-out infinite reverse; }
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 0.9fr;
+            gap: 20px;
+            align-items: center;
+        }
+        .eyebrow { text-transform: uppercase; letter-spacing: 0.14em; font-weight: 700; font-size: 12px; margin: 0 0 12px; color: #bafbec; }
+        .landing-hero h1 { margin: 0 0 14px; font-size: 32px; letter-spacing: -0.02em; }
+        .hero-sub { margin: 0 0 16px; color: #e3f6ff; font-size: 15px; max-width: 560px; }
+        .hero-tags { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+        .hero-tag { padding:8px 12px; background: rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2); border-radius:10px; font-weight:700; color:#e0f2fe; }
+        .hero-actions { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+        .cta { padding: 12px 16px; border-radius: 12px; font-weight: 800; letter-spacing: 0.01em; border: 1px solid rgba(255,255,255,0.24); color: #0f172a; background:#f1f5f9; box-shadow:0 10px 24px rgba(15,118,110,0.25); transition:0.18s ease; }
+        .cta.primary { background: #facc15; color:#0f172a; border-color: transparent; }
+        .cta.outline { background: transparent; color:#e2f3ff; border-color: rgba(255,255,255,0.38); }
+        .cta.ghost { background: rgba(255,255,255,0.12); color:#e2f3ff; }
+        .cta:hover { transform: translateY(-1px); text-decoration: none; box-shadow:0 14px 28px rgba(0,0,0,0.25); }
+        .hero-footnote { font-size: 13px; color:#cde9ff; margin-top:6px; display:flex; gap:10px; flex-wrap:wrap; }
+
+        .hero-panel {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 14px;
+            padding: 16px;
+            backdrop-filter: blur(6px);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.16);
+        }
+        .panel-header { font-weight: 800; font-size: 14px; color:#d1f2ff; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+        .panel-badge { padding:6px 10px; border-radius:10px; background: rgba(250,204,21,0.2); color:#fef3c7; font-weight:700; font-size:12px; }
+        .panel-row { display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.18); }
+        .panel-row:last-child { border-bottom:none; }
+        .panel-time { font-weight:800; min-width:68px; }
+        .panel-desc { color:#e3f6ff; font-size:13px; }
+        .panel-metrics { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+        .metric { background: rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:8px 10px; display:flex; align-items:center; gap:8px; color:#e2f3ff; font-weight:700; font-size:12px; }
+        .metric-icon { width:22px; height:22px; display:grid; place-items:center; background:rgba(255,255,255,0.12); border-radius:8px; color:#fef3c7; font-size:12px; }
+
+        .landing-section { margin-top: 28px; padding: 24px; background: #ffffff; border-radius: 18px; border:1px solid #e2e8f0; box-shadow:0 18px 38px rgba(15,23,42,0.08); }
+        .section-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-bottom:16px; }
+        .section-head h2 { margin:0; font-size:22px; }
+        .section-sub { color:#64748b; margin:4px 0 0; font-size:14px; }
+        .pill { padding:8px 12px; border-radius:12px; background:rgba(15,191,140,0.12); color:#0f766e; font-weight:700; font-size:12px; }
+
+        .schedule-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; }
+        .schedule-card { border:1px solid #e5e7eb; border-radius:14px; padding:16px; background:linear-gradient(160deg, #f8fbff, #f1fbf7); box-shadow:0 10px 24px rgba(15,118,110,0.08); }
+        .schedule-title { font-weight:800; margin:0 0 6px; color:#0f172a; }
+        .schedule-meta { color:#0f766e; font-size:13px; font-weight:700; margin-bottom:10px; }
+        .time-row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px dashed #d6e3f0; font-size:13px; }
+        .time-row:last-child { border-bottom:none; }
+        .label-ghost { padding:4px 8px; background:#0f172a; color:#e2e8f0; border-radius:10px; font-size:12px; }
+
+        .notice-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
+        .notice-card { border:1px solid #e5e7eb; border-radius:14px; padding:14px; background: #f9fafb; box-shadow:0 12px 24px rgba(15,23,42,0.04); }
+        .notice-date { font-size:12px; color:#64748b; }
+        .notice-title { font-weight:800; margin:6px 0; color:#0f172a; }
+        .notice-body { color:#475569; font-size:13px; }
+
+        .review-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; }
+        .review-card { border:1px solid #e2e8f0; border-radius:14px; padding:16px; background:linear-gradient(160deg, #ffffff, #f3f8ff); box-shadow:0 12px 28px rgba(15,23,42,0.06); position:relative; overflow:hidden; }
+        .review-card::after { content:''; position:absolute; inset:-20% auto auto -10%; width:120px; height:120px; background:radial-gradient(circle, rgba(15,191,140,0.18), transparent 55%); transform:rotate(12deg); }
+        .review-stars { color:#f59e0b; font-weight:800; }
+        .review-text { color:#0f172a; font-size:14px; margin:8px 0 12px; line-height:1.6; position:relative; }
+        .reviewer { font-weight:700; color:#0f766e; position:relative; }
+
+        .dual { display:grid; grid-template-columns:1fr 1.1fr; gap:16px; align-items:stretch; }
+        .location-copy h3 { margin:8px 0 10px; }
+        .location-points { list-style:none; padding:0; margin:0; display:grid; gap:8px; color:#334155; }
+        .location-points li { display:flex; gap:8px; align-items:flex-start; }
+        .map-wrap { border-radius:14px; overflow:hidden; border:1px solid #e2e8f0; box-shadow:0 14px 30px rgba(15,23,42,0.12); min-height:260px; }
+        .map-wrap iframe { width:100%; height:100%; border:0; }
+
+        .callout { background:linear-gradient(120deg, #0f172a, #0f766e); color:#e2e8f0; overflow:hidden; }
+        .callout-inner { display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap; }
+        .callout-actions { display:flex; gap:10px; flex-wrap:wrap; }
+
+        @keyframes float { 0%,100% { transform:translateY(0);} 50% { transform:translateY(-8px);} }
+
+        @media (max-width: 900px) {
+            .hero-grid { grid-template-columns: 1fr; }
+            .dual { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 640px) {
+            .landing-hero { padding: 22px 18px; }
+            .landing-hero h1 { font-size: 24px; }
+            .hero-sub { font-size: 13px; }
+            .hero-panel { margin-top: 8px; }
+            .panel-row { flex-direction: column; align-items: flex-start; gap: 4px; }
+            .panel-time { min-width: auto; }
+            .section-head h2 { font-size: 19px; }
+            .section-sub { font-size: 13px; }
+            .schedule-grid, .notice-grid, .review-grid { grid-template-columns: 1fr; }
+            .landing-section { padding: 18px; }
+            .callout-inner { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+
     <div class="container">
 
-        <!-- 메인 히어로 카드 -->
-        <div class="card" style="display:flex; gap:24px; flex-wrap:wrap; align-items:flex-start;">
-
-            <!-- 왼쪽: 소개 텍스트 -->
-            <div style="flex:1 1 260px;">
-                <h1 class="page-title" style="margin-bottom:10px;">Intuitive</h1>
-                <p style="margin:0 0 10px; font-size:14px; color:#6b7280;">
-                    PDF를 업로드하면, 내용을 기반으로 자동으로 학습용 문제를 만들어주는 서비스입니다.
-                </p>
-                <p style="margin:0; font-size:13px; color:#9ca3af;">
-                    강의자료, 교재, 논문 등을 올려두고 매일 문제를 풀면서 복습해 보세요.
-                </p>
-            </div>
-
-            <!-- 오른쪽: 빠른 시작 카드 -->
-            <div style="flex:0 0 260px; border-left:1px solid var(--border-soft); padding-left:18px;">
-                <h2 style="font-size:14px; margin:0 0 10px; color:#4b5563;">빠른 시작</h2>
-
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    <a th:href="@{/document/upload}" class="btn">
-                        📄 PDF 업로드하기
-                    </a>
-                    <a th:href="@{/document/list}" class="btn btn-outline">
-                        📚 내 PDF 목록 보기
-                    </a>
-                    <a th:href="@{/document/makeprob}" class="btn btn-outline">
-                        📝 문제 생성 페이지로
-                    </a>
+        <section class="landing-hero" id="top">
+            <div class="hero-grid">
+                <div>
+                    <p class="eyebrow">애플과학 · Banpo Apple Science</p>
+                    <h1>개념이 선명해지는 순간, 성적이 달라집니다.</h1>
+                    <p class="hero-sub">실험, 질문, 데이터로 설계한 과학 전문 커리큘럼. 주중·주말 내내 운영되는 맞춤 학습으로
+                        반포의 학생들이 안정적으로 성적을 올리고 있습니다.</p>
+                    <div class="hero-tags">
+                        <span class="hero-tag">주 6일 운영</span>
+                        <span class="hero-tag">심화 실험/내신 대비</span>
+                        <span class="hero-tag">1:1 클리닉</span>
+                    </div>
+                    <div class="hero-actions">
+                        <a class="cta primary" href="#schedule" data-scroll>시간표 보기</a>
+                        <a class="cta ghost" href="#notice" data-scroll>공지사항</a>
+                        <a class="cta outline" th:href="@{/login}">Login</a>
+                    </div>
+                    <div class="hero-footnote">
+                        <span>문의 02-532-1706</span>
+                        <span>신반포역 3번 출구 도보 3분</span>
+                    </div>
+                </div>
+                <div class="hero-panel">
+                    <div class="panel-header">
+                        <span class="panel-badge">이번 주 하이라이트</span>
+                        <span>집중 클리닉 & 실험</span>
+                    </div>
+                    <div class="panel-row">
+                        <div class="panel-time">화 18:00</div>
+                        <div class="panel-desc">중등 물리 실험 랩 · Motion Lab · 실측 데이터로 그래프 분석</div>
+                    </div>
+                    <div class="panel-row">
+                        <div class="panel-time">목 19:30</div>
+                        <div class="panel-desc">고1 내신 대비 · 학교별 기출+빈칸 노트 정리, 라이브 풀이</div>
+                    </div>
+                    <div class="panel-row">
+                        <div class="panel-time">토 14:00</div>
+                        <div class="panel-desc">고3 파이널 모의 · 개인 오답 리포트 피드백 & 현장 질의응답</div>
+                    </div>
+                    <div class="panel-metrics">
+                        <div class="metric">
+                            <div class="metric-icon">✔</div>
+                            <div>출결 · 숙제 실시간 알림</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-icon">🌐</div>
+                            <div>온라인 포털 연동</div>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </section>
 
-        </div>
+        <section class="landing-section" id="schedule">
+            <div class="section-head">
+                <div>
+                    <div class="pill">시간표</div>
+                    <h2>주중·주말 운영, 학년별 맞춤 편성</h2>
+                    <p class="section-sub">현장 수업과 온라인 과제까지 한 흐름으로 이어집니다.</p>
+                </div>
+                <a class="cta ghost" href="#login" data-scroll>상담 / Login</a>
+            </div>
+            <div class="schedule-grid">
+                <div class="schedule-card">
+                    <div class="schedule-title">중등 심화</div>
+                    <div class="schedule-meta">개념+실험 · 2회/주</div>
+                    <div class="time-row"><span>화 · 목 18:00</span><span class="label-ghost">실험 랩</span></div>
+                    <div class="time-row"><span>토 11:00</span><span>주간 테스트</span></div>
+                    <div class="time-row"><span>온라인</span><span>과제/오답 등록</span></div>
+                </div>
+                <div class="schedule-card">
+                    <div class="schedule-title">고1 내신 대비</div>
+                    <div class="schedule-meta">학교별 기출 분석 · 클리닉 포함</div>
+                    <div class="time-row"><span>월 · 수 19:30</span><span class="label-ghost">개념/문풀</span></div>
+                    <div class="time-row"><span>금 17:00</span><span>개인 오답 코칭</span></div>
+                    <div class="time-row"><span>온라인</span><span>리포트/질문 게시판</span></div>
+                </div>
+                <div class="schedule-card">
+                    <div class="schedule-title">고3 파이널</div>
+                    <div class="schedule-meta">모의+피드백 · 집중 관리</div>
+                    <div class="time-row"><span>토 14:00</span><span class="label-ghost">파이널 모의</span></div>
+                    <div class="time-row"><span>일 10:30</span><span>개인 리뷰 & 질의응답</span></div>
+                    <div class="time-row"><span>평일 상시</span><span>1:1 자리 예약</span></div>
+                </div>
+            </div>
+        </section>
 
-        <!-- 간단한 설명 카드 -->
-        <div class="card" style="margin-top:14px; font-size:13px; color:#6b7280;">
-            <strong style="display:block; margin-bottom:6px;">사용 방법</strong>
-            <ol style="margin:0 0 4px 18px; padding:0;">
-                <li>PDF를 업로드합니다.</li>
-                <li>업로드된 PDF 목록에서 원하는 문서를 선택합니다. (추후 확장 예정)</li>
-                <li>해당 문서를 기반으로 자동 생성된 문제를 풀며 학습합니다.</li>
-            </ol>
-        </div>
+        <section class="landing-section" id="notice">
+            <div class="section-head">
+                <div>
+                    <div class="pill">공지사항</div>
+                    <h2>반포 애플과학 소식</h2>
+                </div>
+            </div>
+            <div class="notice-grid">
+                <article class="notice-card">
+                    <div class="notice-date">2024. 07. 01</div>
+                    <div class="notice-title">여름방학 집중 클리닉 신청</div>
+                    <div class="notice-body">7/20~8/18 기간, 학년별 맞춤 집중반 운영합니다. 좌석이 한정되어 있으니 전화로 우선 예약해주세요.</div>
+                </article>
+                <article class="notice-card">
+                    <div class="notice-date">2024. 06. 24</div>
+                    <div class="notice-title">시험 대비 주간 야간 자습</div>
+                    <div class="notice-body">평일 22:00까지 연장 운영, 과제 체크와 퇴실 문자 알림을 함께 제공합니다.</div>
+                </article>
+                <article class="notice-card">
+                    <div class="notice-date">2024. 06. 10</div>
+                    <div class="notice-title">학부모 상담 주간</div>
+                    <div class="notice-body">학생별 성적 리포트와 학습 루틴을 공유드립니다. 전화/카톡으로 일정 예약 가능합니다.</div>
+                </article>
+            </div>
+        </section>
+
+        <section class="landing-section" id="reviews">
+            <div class="section-head">
+                <div>
+                    <div class="pill">수강후기</div>
+                    <h2>학부모·학생이 말하는 변화</h2>
+                </div>
+                <span class="section-sub">실제 상담 기록과 리포트를 바탕으로 요약했습니다.</span>
+            </div>
+            <div class="review-grid">
+                <div class="review-card">
+                    <div class="review-stars">★★★★★</div>
+                    <div class="review-text">“개념 암기가 아니라 실험/질문 위주라서 이해가 확실히 남아요. 시험 전 오답 리포트가 바로바로 나와서 혼자 공부할 때도 방향이 잡혔어요.”</div>
+                    <div class="reviewer">고1 학생</div>
+                </div>
+                <div class="review-card">
+                    <div class="review-stars">★★★★★</div>
+                    <div class="review-text">“출결·숙제 알림이 바로 와서 믿음이 갔고, 매주 상담 때 데이터가 공유돼서 아이가 어디서 막히는지 한눈에 보였습니다.”</div>
+                    <div class="reviewer">중3 학부모</div>
+                </div>
+                <div class="review-card">
+                    <div class="review-stars">★★★★☆</div>
+                    <div class="review-text">“고3 파이널 모의 후 바로 다음 날 피드백을 받아서 실수 줄이는 데 큰 도움이 됐습니다. 자습 자리 예약제도 좋아요.”</div>
+                    <div class="reviewer">고3 학생</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="landing-section dual" id="location">
+            <div class="location-copy">
+                <div class="pill">오시는 길</div>
+                <h3>서울 서초구 신반포로 189 반포쇼핑타운 4동 402호</h3>
+                <ul class="location-points">
+                    <li><span class="label-ghost">주소</span><span>서울 서초구 신반포로 189 반포쇼핑타운 4동 402호</span></li>
+                    <li><span class="label-ghost">주차</span><span>근처 공영주차장 이용 가능, 방문 전 전화 주세요.</span></li>
+                    <li><span class="label-ghost">문의</span><span>02-532-1706 / 상담 가능 시간 13:00~21:00</span></li>
+                </ul>
+                <div class="hero-actions" style="margin-top:14px;">
+                    <a class="cta primary" href="tel:02-532-1706">전화 상담</a>
+                    <a class="cta ghost" href="https://map.naver.com/p/search/%EB%B0%98%ED%8F%AC%EC%95%A0%ED%94%8C%EA%B3%BC%ED%95%99" target="_blank" rel="noreferrer">지도 열기</a>
+                </div>
+            </div>
+            <div class="map-wrap">
+                <iframe
+                    src="https://www.google.com/maps?q=%EC%84%9C%EC%9A%B8%20%EC%84%9C%EC%B4%88%EA%B5%AC%20%EB%B0%98%ED%8F%AC%EB%8F%99&output=embed"
+                    allowfullscreen=""
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+        </section>
+
+        <section class="landing-section callout" id="login">
+            <div class="callout-inner">
+                <div>
+                    <div class="pill" style="background:rgba(255,255,255,0.14); color:#e2e8f0;">학습 포털</div>
+                    <h3 style="margin:10px 0 8px; color:#e2e8f0;">온라인에서도 이어지는 학습 루틴</h3>
+                    <p style="margin:0; color:#cbd5e1;">로그인하면 문제 생성/풀이, 성적 리포트, 그룹 협업 기능이 한 곳에서 연결됩니다.</p>
+                </div>
+                <div class="callout-actions">
+                    <a class="cta primary" th:href="@{/login}">Login</a>
+                    <a class="cta ghost" th:href="@{/signup}">회원가입</a>
+                    <a class="cta outline" th:href="@{/quiz/list}">학습 포털</a>
+                </div>
+            </div>
+        </section>
 
     </div>
 
 </div>
+
+<script>
+    document.querySelectorAll('[data-scroll]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            const targetId = link.getAttribute('href')?.split('#')[1];
+            const el = targetId ? document.getElementById(targetId) : null;
+            if (el) {
+                e.preventDefault();
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+</script>
 </body>
 </html>
