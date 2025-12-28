@@ -19,17 +19,29 @@ import java.security.Principal;
 public class AdminUserController {
 
     private final UserService userService;
+    private final com.example.sbb.repository.GroupMemberRepository groupMemberRepository;
+    private final com.example.sbb.repository.FriendRepository friendRepository;
+    private final com.example.sbb.repository.FriendRequestRepository friendRequestRepository;
+    private final com.example.sbb.repository.FriendShareRequestRepository friendShareRequestRepository;
+    private final com.example.sbb.repository.GroupInviteRepository groupInviteRepository;
+    private final com.example.sbb.repository.DocumentFileRepository documentFileRepository;
+    private final com.example.sbb.repository.QuizQuestionRepository quizQuestionRepository;
+    private final com.example.sbb.repository.ProblemRepository problemRepository;
 
     @GetMapping
     public String list(Model model, Principal principal, RedirectAttributes rttr) {
         SiteUser actor = currentUser(principal);
         if (actor == null) return "redirect:/login";
-        if (!userService.isRoot(actor)) {
-            rttr.addFlashAttribute("error", "루트 계정만 접근할 수 있습니다.");
+        if (!userService.isAdminOrRoot(actor)) {
+            rttr.addFlashAttribute("error", "관리자 이상만 접근할 수 있습니다.");
             return "redirect:/";
         }
-        model.addAttribute("users", userService.findAll());
+        var users = userService.findAll();
+        model.addAttribute("users", users);
         model.addAttribute("rootUsername", actor.getUsername());
+        model.addAttribute("bySchool", groupBySchool(users));
+        model.addAttribute("byGrade", groupByGrade(users));
+        model.addAttribute("isRoot", userService.isRoot(actor));
         return "admin_users";
     }
 
@@ -68,6 +80,21 @@ public class AdminUserController {
         return "redirect:/admin/users";
     }
 
+    @PostMapping("/{id}/delete")
+    public String delete(@PathVariable Long id, Principal principal, RedirectAttributes rttr) {
+        SiteUser actor = currentUser(principal);
+        if (actor == null) return "redirect:/login";
+        if (!userService.isAdminOrRoot(actor)) {
+            rttr.addFlashAttribute("error", "관리자 이상만 계정을 삭제할 수 있습니다.");
+            return "redirect:/";
+        }
+        boolean ok = userService.deleteUser(actor, id, groupMemberRepository, friendRepository, friendRequestRepository,
+                friendShareRequestRepository, groupInviteRepository, documentFileRepository, quizQuestionRepository, problemRepository);
+        if (ok) rttr.addFlashAttribute("message", "계정을 삭제했습니다.");
+        else rttr.addFlashAttribute("error", "계정을 삭제할 수 없습니다.");
+        return "redirect:/admin/users";
+    }
+
     private SiteUser currentUser(Principal principal) {
         if (principal == null) return null;
         try {
@@ -75,5 +102,25 @@ public class AdminUserController {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private java.util.Map<String, java.util.List<SiteUser>> groupBySchool(java.util.List<SiteUser> users) {
+        return users.stream()
+                .filter(u -> u.getSchoolName() != null && !u.getSchoolName().isBlank())
+                .collect(java.util.stream.Collectors.groupingBy(
+                        u -> u.getSchoolName().trim(),
+                        java.util.TreeMap::new,
+                        java.util.stream.Collectors.toList()
+                ));
+    }
+
+    private java.util.Map<String, java.util.List<SiteUser>> groupByGrade(java.util.List<SiteUser> users) {
+        return users.stream()
+                .filter(u -> u.getGrade() != null && !u.getGrade().isBlank())
+                .collect(java.util.stream.Collectors.groupingBy(
+                        u -> u.getGrade().trim(),
+                        java.util.TreeMap::new,
+                        java.util.stream.Collectors.toList()
+                ));
     }
 }

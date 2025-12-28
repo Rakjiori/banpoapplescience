@@ -8,7 +8,6 @@ import com.example.sbb.domain.user.SiteUser;
 import com.example.sbb.domain.user.UserService;
 import com.example.sbb.service.AttendanceService;
 import com.example.sbb.service.GroupService;
-import com.example.sbb.service.FriendService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -27,7 +26,6 @@ public class GroupController {
 
     private final GroupService groupService;
     private final UserService userService;
-    private final FriendService friendService;
     private final AttendanceService attendanceService;
 
     @GetMapping
@@ -36,7 +34,7 @@ public class GroupController {
         SiteUser user = userService.getUser(principal.getName());
         List<GroupMember> memberships = groupService.memberships(user);
         model.addAttribute("memberships", memberships);
-        model.addAttribute("friends", friendService.myFriends(user));
+        model.addAttribute("canCreateGroup", userService.isAdminOrRoot(user));
         return "group_list";
     }
 
@@ -46,6 +44,10 @@ public class GroupController {
                          RedirectAttributes rttr) {
         if (principal == null) return "redirect:/login";
         SiteUser user = userService.getUser(principal.getName());
+        if (!userService.isAdminOrRoot(user)) {
+            rttr.addFlashAttribute("error", "그룹 생성은 관리자/루트만 가능합니다.");
+            return "redirect:/groups";
+        }
         StudyGroup group = groupService.createGroup(name, user);
         rttr.addFlashAttribute("message", "그룹이 생성되었습니다. 코드: " + group.getJoinCode());
         return "redirect:/groups";
@@ -102,11 +104,14 @@ public class GroupController {
         model.addAttribute("group", group);
         model.addAttribute("sharedQuestions", groupService.listShared(group));
         model.addAttribute("memberships", memberships);
-        model.addAttribute("friends", friendService.myFriends(user));
         model.addAttribute("members", groupService.membersOf(group));
         model.addAttribute("isOwner", groupService.isOwner(group, user));
         boolean canManage = groupService.isOwner(group, user) || userService.isAdminOrRoot(user);
         model.addAttribute("canManage", canManage);
+        var memberUserIds = groupService.membersOf(group).stream()
+                .filter(m -> m.getUser() != null)
+                .map(m -> m.getUser().getId())
+                .collect(Collectors.toSet());
         model.addAttribute("groupNotices", groupService.listNotices(group));
         model.addAttribute("groupTasks", groupService.listTasks(group));
         var weekStart = java.time.LocalDate.now().with(java.time.DayOfWeek.MONDAY);
@@ -126,7 +131,12 @@ public class GroupController {
         model.addAttribute("memberUserIds", groupService.membersOf(group).stream()
                 .filter(m -> m.getUser() != null)
                 .map(m -> m.getUser().getId())
-                .collect(java.util.stream.Collectors.toSet()));
+                .collect(Collectors.toSet()));
+        if (canManage) {
+            model.addAttribute("inviteCandidates", userService.findAll().stream()
+                    .filter(u -> u.getId() != null && !memberUserIds.contains(u.getId()))
+                    .toList());
+        }
         return "group_detail";
     }
 
@@ -190,15 +200,19 @@ public class GroupController {
 
     @PostMapping("/{groupId}/members/invite")
     public String inviteFriends(@PathVariable Long groupId,
-                                @RequestParam(value = "friendIds", required = false) List<Long> friendIds,
+                                @RequestParam(value = "userIds", required = false) List<Long> userIds,
                                 Principal principal,
                                 RedirectAttributes rttr) {
         if (principal == null) return "redirect:/login";
         SiteUser user = userService.getUser(principal.getName());
-        List<SiteUser> targets = friendService.resolveFriendTargets(user, friendIds);
+        List<SiteUser> targets = userIds == null ? List.of() : userIds.stream()
+                .map(userService::findById)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .toList();
         int invited = groupService.inviteFriends(groupId, user, targets);
-        if (invited > 0) rttr.addFlashAttribute("message", invited + "명에게 초대 요청을 보냈습니다.");
-        else rttr.addFlashAttribute("error", "초대에 실패했습니다. 권한 또는 선택을 확인하세요.");
+        if (invited > 0) rttr.addFlashAttribute("message", invited + "명을 그룹에 바로 추가했습니다.");
+        else rttr.addFlashAttribute("error", "추가에 실패했습니다. 권한 또는 선택을 확인하세요.");
         return "redirect:/groups/" + groupId;
     }
 

@@ -55,4 +55,13 @@ public class SiteUser {
 
     @Column(nullable = false, columnDefinition = "int default 60")
     private int dailyGoalMinutes = 60;
+
+    @Enumerated(EnumType.STRING)
+    private AccountType accountType;
+
+    private String fullName;
+
+    private String schoolName;
+
+    private String grade;
 }

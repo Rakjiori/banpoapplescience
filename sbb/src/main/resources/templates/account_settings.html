@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout :: layout(~{::body})">
+<body>
+<div class="page-card" style="max-width:720px;">
+    <div class="page-header">
+        <div>
+            <div class="pill-soft">내 정보 수정</div>
+            <h1 class="page-title">계정/학적 정보 업데이트</h1>
+            <p class="muted">아이디, 이름, 학교/학년, 비밀번호를 변경할 수 있습니다.</p>
+        </div>
+        <a class="btn btn-outline" href="/learning">← 학습 포털</a>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger" style="margin-bottom:12px;">
+        <span th:text="${error}"></span>
+    </div>
+    <div th:if="${message}" class="alert alert-success" style="margin-bottom:12px;">
+        <span th:text="${message}"></span>
+    </div>
+
+    <div class="card" style="padding:20px;">
+        <form th:action="@{/account}" method="post" style="display:flex; flex-direction:column; gap:14px;">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+            <div>
+                <label for="currentPassword" class="form-label">현재 비밀번호 *</label>
+                <input type="password" id="currentPassword" name="currentPassword" required autocomplete="current-password">
+                <p class="muted" style="margin-top:6px;">정보를 수정하려면 현재 비밀번호를 입력하세요.</p>
+            </div>
+
+            <div>
+                <label for="username" class="form-label">아이디</label>
+                <input type="text" id="username" name="username" required
+                       th:value="${user.username}">
+            </div>
+
+            <div>
+                <label for="fullName" class="form-label">이름</label>
+                <input type="text" id="fullName" name="fullName"
+                       th:value="${user.fullName}">
+            </div>
+
+            <div class="grid-2" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
+                <div>
+                    <label for="schoolName" class="form-label">학교</label>
+                    <input type="text" id="schoolName" name="schoolName"
+                           th:value="${user.schoolName}">
+                </div>
+                <div>
+                    <label for="grade" class="form-label">학년</label>
+                    <input type="text" id="grade" name="grade"
+                           th:value="${user.grade}">
+                </div>
+            </div>
+
+            <div class="card" style="background:#f9fafb; padding:14px; border:1px solid #e5e7eb;">
+                <div class="title-md" style="margin-bottom:8px;">비밀번호 변경 (선택)</div>
+                <div class="grid-2" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:10px;">
+                    <div>
+                        <label for="newPassword" class="form-label">새 비밀번호</label>
+                        <input type="password" id="newPassword" name="newPassword" autocomplete="new-password">
+                    </div>
+                    <div>
+                        <label for="newPasswordConfirm" class="form-label">비밀번호 확인</label>
+                        <input type="password" id="newPasswordConfirm" name="newPasswordConfirm" autocomplete="new-password">
+                    </div>
+                </div>
+                <p class="muted" style="margin-top:8px;">비밀번호를 변경하지 않으려면 비워두세요.</p>
+            </div>
+
+            <button type="submit" class="btn" style="margin-top:6px;">저장하기</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

@@ -64,4 +64,10 @@ public class HomeController {
         }
         return "index";
     }
+
+    @GetMapping("/reviews")
+    public String reviews(Model model) {
+        model.addAttribute("courseReviews", contentService.listReviews());
+        return "reviews";
+    }
 }

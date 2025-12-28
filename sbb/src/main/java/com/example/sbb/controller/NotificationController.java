@@ -30,8 +30,11 @@ public class NotificationController {
         SiteUser user = userService.getUser(principal.getName());
         List<PendingNotification> due = notificationService.consumeDue(user);
         List<NotificationPayload> payloads = due.stream()
-                .map(NotificationPayload::from)
+                .map(NotificationPayload::fromQuiz)
                 .collect(Collectors.toList());
+        notificationService.recentGroupUpdates(user).forEach(n ->
+                payloads.add(NotificationPayload.fromSimple(n))
+        );
         return ResponseEntity.ok(payloads);
     }
 
@@ -50,11 +53,15 @@ public class NotificationController {
         private String body;
         private String url;
 
-        static NotificationPayload from(PendingNotification pn) {
+        static NotificationPayload fromQuiz(PendingNotification pn) {
             String title = "새 문제 도착";
             String body = pn.getQuestion().getQuestionText();
             String url = "/quiz/solve/" + pn.getQuestion().getId();
             return new NotificationPayload(pn.getId(), title, body, url);
+        }
+
+        static NotificationPayload fromSimple(NotificationService.SimpleNotification n) {
+            return new NotificationPayload(null, n.title(), n.body(), n.url());
         }
     }
 }

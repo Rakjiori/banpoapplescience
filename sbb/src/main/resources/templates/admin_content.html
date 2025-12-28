@@ -135,7 +135,9 @@
         </div>
     </section>
 
-    <section class="card" style="margin-bottom:18px;">
+<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap:14px;">
+
+    <section class="card">
         <div class="card-header">
             <div class="title-md">수강후기 추가</div>
         </div>
@@ -161,19 +163,63 @@
             <div class="title-md">등록된 수강후기</div>
         </div>
         <div th:if="${#lists.isEmpty(reviews)}" class="muted" style="padding:12px;">등록된 후기가 없습니다.</div>
-        <div th:each="r : ${reviews}" class="table-row">
-            <div>
-                <div class="review-stars" th:text="${#strings.repeat('★', r.rating) + #strings.repeat('☆', 5 - r.rating)}">★★★★★</div>
-                <div class="title-md" th:text="${r.author}">작성자</div>
-                <div th:text="${r.content}" style="margin-top:6px;"></div>
+        <div style="max-height:320px; overflow:auto; padding:8px;" th:if="${!#lists.isEmpty(reviews)}">
+            <div th:each="r : ${reviews}" class="table-row">
+                <div>
+                    <div class="review-stars" th:text="${#strings.repeat('★', r.rating) + #strings.repeat('☆', 5 - r.rating)}">★★★★★</div>
+                    <div class="title-md" th:text="${r.author}">작성자</div>
+                    <div th:text="${r.content}" style="margin-top:6px; max-height:80px; overflow:hidden;"></div>
+                </div>
+                <form th:action="@{/admin/content/reviews/{id}/delete(id=${r.id})}" method="post"
+                      onsubmit="return confirm('삭제할까요?');">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button type="submit" class="btn btn-outline" style="padding:6px 10px;">삭제</button>
+                </form>
             </div>
-            <form th:action="@{/admin/content/reviews/{id}/delete(id=${r.id})}" method="post"
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <div class="title-md">공지사항 추가</div>
+        </div>
+        <form th:action="@{/admin/content/announcements}" method="post" class="form-grid">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <label>제목
+                <input type="text" name="title" placeholder="공지 제목" required>
+            </label>
+            <label>게시일(선택)
+                <input type="date" name="publishedAt">
+            </label>
+            <label>내용
+                <textarea name="content" rows="4" placeholder="공지 내용을 입력하세요" required></textarea>
+            </label>
+            <div style="display:flex; justify-content:flex-end;">
+                <button type="submit" class="btn">추가</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <div class="title-md">등록된 공지사항</div>
+        </div>
+        <div th:if="${#lists.isEmpty(announcements)}" class="muted" style="padding:12px;">등록된 공지사항이 없습니다.</div>
+        <div th:each="n : ${announcements}" class="table-row">
+            <div>
+                <div class="title-md" th:text="${n.title}">제목</div>
+                <div class="muted" th:text="${n.publishedAt != null ? n.publishedAt : #temporals.format(n.createdAt, 'yyyy-MM-dd')}">날짜</div>
+                <div th:text="${n.content}" style="margin-top:6px; white-space:pre-wrap;"></div>
+            </div>
+            <form th:action="@{/admin/content/announcements/{id}/delete(id=${n.id})}" method="post"
                   onsubmit="return confirm('삭제할까요?');">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                 <button type="submit" class="btn btn-outline" style="padding:6px 10px;">삭제</button>
             </form>
         </div>
     </section>
+
+</div>
 
     <section class="card">
         <div class="card-header">

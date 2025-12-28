@@ -1,8 +1,8 @@
-<!-- templates/navbar.html -->
+  <!-- templates/navbar.html -->
 <nav class="navbar" th:fragment="nav">
   <div class="navbar-inner">
     <a class="brand" th:href="@{/}">
-      <span class="brand-mark">🍏</span>
+      <img class="brand-logo" th:src="@{/image/logo.png}" alt="애플과학 로고">
       <div class="brand-text">
         <div class="brand-name">애플과학</div>
         <div class="brand-sub">Banpo Apple Science</div>
@@ -18,7 +18,7 @@
 
     <!-- 우측 로그인/상태 -->
     <div class="user-status nav-actions">
-      <a class="nav-pill ghost" th:href="@{/quiz/list}">학습 포털</a>
+      <a class="nav-pill ghost" th:href="@{/learning}">학습 포털</a>
       <div class="notif-wrapper" th:if="${#authorization.expression('isAuthenticated()')}">
         <button type="button" class="icon-button" id="notificationBell">
           <span class="bell-icon" aria-hidden="true">🔔</span>
@@ -29,20 +29,6 @@
           <div class="notification-list" id="notificationList">
             <div class="notification-empty">새 알림이 없습니다.</div>
           </div>
-        </div>
-        <button type="button" class="icon-button" id="friendBell" title="친구 추가" style="margin-left:6px;">
-          <span aria-hidden="true">➕</span>
-          <span class="badge" id="friendBadge" style="display:none;">0</span>
-        </button>
-        <div class="notification-panel" id="friendPanel">
-          <div class="notification-header">친구 추가</div>
-          <form id="friendAddForm" style="padding:10px; display:flex; gap:8px; align-items:center;">
-            <input type="hidden" id="friendCsrfParam" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-            <input type="hidden" id="friendCsrfHeader" th:value="${_csrf.headerName}">
-            <input type="text" name="username" placeholder="아이디 검색" style="flex:1; padding:8px 10px; border:1px solid #111111; border-radius:8px;">
-            <button type="submit" class="btn btn-outline" style="padding:6px 10px;">추가</button>
-          </form>
-          <div id="friendRequestList" class="notification-list"></div>
         </div>
       </div>
       <div class="profile-wrapper" th:if="${#authorization.expression('isAuthenticated()')}">
@@ -60,14 +46,14 @@
             </div>
           </div>
           <div class="profile-list">
-            <a href="/quiz/list" class="profile-item">내 문제 보기</a>
+            <a href="/learning" class="profile-item">학습 포털</a>
             <a href="/groups" class="profile-item">내 그룹 보기</a>
             <a href="/folders" class="profile-item">내 폴더</a>
-            <a href="/profile" class="profile-item">프로필</a>
+            <a href="/account" class="profile-item">내 정보 수정</a>
             <a href="/admin/content" class="profile-item"
                th:if="${#authorization.expression('hasAnyAuthority(''ROLE_ADMIN'',''ROLE_ROOT'')')}">학원 콘텐츠 관리</a>
             <a href="/admin/users" class="profile-item"
-               th:if="${#authorization.expression('hasAuthority(''ROLE_ROOT'')')}">관리자 지정</a>
+               th:if="${#authorization.expression('hasAnyAuthority(''ROLE_ADMIN'',''ROLE_ROOT'')')}">관리자/계정 현황</a>
             <a href="/logout" class="profile-item">로그아웃</a>
           </div>
         </div>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout :: layout(~{::body})">
+<body>
+<div class="page-card" style="max-width:720px;">
+    <div class="page-header">
+        <div>
+            <div class="pill-soft">오류 발생</div>
+            <h1 class="page-title">페이지를 불러오지 못했어요</h1>
+            <p class="muted">요청한 페이지를 처리하는 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.</p>
+        </div>
+        <a class="btn btn-outline" href="/">홈으로 이동</a>
+    </div>
+    <div class="card" style="padding:16px;">
+        <div class="title-md">상세 정보</div>
+        <p class="muted" th:text="${message} ?: '일시적인 오류가 발생했습니다.'">오류 메시지</p>
+        <div th:if="${trace}" class="muted" style="margin-top:10px; max-height:240px; overflow:auto; font-size:12px; background:#f9fafb; padding:10px; border:1px solid #e5e7eb; border-radius:8px;">
+            <pre th:text="${trace}">stacktrace</pre>
+        </div>
+    </div>
+</div>
+</body>
+</html>

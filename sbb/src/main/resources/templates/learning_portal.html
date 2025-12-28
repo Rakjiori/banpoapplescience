@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout :: layout(~{::body})">
+<body>
+<div class="page-card">
+    <div class="page-header">
+        <div>
+            <div class="pill-soft">학습 포털</div>
+            <h1 class="page-title">나의 수업, 과제, 공지 한눈에</h1>
+            <p class="muted">그룹(수업)에서 올라온 과제와 공지사항을 한 곳에서 확인하세요.</p>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <a class="btn btn-outline" href="/groups">그룹 관리</a>
+            <a class="btn" href="/groups">수업 참여하기</a>
+        </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="card" style="background: linear-gradient(135deg, #eef2ff, #e0f2fe); padding:18px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <div class="title-md">나의 수업 보기</div>
+                <a class="btn btn-outline" href="/groups">수업으로 이동</a>
+            </div>
+            <div th:if="${#lists.isEmpty(memberships)}" class="muted">아직 참여한 수업이 없습니다.</div>
+            <div th:if="${!#lists.isEmpty(memberships)}" style="max-height:180px; overflow:auto; display:flex; flex-direction:column; gap:8px;">
+                <div class="pill-soft" th:each="m : ${memberships}">
+                    <div class="title-md" th:text="${m.group.name}">수업명</div>
+                    <div class="muted" th:text="${m.group.joinCode != null ? '코드: ' + m.group.joinCode : ''}">코드</div>
+                    <div class="muted" th:text="${m.role == 'OWNER' ? '담당자' : '수강생'}">역할</div>
+                </div>
+            </div>
+        </div>
+        <div class="card" style="background: linear-gradient(135deg, #ecfdf3, #e0f7e9); padding:18px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <div class="title-md">과제</div>
+                <span class="pill-soft" th:text="${#lists.size(portalTasks)} + '건'">0건</span>
+            </div>
+            <div th:if="${#lists.isEmpty(portalTasks)}" class="muted">등록된 과제가 없습니다.</div>
+            <div th:if="${!#lists.isEmpty(portalTasks)}" style="max-height:180px; overflow:auto; display:flex; flex-direction:column; gap:8px;">
+                <div class="pill-soft" th:each="item : ${portalTasks}">
+                    <div class="title-md" th:text="${item.task.title}">과제 제목</div>
+                    <div class="muted" th:text="${item.task.description}">설명</div>
+                    <div class="muted" th:text="${item.task.dueDate != null ? '마감: ' + item.task.dueDate : '마감일 없음'}">마감</div>
+                    <div class="muted" th:text="${item.group.name}">그룹</div>
+                </div>
+            </div>
+        </div>
+        <div class="card" style="background: linear-gradient(135deg, #fff7ed, #fffbeb); padding:18px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <div class="title-md">공지사항</div>
+                <span class="pill-soft" th:text="${#lists.size(portalNotices)} + '건'">0건</span>
+            </div>
+            <div th:if="${#lists.isEmpty(portalNotices)}" class="muted">새 공지가 없습니다.</div>
+            <div th:if="${!#lists.isEmpty(portalNotices)}" style="max-height:180px; overflow:auto; display:flex; flex-direction:column; gap:8px;">
+                <div class="pill-soft" th:each="item : ${portalNotices}">
+                    <div class="title-md" th:text="${item.notice.title}">공지 제목</div>
+                    <div class="muted" th:text="${item.notice.content}">내용</div>
+                    <div class="muted" th:text="${#temporals.format(item.notice.createdAt, 'yyyy.MM.dd HH:mm')}">작성일</div>
+                    <div class="muted" th:text="${item.group.name}">그룹</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

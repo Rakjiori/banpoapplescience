@@ -3,7 +3,6 @@ package com.example.sbb.service;
 import com.example.sbb.domain.group.GroupMember;
 import com.example.sbb.domain.group.GroupSharedQuestion;
 import com.example.sbb.domain.group.StudyGroup;
-import com.example.sbb.domain.group.GroupInvite;
 import com.example.sbb.domain.quiz.QuizQuestion;
 import com.example.sbb.domain.user.SiteUser;
 import com.example.sbb.domain.group.GroupNotice;
@@ -12,8 +11,6 @@ import com.example.sbb.repository.GroupMemberRepository;
 import com.example.sbb.repository.GroupSharedQuestionRepository;
 import com.example.sbb.repository.StudyGroupRepository;
 import com.example.sbb.repository.QuizQuestionRepository;
-import com.example.sbb.repository.GroupInviteRepository;
-import com.example.sbb.repository.PendingNotificationRepository;
 import com.example.sbb.repository.GroupNoticeRepository;
 import com.example.sbb.repository.GroupTaskRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,8 +30,6 @@ public class GroupService {
     private final GroupMemberRepository groupMemberRepository;
     private final GroupSharedQuestionRepository sharedQuestionRepository;
     private final QuizQuestionRepository quizQuestionRepository;
-    private final GroupInviteRepository groupInviteRepository;
-    private final PendingNotificationRepository pendingNotificationRepository;
     private final GroupNoticeRepository groupNoticeRepository;
     private final GroupTaskRepository groupTaskRepository;
     private final SecureRandom random = new SecureRandom();
@@ -181,25 +176,23 @@ public class GroupService {
     }
 
     @Transactional
-    public int inviteFriends(Long groupId, SiteUser owner, List<SiteUser> targets) {
+    public int inviteFriends(Long groupId, SiteUser actor, List<SiteUser> targets) {
         StudyGroup group = studyGroupRepository.findById(groupId).orElse(null);
-        if (group == null || !isOwner(group, owner) || targets == null || targets.isEmpty()) {
+        if (group == null || !canManage(group, actor) || targets == null || targets.isEmpty()) {
             return 0;
         }
-        int created = 0;
+        int added = 0;
         for (SiteUser t : targets) {
             if (t == null) continue;
             if (groupMemberRepository.findByGroupAndUser(group, t).isPresent()) continue;
-            if (groupInviteRepository.existsByGroupAndToUserAndStatus(group, t, GroupInvite.Status.PENDING)) continue;
-            GroupInvite invite = new GroupInvite();
-            invite.setGroup(group);
-            invite.setFromUser(owner);
-            invite.setToUser(t);
-            invite.setStatus(GroupInvite.Status.PENDING);
-            groupInviteRepository.save(invite);
-            created++;
+            GroupMember gm = new GroupMember();
+            gm.setGroup(group);
+            gm.setUser(t);
+            gm.setRole("MEMBER");
+            groupMemberRepository.save(gm);
+            added++;
         }
-        return created;
+        return added;
     }
 
     @Transactional
@@ -211,42 +204,6 @@ public class GroupService {
         if (gm == null || gm.getGroup() == null || !gm.getGroup().getId().equals(groupId)) return false;
         if (gm.getUser() != null && group.getOwner().getId().equals(gm.getUser().getId())) return false;
         groupMemberRepository.delete(gm);
-        return true;
-    }
-
-    public List<GroupInvite> inboxInvites(SiteUser user) {
-        return groupInviteRepository.findByToUserAndStatus(user, GroupInvite.Status.PENDING);
-    }
-
-    public List<GroupInvite> sentInvites(SiteUser user) {
-        return groupInviteRepository.findByFromUserAndStatus(user, GroupInvite.Status.PENDING);
-    }
-
-    @Transactional
-    public boolean acceptInvite(Long inviteId, SiteUser user) {
-        var invOpt = groupInviteRepository.findByIdAndToUser(inviteId, user);
-        if (invOpt.isEmpty()) return false;
-        GroupInvite invite = invOpt.get();
-        invite.setStatus(GroupInvite.Status.ACCEPTED);
-        groupInviteRepository.save(invite);
-        StudyGroup group = invite.getGroup();
-        if (group != null && groupMemberRepository.findByGroupAndUser(group, user).isEmpty()) {
-            GroupMember gm = new GroupMember();
-            gm.setGroup(group);
-            gm.setUser(user);
-            gm.setRole("MEMBER");
-            groupMemberRepository.save(gm);
-        }
-        return true;
-    }
-
-    @Transactional
-    public boolean rejectInvite(Long inviteId, SiteUser user) {
-        var invOpt = groupInviteRepository.findByIdAndToUser(inviteId, user);
-        if (invOpt.isEmpty()) return false;
-        GroupInvite invite = invOpt.get();
-        invite.setStatus(GroupInvite.Status.REJECTED);
-        groupInviteRepository.save(invite);
         return true;
     }
 
@@ -277,13 +234,9 @@ public class GroupService {
         groupTaskRepository.deleteAll(groupTaskRepository.findAll().stream()
                 .filter(t -> t.getGroup() != null && t.getGroup().getId().equals(group.getId()))
                 .toList());
-        // 2) 그룹 초대 제거
-        groupInviteRepository.deleteAll(groupInviteRepository.findAll().stream()
-                .filter(inv -> inv.getGroup() != null && inv.getGroup().getId().equals(group.getId()))
-                .toList());
-        // 3) 멤버 제거
+        // 2) 멤버 제거
         groupMemberRepository.deleteAll(groupMemberRepository.findByGroup(group));
-        // 4) 그룹 엔티티 제거
+        // 3) 그룹 엔티티 제거
         studyGroupRepository.delete(group);
         return true;
     }

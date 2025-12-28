@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout :: layout(~{::body})">
+<body>
+<div class="page-card">
+    <div class="page-header">
+        <div>
+            <div class="pill-soft">수강후기</div>
+            <h1 class="page-title">학부모·학생 후기 모음</h1>
+            <p class="muted">별점과 함께 작성된 모든 후기를 한 번에 볼 수 있습니다.</p>
+        </div>
+        <a class="btn btn-outline" href="/">← 홈으로</a>
+    </div>
+
+    <div th:if="${#lists.isEmpty(courseReviews)}" class="card" style="padding:18px;">등록된 수강후기가 없습니다.</div>
+
+    <div th:if="${not #lists.isEmpty(courseReviews)}"
+         style="max-height:600px; overflow:auto; padding-right:6px;">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:12px;">
+            <div class="card" th:each="r : ${courseReviews}" style="display:flex; flex-direction:column; min-height:160px;">
+                <div class="review-stars" th:text="${#strings.repeat('★', r.rating) + #strings.repeat('☆', 5 - r.rating)}">★★★★★</div>
+                <div class="review-text" th:text="${#strings.abbreviate(r.content,100)}" style="flex:1;">후기 내용</div>
+                <div class="reviewer" th:text="${r.author}">작성자</div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
