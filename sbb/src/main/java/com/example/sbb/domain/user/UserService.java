@@ -213,4 +213,44 @@ public class UserService {
     public SiteUser save(SiteUser user) {
         return userRepository.save(user);
     }
+
+    public List<SiteUser> findAll() {
+        return userRepository.findAll();
+    }
+
+    public Optional<SiteUser> findById(Long id) {
+        return userRepository.findById(id);
+    }
+
+    public boolean isRoot(SiteUser user) {
+        return user != null && "ROLE_ROOT".equals(user.getRole());
+    }
+
+    public boolean isAdminOrRoot(SiteUser user) {
+        if (user == null) return false;
+        String role = user.getRole();
+        return "ROLE_ADMIN".equals(role) || "ROLE_ROOT".equals(role);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public boolean promoteToAdmin(SiteUser actor, Long targetUserId) {
+        if (!isRoot(actor) || targetUserId == null) return false;
+        SiteUser target = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new java.util.NoSuchElementException("유저를 찾을 수 없습니다."));
+        if (isRoot(target)) return true;
+        target.setRole("ROLE_ADMIN");
+        userRepository.save(target);
+        return true;
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public boolean revokeAdmin(SiteUser actor, Long targetUserId) {
+        if (!isRoot(actor) || targetUserId == null) return false;
+        SiteUser target = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new java.util.NoSuchElementException("유저를 찾을 수 없습니다."));
+        if (isRoot(target)) return false;
+        target.setRole("ROLE_USER");
+        userRepository.save(target);
+        return true;
+    }
 }

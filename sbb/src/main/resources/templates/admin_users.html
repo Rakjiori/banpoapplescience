@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout :: layout(~{::body})">
+<body>
+<div class="page-card">
+    <div class="page-header">
+        <div>
+            <div class="pill">루트 전용</div>
+            <h1 class="page-title">관리자 지정</h1>
+            <p class="muted">루트 계정에서만 관리자 권한을 부여하거나 회수할 수 있습니다.</p>
+        </div>
+        <div class="pill-soft">현재 루트: <span th:text="${rootUsername}">root</span></div>
+    </div>
+
+    <div th:if="${message}" class="alert alert-success" style="margin-bottom:12px;">
+        <span th:text="${message}"></span>
+    </div>
+    <div th:if="${error}" class="alert alert-danger" style="margin-bottom:12px;">
+        <span th:text="${error}"></span>
+    </div>
+
+    <div class="table-card">
+        <div class="table-head">
+            <div>사용자</div>
+            <div>역할</div>
+            <div>액션</div>
+        </div>
+        <div class="table-row" th:each="u : ${users}">
+            <div>
+                <div class="title-md" th:text="${u.username}">username</div>
+                <div class="muted" th:text="${u.email}">email</div>
+            </div>
+            <div>
+                <span class="pill" th:text="${u.role}">ROLE_USER</span>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <form th:action="@{/admin/users/{id}/promote(id=${u.id})}" method="post" th:if="${u.role != 'ROLE_ROOT' and u.role != 'ROLE_ADMIN'}">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button type="submit" class="btn" style="padding:6px 10px;">관리자로 지정</button>
+                </form>
+                <form th:action="@{/admin/users/{id}/revoke(id=${u.id})}" method="post" th:if="${u.role == 'ROLE_ADMIN'}">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button type="submit" class="btn btn-outline" style="padding:6px 10px;"
+                            onclick="return confirm('관리자 권한을 해제할까요?');">관리자 해제</button>
+                </form>
+                <span th:if="${u.role == 'ROLE_ROOT'}" class="pill-soft">루트</span>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

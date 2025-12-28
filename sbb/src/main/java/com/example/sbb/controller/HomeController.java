@@ -3,6 +3,7 @@ package com.example.sbb.controller;
 import com.example.sbb.domain.user.Friend;
 import com.example.sbb.domain.user.SiteUser;
 import com.example.sbb.domain.user.UserService;
+import com.example.sbb.service.AcademyContentService;
 import com.example.sbb.service.FriendService;
 import com.example.sbb.service.ProgressService;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +21,17 @@ public class HomeController {
     private final UserService userService;
     private final FriendService friendService;
     private final ProgressService progressService;
+    private final AcademyContentService contentService;
 
     private record RankingEntry(int rank, SiteUser user, String medal) {}
 
     @GetMapping("/")
     public String index(Model model, java.security.Principal principal) {
+        model.addAttribute("schedules", contentService.listSchedules());
+        model.addAttribute("scheduleSlots", contentService.listSlots());
+        model.addAttribute("courseReviews", contentService.listReviews());
+        model.addAttribute("announcements", contentService.listAnnouncements());
+        model.addAttribute("subjectColors", contentService.subjectColors());
         if (principal != null) {
             SiteUser user = userService.getUser(principal.getName());
             model.addAttribute("sessionUser", user);

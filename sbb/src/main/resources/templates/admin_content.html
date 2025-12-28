@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout :: layout(~{::body})">
+<body>
+<div class="page-card">
+    <div class="page-header">
+        <div>
+            <div class="pill">관리자 전용</div>
+            <h1 class="page-title">학원 콘텐츠 관리</h1>
+            <p class="muted">시간표, 공지사항, 수강후기를 등록·삭제합니다. 루트/관리자만 접근 가능합니다.</p>
+        </div>
+    </div>
+
+    <div th:if="${message}" class="alert alert-success" style="margin-bottom:12px;">
+        <span th:text="${message}"></span>
+    </div>
+    <div th:if="${error}" class="alert alert-danger" style="margin-bottom:12px;">
+        <span th:text="${error}"></span>
+    </div>
+
+    <section class="card" style="margin-bottom:18px;">
+        <div class="card-header">
+            <div class="title-md">시간표 추가</div>
+        </div>
+        <form th:action="@{/admin/content/schedules}" method="post" class="form-grid">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <label>과목
+                <select name="subject" required>
+                    <option value="물리">물리</option>
+                    <option value="화학">화학</option>
+                    <option value="생명">생명</option>
+                    <option value="지구">지구</option>
+                    <option value="융합">융합</option>
+                    <option value="기타">기타</option>
+                </select>
+            </label>
+            <label>과정
+                <select name="courseType" required>
+                    <option value="1과목">1과목</option>
+                    <option value="2과목">2과목</option>
+                    <option value="내신">내신</option>
+                    <option value="모의">모의</option>
+                    <option value="기타">기타</option>
+                </select>
+            </label>
+            <label>학교
+                <select name="school" required>
+                    <option value="세화고">세화고</option>
+                    <option value="세화여고">세화여고</option>
+                    <option value="기타">기타</option>
+                </select>
+            </label>
+            <label>정렬 순서
+                <input type="number" name="sortOrder" value="0">
+            </label>
+            <label>첫 시간 - 요일
+                <select name="slotDayOfWeek">
+                    <option value="">선택 안 함</option>
+                    <option value="MONDAY">월요일</option>
+                    <option value="TUESDAY">화요일</option>
+                    <option value="WEDNESDAY">수요일</option>
+                    <option value="THURSDAY">목요일</option>
+                    <option value="FRIDAY">금요일</option>
+                    <option value="SATURDAY">토요일</option>
+                    <option value="SUNDAY">일요일</option>
+                </select>
+            </label>
+            <label>첫 시간 - 시작
+                <input type="time" name="slotStartTime" step="1800" min="06:00" max="22:00">
+            </label>
+            <label>첫 시간 - 종료
+                <input type="time" name="slotEndTime" step="1800" min="06:00" max="22:00">
+            </label>
+            <label>첫 시간 - 비고
+                <input type="text" name="slotNote" placeholder="예: 실험실, Zoom 등">
+            </label>
+            <div style="display:flex; justify-content:flex-end;">
+                <button type="submit" class="btn">추가</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="card" style="margin-bottom:18px;">
+        <div class="card-header">
+            <div class="title-md">등록된 시간표</div>
+        </div>
+        <div th:if="${#lists.isEmpty(schedules)}" class="muted" style="padding:12px;">등록된 시간표가 없습니다.</div>
+        <div th:each="s : ${schedules}" class="table-row">
+            <div>
+                <div class="title-md" th:text="${s.subject}">과목</div>
+                <div class="pill-soft" th:text="${s.school}">학교</div>
+                <div class="pill-soft" th:text="${s.courseType}">과정</div>
+            </div>
+            <div class="pill-soft" th:text="${'순서 ' + s.sortOrder}">순서</div>
+            <form th:action="@{/admin/content/schedules/{id}/delete(id=${s.id})}" method="post"
+                  onsubmit="return confirm('삭제할까요?');">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button type="submit" class="btn btn-outline" style="padding:6px 10px;">삭제</button>
+            </form>
+        </div>
+        <div class="table-row" style="flex-direction:column; align-items:flex-start;" th:each="s : ${schedules}">
+            <div class="title-md">시간 추가 ( <span th:text="${s.subject}">title</span> )</div>
+            <form th:action="@{/admin/content/schedules/{id}/slots(id=${s.id})}" method="post" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <select name="dayOfWeek" required>
+                    <option value="MONDAY">월요일</option>
+                    <option value="TUESDAY">화요일</option>
+                    <option value="WEDNESDAY">수요일</option>
+                    <option value="THURSDAY">목요일</option>
+                    <option value="FRIDAY">금요일</option>
+                    <option value="SATURDAY">토요일</option>
+                    <option value="SUNDAY">일요일</option>
+                </select>
+                <input type="time" name="startTime" required step="1800" min="06:00" max="22:00">
+                <input type="time" name="endTime" required step="1800" min="06:00" max="22:00">
+                <input type="text" name="note" placeholder="비고(예: 실험실)">
+                <button type="submit" class="btn" style="padding:6px 10px;">추가</button>
+            </form>
+            <div style="display:flex; flex-direction:column; gap:6px; width:100%; margin-top:8px;">
+                <div class="muted">현재 시간</div>
+                <div th:each="slot : ${slots}">
+                    <div th:if="${slot.schedule.id == s.id}"
+                         style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:6px 8px; border:1px solid #e5e7eb; border-radius:8px;">
+                        <span class="pill-soft" th:text="${slot.dayOfWeek}">MONDAY</span>
+                        <span th:text="${slot.startTime + ' ~ ' + slot.endTime}">10:00 ~ 12:00</span>
+                        <span th:if="${slot.note}" class="muted" th:text="${slot.note}"></span>
+                        <form th:action="@{/admin/content/slots/{id}/delete(id=${slot.id})}" method="post" style="margin:0;">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <button type="submit" class="btn btn-outline" style="padding:4px 8px;"
+                                    onclick="return confirm('시간을 삭제할까요?');">삭제</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="card" style="margin-bottom:18px;">
+        <div class="card-header">
+            <div class="title-md">수강후기 추가</div>
+        </div>
+        <form th:action="@{/admin/content/reviews}" method="post" class="form-grid">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <label>작성자
+                <input type="text" name="author" placeholder="예: 고1 학생" required>
+            </label>
+            <label>별점(1~5)
+                <input type="number" name="rating" min="1" max="5" value="5" required>
+            </label>
+            <label>내용
+                <textarea name="content" rows="4" placeholder="수강후기를 입력하세요" required></textarea>
+            </label>
+            <div style="display:flex; justify-content:flex-end;">
+                <button type="submit" class="btn">추가</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <div class="title-md">등록된 수강후기</div>
+        </div>
+        <div th:if="${#lists.isEmpty(reviews)}" class="muted" style="padding:12px;">등록된 후기가 없습니다.</div>
+        <div th:each="r : ${reviews}" class="table-row">
+            <div>
+                <div class="review-stars" th:text="${#strings.repeat('★', r.rating) + #strings.repeat('☆', 5 - r.rating)}">★★★★★</div>
+                <div class="title-md" th:text="${r.author}">작성자</div>
+                <div th:text="${r.content}" style="margin-top:6px;"></div>
+            </div>
+            <form th:action="@{/admin/content/reviews/{id}/delete(id=${r.id})}" method="post"
+                  onsubmit="return confirm('삭제할까요?');">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button type="submit" class="btn btn-outline" style="padding:6px 10px;">삭제</button>
+            </form>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <div class="title-md">공지사항 추가</div>
+        </div>
+        <form th:action="@{/admin/content/announcements}" method="post" class="form-grid">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <label>제목
+                <input type="text" name="title" placeholder="공지 제목" required>
+            </label>
+            <label>게시일(선택)
+                <input type="date" name="publishedAt">
+            </label>
+            <label>내용
+                <textarea name="content" rows="4" placeholder="공지 내용을 입력하세요" required></textarea>
+            </label>
+            <div style="display:flex; justify-content:flex-end;">
+                <button type="submit" class="btn">추가</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <div class="title-md">등록된 공지사항</div>
+        </div>
+        <div th:if="${#lists.isEmpty(announcements)}" class="muted" style="padding:12px;">등록된 공지사항이 없습니다.</div>
+        <div th:each="n : ${announcements}" class="table-row">
+            <div>
+                <div class="title-md" th:text="${n.title}">제목</div>
+                <div class="muted" th:text="${n.publishedAt != null ? n.publishedAt : #temporals.format(n.createdAt, 'yyyy-MM-dd')}">날짜</div>
+                <div th:text="${n.content}" style="margin-top:6px; white-space:pre-wrap;"></div>
+            </div>
+            <form th:action="@{/admin/content/announcements/{id}/delete(id=${n.id})}" method="post"
+                  onsubmit="return confirm('삭제할까요?');">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button type="submit" class="btn btn-outline" style="padding:6px 10px;">삭제</button>
+            </form>
+        </div>
+    </section>
+</div>
+<script>
+    // 시간 입력을 00/30 분 단위로 스냅
+    document.querySelectorAll('input[type="time"]').forEach(inp => {
+        inp.addEventListener('change', () => {
+            if (!inp.value) return;
+            const [h, m] = inp.value.split(':').map(Number);
+            const snapped = m < 15 ? 0 : (m < 45 ? 30 : 0);
+            const hour = snapped === 0 && m >= 45 ? (h + 1) % 24 : h;
+            const hh = String(hour).padStart(2, '0');
+            const mm = String(snapped).padStart(2, '0');
+            inp.value = `${hh}:${mm}`;
+        });
+    });
+</script>
+</body>
+</html>

@@ -64,6 +64,10 @@
             <a href="/groups" class="profile-item">내 그룹 보기</a>
             <a href="/folders" class="profile-item">내 폴더</a>
             <a href="/profile" class="profile-item">프로필</a>
+            <a href="/admin/content" class="profile-item"
+               th:if="${#authorization.expression('hasAnyAuthority(''ROLE_ADMIN'',''ROLE_ROOT'')')}">학원 콘텐츠 관리</a>
+            <a href="/admin/users" class="profile-item"
+               th:if="${#authorization.expression('hasAuthority(''ROLE_ROOT'')')}">관리자 지정</a>
             <a href="/logout" class="profile-item">로그아웃</a>
           </div>
         </div>
