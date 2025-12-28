@@ -37,4 +37,9 @@ public class AttendanceService {
         record.setStatus(status);
         return attendanceRecordRepository.save(record);
     }
+
+    public List<AttendanceRecord> listForRange(StudyGroup group, LocalDate start, LocalDate end) {
+        if (group == null || start == null || end == null) return List.of();
+        return attendanceRecordRepository.findByGroupAndDateBetween(group, start, end);
+    }
 }

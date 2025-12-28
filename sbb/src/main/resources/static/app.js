@@ -1,3 +1,5 @@
+// CSRF 메타를 전역으로 노출
+const csrfTokenMeta=document.querySelector('meta[name="_csrf"]');const csrfHeaderMeta=document.querySelector('meta[name="_csrf_header"]');window.csrfToken=csrfTokenMeta?csrfTokenMeta.content:'';window.csrfHeader=csrfHeaderMeta?csrfHeaderMeta.content:'X-CSRF-TOKEN';
 async function registerSW(){ if(!('serviceWorker'in navigator)) return null; return navigator.serviceWorker.register('/sw.js'); }
 function b64ToU8(b64){const p='='.repeat((4-b64.length%4)%4);const a=(b64+p).replace(/-/g,'+').replace(/_/g,'/');const r=atob(a),u=new Uint8Array(r.length);for(let i=0;i<r.length;i++)u[i]=r.charCodeAt(i);return u;}
 async function subscribePush(){
@@ -407,6 +409,44 @@ function setupProfileDropdown(){
   });
 }
 
+function setupConsultation(){
+  const btns = [document.getElementById('consultBtn'), document.getElementById('scheduleConsultBtn'), document.getElementById('floatingConsultBtn')].filter(Boolean);
+  const modal = document.getElementById('consultModal');
+  const closeBtn = document.getElementById('consultClose');
+  const form = document.getElementById('consultForm');
+  if(btns.length){
+    btns.forEach(btn => btn.addEventListener('click', () => {
+      if(modal){ modal.style.display = 'flex'; }
+    }));
+  }
+  closeBtn?.addEventListener('click', ()=> { if(modal) modal.style.display='none'; });
+  if(modal){
+    modal.addEventListener('click', (e)=>{ if(e.target === modal) modal.style.display='none'; });
+  }
+  if(form){
+    form.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const data = new FormData(form);
+      const type = data.get('type');
+      const phone = (data.get('phone') || '').toString().trim();
+      const memo = (data.get('message') || '').toString().trim();
+      const message = `[연락처] ${phone}` + (memo ? ` | ${memo}` : '');
+      fetch('/consultations/request', {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          [window.csrfHeader || 'X-CSRF-TOKEN']: window.csrfToken || ''
+        },
+        body: JSON.stringify({ type, message })
+      }).then(res=>{
+        if(res.ok){ alert('상담 요청이 접수되었습니다. (관리자에게 알림)'); form.reset(); modal.style.display='none'; }
+        else if(res.status === 401) alert('로그인 후 이용해주세요.');
+        else alert('요청을 처리하지 못했습니다.');
+      }).catch(()=> alert('요청을 처리하지 못했습니다.'));
+    });
+  }
+}
+
 // 폴링 기반 웹 알림 (서버 push 없이도 동작)
 async function pollNotifications(){
   if(!('Notification' in window)) return;
@@ -498,5 +538,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
   setupProfileDropdown();
   setupRevealAnimations();
   setupRipple();
+  setupConsultation();
   decorateBlueButtons();
 });

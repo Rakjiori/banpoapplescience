@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout :: layout(~{::body})">
+<body>
+<div class="page-card">
+    <div class="page-header">
+        <div>
+            <div class="pill">관리자 전용</div>
+            <h1 class="page-title">상담 요청</h1>
+            <p class="muted">방문/전화 상담 요청이 접수된 순서대로 표시됩니다.</p>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <div class="table-head">
+            <div>구분</div>
+            <div>내용</div>
+            <div>시각</div>
+        </div>
+        <div class="table-row" th:each="c : ${consultations}">
+            <div class="pill-soft" th:text="${c.type}">VISIT</div>
+            <div>
+                <div class="title-md" th:text="${c.user != null ? c.user.username : '비회원'}">user</div>
+                <div th:if="${c.message}" th:text="${c.message}" style="margin-top:4px; white-space:pre-wrap;"></div>
+            </div>
+            <div class="muted" th:text="${#temporals.format(c.createdAt, 'yyyy-MM-dd HH:mm')}">time</div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

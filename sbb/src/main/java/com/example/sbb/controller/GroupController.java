@@ -1,10 +1,12 @@
 package com.example.sbb.controller;
 
+import com.example.sbb.domain.group.AttendanceStatus;
 import com.example.sbb.domain.group.GroupMember;
 import com.example.sbb.domain.group.GroupSharedQuestion;
 import com.example.sbb.domain.group.StudyGroup;
 import com.example.sbb.domain.user.SiteUser;
 import com.example.sbb.domain.user.UserService;
+import com.example.sbb.service.AttendanceService;
 import com.example.sbb.service.GroupService;
 import com.example.sbb.service.FriendService;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/groups")
@@ -25,6 +28,7 @@ public class GroupController {
     private final GroupService groupService;
     private final UserService userService;
     private final FriendService friendService;
+    private final AttendanceService attendanceService;
 
     @GetMapping
     public String list(Model model, Principal principal) {
@@ -101,6 +105,24 @@ public class GroupController {
         model.addAttribute("friends", friendService.myFriends(user));
         model.addAttribute("members", groupService.membersOf(group));
         model.addAttribute("isOwner", groupService.isOwner(group, user));
+        boolean canManage = groupService.isOwner(group, user) || userService.isAdminOrRoot(user);
+        model.addAttribute("canManage", canManage);
+        model.addAttribute("groupNotices", groupService.listNotices(group));
+        model.addAttribute("groupTasks", groupService.listTasks(group));
+        var weekStart = java.time.LocalDate.now().with(java.time.DayOfWeek.MONDAY);
+        var weekEnd = weekStart.plusDays(6);
+        var weekDates = java.util.stream.IntStream.range(0,7)
+                .mapToObj(weekStart::plusDays)
+                .toList();
+        var weekRecords = attendanceService.listForRange(group, weekStart, weekEnd);
+        var attendanceMap = weekRecords.stream()
+                .filter(r -> r.getStudent() != null)
+                .collect(java.util.stream.Collectors.toMap(
+                        r -> r.getStudent().getId() + "_" + r.getDate(),
+                        r -> r.getStatus()
+                ));
+        model.addAttribute("weekDates", weekDates);
+        model.addAttribute("weekAttendance", attendanceMap);
         model.addAttribute("memberUserIds", groupService.membersOf(group).stream()
                 .filter(m -> m.getUser() != null)
                 .map(m -> m.getUser().getId())
@@ -192,6 +214,106 @@ public class GroupController {
             rttr.addFlashAttribute("message", "멤버를 삭제했습니다.");
         } else {
             rttr.addFlashAttribute("error", "제거할 수 없습니다. 그룹장 권한을 확인하세요.");
+        }
+        return "redirect:/groups/" + groupId;
+    }
+
+    @PostMapping("/{groupId}/attendance")
+    public String markAttendance(@PathVariable Long groupId,
+                                 @RequestParam("studentId") Long studentId,
+                                 @RequestParam("date") java.time.LocalDate date,
+                                 @RequestParam("status") String status,
+                                 Principal principal,
+                                 RedirectAttributes rttr) {
+        if (principal == null) return "redirect:/login";
+        SiteUser actor = userService.getUser(principal.getName());
+        List<GroupMember> memberships = groupService.memberships(actor);
+        Optional<StudyGroup> groupOpt = memberships.stream()
+                .map(GroupMember::getGroup)
+                .filter(g -> g.getId().equals(groupId))
+                .findFirst();
+        if (groupOpt.isEmpty()) {
+            rttr.addFlashAttribute("error", "수업에 속해 있지 않습니다.");
+            return "redirect:/groups";
+        }
+        StudyGroup group = groupOpt.get();
+        boolean canManage = groupService.isOwner(group, actor) || userService.isAdminOrRoot(actor);
+        if (!canManage) {
+            rttr.addFlashAttribute("error", "출석을 체크할 권한이 없습니다.");
+            return "redirect:/groups/" + groupId;
+        }
+        Optional<GroupMember> targetMember = groupService.membersOf(group).stream()
+                .filter(m -> m.getUser() != null && m.getUser().getId().equals(studentId))
+                .findFirst();
+        if (targetMember.isEmpty()) {
+            rttr.addFlashAttribute("error", "멤버를 찾을 수 없습니다.");
+            return "redirect:/groups/" + groupId;
+        }
+        try {
+            AttendanceStatus statusEnum = AttendanceStatus.valueOf(status);
+            attendanceService.markAttendance(group, targetMember.get().getUser(), actor, statusEnum, date);
+            rttr.addFlashAttribute("message", "출석을 업데이트했습니다.");
+        } catch (Exception e) {
+            rttr.addFlashAttribute("error", "출석 처리에 실패했습니다.");
+        }
+        return "redirect:/groups/" + groupId;
+    }
+
+    @PostMapping("/{groupId}/notices")
+    public String addNotice(@PathVariable Long groupId,
+                            @RequestParam String title,
+                            @RequestParam(required = false) String content,
+                            Principal principal,
+                            RedirectAttributes rttr) {
+        if (principal == null) return "redirect:/login";
+        SiteUser actor = userService.getUser(principal.getName());
+        var notice = groupService.addNotice(groupId, actor, title, content);
+        if (notice == null) rttr.addFlashAttribute("error", "공지 추가에 실패했습니다. 권한 또는 내용을 확인하세요.");
+        else rttr.addFlashAttribute("message", "공지사항을 추가했습니다.");
+        return "redirect:/groups/" + groupId;
+    }
+
+    @PostMapping("/{groupId}/notices/{noticeId}/delete")
+    public String deleteNotice(@PathVariable Long groupId,
+                               @PathVariable Long noticeId,
+                               Principal principal,
+                               RedirectAttributes rttr) {
+        if (principal == null) return "redirect:/login";
+        SiteUser actor = userService.getUser(principal.getName());
+        if (!groupService.deleteNotice(noticeId, actor)) {
+            rttr.addFlashAttribute("error", "공지 삭제 권한이 없습니다.");
+        } else {
+            rttr.addFlashAttribute("message", "공지를 삭제했습니다.");
+        }
+        return "redirect:/groups/" + groupId;
+    }
+
+    @PostMapping("/{groupId}/tasks")
+    public String addTask(@PathVariable Long groupId,
+                          @RequestParam String title,
+                          @RequestParam(required = false) String description,
+                          @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(pattern = "yyyy-MM-dd") java.time.LocalDate dueDate,
+                          Principal principal,
+                          RedirectAttributes rttr) {
+        if (principal == null) return "redirect:/login";
+        SiteUser actor = userService.getUser(principal.getName());
+        var task = groupService.addTask(groupId, actor, title, description, dueDate);
+        if (task == null) rttr.addFlashAttribute("error", "과제 추가에 실패했습니다. 권한 또는 내용을 확인하세요.");
+        else rttr.addFlashAttribute("message", "과제를 추가했습니다.");
+        return "redirect:/groups/" + groupId;
+    }
+
+    @PostMapping("/{groupId}/tasks/{taskId}/delete")
+    public String deleteTask(@PathVariable Long groupId,
+                             @PathVariable Long taskId,
+                             Principal principal,
+                             RedirectAttributes rttr) {
+        if (principal == null) return "redirect:/login";
+        SiteUser actor = userService.getUser(principal.getName());
+        if (!groupService.deleteTask(taskId, actor)) {
+            rttr.addFlashAttribute("error", "과제 삭제 권한이 없습니다.");
+        } else {
+            rttr.addFlashAttribute("message", "과제를 삭제했습니다.");
         }
         return "redirect:/groups/" + groupId;
     }

@@ -1,0 +1,11 @@
+package com.example.sbb.repository;
+
+import com.example.sbb.domain.group.GroupTask;
+import com.example.sbb.domain.group.StudyGroup;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface GroupTaskRepository extends JpaRepository<GroupTask, Long> {
+    List<GroupTask> findByGroupOrderByDueDateAscCreatedAtDesc(StudyGroup group);
+}

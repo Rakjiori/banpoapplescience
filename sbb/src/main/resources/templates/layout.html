@@ -25,6 +25,42 @@
       <th:block th:replace="${body}"></th:block>
   </main>
 
+  <!-- 떠 있는 상담 버튼 & 모달 -->
+  <button id="floatingConsultBtn" class="floating-consult">
+    <span>상담</span>
+    <small>02-532-1706</small>
+  </button>
+  <div id="consultModal" class="consult-modal">
+    <div class="consult-card">
+      <div class="consult-header">
+        <div>
+          <div class="pill">상담 요청</div>
+          <h3 style="margin:6px 0 4px;">바로 전화 또는 방문 예약</h3>
+          <p class="muted" style="margin:0;">관리자에게 바로 전달됩니다.</p>
+        </div>
+        <button type="button" id="consultClose" class="icon-button">✕</button>
+      </div>
+      <form id="consultForm" style="display:flex; flex-direction:column; gap:10px;">
+        <label>종류
+          <select name="type" required>
+            <option value="CALL">전화 요청</option>
+            <option value="VISIT">방문 예약</option>
+          </select>
+        </label>
+        <label>내 연락처
+          <input type="tel" name="phone" placeholder="예: 010-1234-5678" required>
+        </label>
+        <label>메모 (선택)
+          <textarea name="message" rows="3" placeholder="희망 시간이나 방문 일정을 적어주세요"></textarea>
+        </label>
+        <div class="consult-actions">
+          <div class="muted">애플과학 ☎ 02-532-1706</div>
+          <button type="submit" class="btn">요청 보내기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- 🔻 푸터 추가 -->
   <footer class="site-footer">
     <div class="footer-inner">
@@ -52,6 +88,32 @@
 
   <!-- 공통 스크립트 -->
   <script th:src="@{/app.js}"></script>
+  <style>
+    .floating-consult {
+      position: fixed; right: 20px; bottom: 20px;
+      background: linear-gradient(135deg, #0f766e, #14b8a6);
+      color:#fff; border:none; border-radius:16px;
+      padding:12px 14px; box-shadow:0 12px 30px rgba(0,0,0,0.2);
+      display:flex; flex-direction:column; gap:2px; align-items:flex-start;
+      font-weight:800; z-index:999;
+    }
+    .floating-consult small { font-weight:600; opacity:0.9; }
+    .consult-modal {
+      position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+      background:rgba(0,0,0,0.45); z-index:1000; padding:12px;
+    }
+    .consult-card {
+      background:#fff; border-radius:16px; padding:16px; max-width:420px; width:100%;
+      box-shadow:0 16px 40px rgba(0,0,0,0.22); border:1px solid #e2e8f0;
+      display:flex; flex-direction:column; gap:10px;
+    }
+    .consult-header { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+    .consult-card label { display:flex; flex-direction:column; gap:6px; font-weight:700; color:#0f172a; }
+    .consult-card input, .consult-card select, .consult-card textarea {
+      width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:10px;
+    }
+    .consult-actions { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  </style>
 
 </body>
 </html>

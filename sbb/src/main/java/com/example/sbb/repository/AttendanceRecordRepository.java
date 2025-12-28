@@ -12,4 +12,5 @@ import java.util.Optional;
 public interface AttendanceRecordRepository extends JpaRepository<AttendanceRecord, Long> {
     List<AttendanceRecord> findByGroupAndDate(StudyGroup group, LocalDate date);
     Optional<AttendanceRecord> findByGroupAndStudentAndDate(StudyGroup group, SiteUser student, LocalDate date);
+    List<AttendanceRecord> findByGroupAndDateBetween(StudyGroup group, LocalDate start, LocalDate end);
 }

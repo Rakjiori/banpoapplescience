@@ -6,12 +6,16 @@ import com.example.sbb.domain.group.StudyGroup;
 import com.example.sbb.domain.group.GroupInvite;
 import com.example.sbb.domain.quiz.QuizQuestion;
 import com.example.sbb.domain.user.SiteUser;
+import com.example.sbb.domain.group.GroupNotice;
+import com.example.sbb.domain.group.GroupTask;
 import com.example.sbb.repository.GroupMemberRepository;
 import com.example.sbb.repository.GroupSharedQuestionRepository;
 import com.example.sbb.repository.StudyGroupRepository;
 import com.example.sbb.repository.QuizQuestionRepository;
 import com.example.sbb.repository.GroupInviteRepository;
 import com.example.sbb.repository.PendingNotificationRepository;
+import com.example.sbb.repository.GroupNoticeRepository;
+import com.example.sbb.repository.GroupTaskRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +35,8 @@ public class GroupService {
     private final QuizQuestionRepository quizQuestionRepository;
     private final GroupInviteRepository groupInviteRepository;
     private final PendingNotificationRepository pendingNotificationRepository;
+    private final GroupNoticeRepository groupNoticeRepository;
+    private final GroupTaskRepository groupTaskRepository;
     private final SecureRandom random = new SecureRandom();
 
     @Transactional
@@ -71,8 +77,8 @@ public class GroupService {
         if (group == null) return List.of();
         List<GroupMember> byGroup = groupMemberRepository.findByGroupOrderByJoinedAtAsc(group);
         if (byGroup == null || byGroup.isEmpty()) {
-            return groupMemberRepository.findByGroup(group);
-        }
+        return groupMemberRepository.findByGroup(group);
+    }
         return byGroup;
     }
 
@@ -81,8 +87,20 @@ public class GroupService {
         return group.getOwner() != null && group.getOwner().getId().equals(user.getId());
     }
 
+    public boolean canManage(StudyGroup group, SiteUser user) {
+        return isOwner(group, user) || (user != null && "ROLE_ADMIN".equals(user.getRole())) || (user != null && "ROLE_ROOT".equals(user.getRole()));
+    }
+
     public List<GroupSharedQuestion> listShared(StudyGroup group) {
         return sharedQuestionRepository.findByGroupOrderBySharedAtDesc(group);
+    }
+
+    public List<GroupNotice> listNotices(StudyGroup group) {
+        return groupNoticeRepository.findByGroupOrderByCreatedAtDesc(group);
+    }
+
+    public List<GroupTask> listTasks(StudyGroup group) {
+        return groupTaskRepository.findByGroupOrderByDueDateAscCreatedAtDesc(group);
     }
 
     @Transactional
@@ -252,6 +270,13 @@ public class GroupService {
         if (group == null) return false;
         // 1) 공유된 문제 제거
         sharedQuestionRepository.deleteAllByGroup(group);
+        // 공지/과제 제거
+        groupNoticeRepository.deleteAll(groupNoticeRepository.findAll().stream()
+                .filter(n -> n.getGroup() != null && n.getGroup().getId().equals(group.getId()))
+                .toList());
+        groupTaskRepository.deleteAll(groupTaskRepository.findAll().stream()
+                .filter(t -> t.getGroup() != null && t.getGroup().getId().equals(group.getId()))
+                .toList());
         // 2) 그룹 초대 제거
         groupInviteRepository.deleteAll(groupInviteRepository.findAll().stream()
                 .filter(inv -> inv.getGroup() != null && inv.getGroup().getId().equals(group.getId()))
@@ -288,6 +313,51 @@ public class GroupService {
                 deleteGroup(group);
             }
         }
+        return true;
+    }
+
+    @Transactional
+    public GroupNotice addNotice(Long groupId, SiteUser author, String title, String content) {
+        StudyGroup group = studyGroupRepository.findById(groupId).orElse(null);
+        if (group == null || !canManage(group, author)) return null;
+        if (title == null || title.isBlank()) return null;
+        GroupNotice notice = new GroupNotice();
+        notice.setGroup(group);
+        notice.setAuthor(author);
+        notice.setTitle(title.trim());
+        notice.setContent(content);
+        return groupNoticeRepository.save(notice);
+    }
+
+    @Transactional
+    public boolean deleteNotice(Long noticeId, SiteUser actor) {
+        if (noticeId == null) return false;
+        GroupNotice notice = groupNoticeRepository.findById(noticeId).orElse(null);
+        if (notice == null || notice.getGroup() == null || !canManage(notice.getGroup(), actor)) return false;
+        groupNoticeRepository.delete(notice);
+        return true;
+    }
+
+    @Transactional
+    public GroupTask addTask(Long groupId, SiteUser author, String title, String description, java.time.LocalDate dueDate) {
+        StudyGroup group = studyGroupRepository.findById(groupId).orElse(null);
+        if (group == null || !canManage(group, author)) return null;
+        if (title == null || title.isBlank()) return null;
+        GroupTask task = new GroupTask();
+        task.setGroup(group);
+        task.setAuthor(author);
+        task.setTitle(title.trim());
+        task.setDescription(description);
+        task.setDueDate(dueDate);
+        return groupTaskRepository.save(task);
+    }
+
+    @Transactional
+    public boolean deleteTask(Long taskId, SiteUser actor) {
+        if (taskId == null) return false;
+        GroupTask task = groupTaskRepository.findById(taskId).orElse(null);
+        if (task == null || task.getGroup() == null || !canManage(task.getGroup(), actor)) return false;
+        groupTaskRepository.delete(task);
         return true;
     }
 }
