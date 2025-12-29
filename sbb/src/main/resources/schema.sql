@@ -93,6 +93,40 @@ CREATE TABLE IF NOT EXISTS group_invite (
     CONSTRAINT fk_group_invite_to FOREIGN KEY (to_user_id) REFERENCES site_user(id)
 );
 
+CREATE TABLE IF NOT EXISTS group_fee_payment (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    group_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    recorded_by BIGINT,
+    amount INT NOT NULL,
+    paid_at DATE NOT NULL,
+    note VARCHAR(255),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_fee_group FOREIGN KEY (group_id) REFERENCES study_group(id),
+    CONSTRAINT fk_fee_user FOREIGN KEY (user_id) REFERENCES site_user(id),
+    CONSTRAINT fk_fee_recorder FOREIGN KEY (recorded_by) REFERENCES site_user(id)
+);
+
+CREATE TABLE IF NOT EXISTS admin_note (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    content TEXT NOT NULL,
+    author_id BIGINT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_admin_note_author FOREIGN KEY (author_id) REFERENCES site_user(id)
+);
+
+CREATE TABLE IF NOT EXISTS admin_note_comment (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    note_id BIGINT NOT NULL,
+    author_id BIGINT NOT NULL,
+    content TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_admin_note_comment_note FOREIGN KEY (note_id) REFERENCES admin_note(id),
+    CONSTRAINT fk_admin_note_comment_author FOREIGN KEY (author_id) REFERENCES site_user(id)
+);
+
 -- MySQL 5.7에서는 ADD COLUMN IF NOT EXISTS 구문을 지원하지 않으므로
 -- INFORMATION_SCHEMA를 조회해 없을 때만 동적으로 컬럼을 추가한다.
 SET @sql_last_solved_date := IF(

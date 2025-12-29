@@ -30,7 +30,7 @@
 
     <div class="card" style="padding:0;">
         <div style="max-height:420px; overflow:auto;">
-            <div class="table-row" style="display:grid; grid-template-columns: 60px 160px 180px 140px 140px 240px; align-items:center; gap:8px; padding:10px; border-bottom:1px solid #e5e7eb; font-weight:600; background:#f8fafc;">
+            <div class="table-row" style="display:grid; grid-template-columns: 80px 160px 180px 140px 140px 240px; align-items:center; gap:8px; padding:10px; border-bottom:1px solid #e5e7eb; font-weight:600; background:#f8fafc;">
                 <div>#</div>
                 <div>아이디</div>
                 <div>학교</div>
@@ -41,15 +41,16 @@
             <div class="table-row user-row"
                  th:each="u, stat : ${users}"
                  th:data-role="${u.role}"
-                 th:data-text="${(u.username + ' ' + (u.fullName != null ? u.fullName : '') + ' ' + (u.schoolName != null ? u.schoolName : '') + ' ' + (u.grade != null ? u.grade : '')).toLowerCase()}"
-                 style="display:grid; grid-template-columns: 60px 160px 180px 140px 140px 240px; align-items:center; gap:8px; padding:10px; border-bottom:1px solid #f1f5f9;">
-                <div class="pill-soft" th:text="${stat.count}">1</div>
+                 th:data-text="${(u.id + ' ' + u.username + ' ' + (u.fullName != null ? u.fullName : '') + ' ' + (u.schoolName != null ? u.schoolName : '') + ' ' + (u.grade != null ? u.grade : '')).toLowerCase()}"
+                 style="display:grid; grid-template-columns: 80px 160px 180px 140px 140px 240px; align-items:center; gap:8px; padding:10px; border-bottom:1px solid #f1f5f9;">
+                <div class="pill-soft" th:text="${stat.index + 1}">1</div>
                 <div class="title-md" th:text="${u.username}">username</div>
                 <div class="muted" th:text="${u.schoolName != null ? u.schoolName : '-'}">학교</div>
                 <div class="muted" th:text="${u.grade != null ? u.grade : '-'}">학년</div>
                 <div class="muted" th:text="${u.fullName != null ? u.fullName : ''}">이름</div>
                 <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-                    <span class="pill" th:text="${u.role}">ROLE_USER</span>
+                    <span class="pill" th:if="${u.role == 'ROLE_ADMIN'}" th:text="${u.role}">ROLE_ADMIN</span>
+                    <span class="pill" th:if="${u.role == 'ROLE_ROOT'}" th:text="${u.role}">ROLE_ROOT</span>
                     <form th:if="${isRoot and u.role != 'ROLE_ROOT' and u.role != 'ROLE_ADMIN'}"
                           th:action="@{/admin/users/{id}/promote(id=${u.id})}" method="post">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">

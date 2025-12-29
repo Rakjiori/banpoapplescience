@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout :: layout(~{::body})">
+<body>
+<div class="page-card">
+    <div class="page-header">
+        <div>
+            <div class="pill">관리자/루트</div>
+            <h1 class="page-title">관리자 인수인계 게시판</h1>
+            <p class="muted">관리자끼리 남기는 공지/인수인계 메모를 확인하세요.</p>
+        </div>
+        <a class="btn" href="/admin/notes/new">새 글 작성</a>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger" style="margin-bottom:12px;">
+        <span th:text="${error}"></span>
+    </div>
+    <div th:if="${message}" class="alert alert-success" style="margin-bottom:12px;">
+        <span th:text="${message}"></span>
+    </div>
+
+    <div class="card">
+        <div class="table-row" style="display:grid; grid-template-columns: 80px 1fr 140px 180px; align-items:center; gap:8px; padding:10px; border-bottom:1px solid #e5e7eb; font-weight:600; background:#f8fafc;">
+            <div>#</div>
+            <div>제목</div>
+            <div>작성자</div>
+            <div>작성일</div>
+        </div>
+        <div th:each="n, stat : ${notes}"
+             class="table-row"
+             style="display:grid; grid-template-columns: 80px 1fr 140px 180px; align-items:center; gap:8px; padding:10px; border-bottom:1px solid #f1f5f9;">
+            <div class="pill-soft" th:text="${stat.count}">1</div>
+            <a th:href="@{'/admin/notes/' + ${n.id}}" class="title-md" th:text="${n.title}">제목</a>
+            <div class="muted" th:text="${n.author != null ? n.author.username : '-'}">작성자</div>
+            <div class="muted" th:text="${#temporals.format(n.createdAt, 'yyyy-MM-dd HH:mm')}">날짜</div>
+        </div>
+        <div th:if="${#lists.isEmpty(notes)}" style="padding:20px; text-align:center; color:#6b7280;">
+            아직 작성된 글이 없습니다.
+        </div>
+    </div>
+</div>
+</body>
+</html>

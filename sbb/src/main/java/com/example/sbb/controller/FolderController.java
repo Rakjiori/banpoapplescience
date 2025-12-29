@@ -43,30 +43,14 @@ public class FolderController {
 
     @GetMapping
     public String list(Model model, Principal principal) {
-        if (principal == null) return "redirect:/login";
-        SiteUser user = userService.getUser(principal.getName());
-        List<Folder> folders = folderRepository.findByUserOrderByCreatedAtAsc(user);
-        model.addAttribute("folders", folders);
-        return "folder_list";
+        return "redirect:/";
     }
 
     @PostMapping
     public String create(@RequestParam("name") String name,
                          Principal principal,
                          Model model) {
-        if (principal == null) return "redirect:/login";
-        if (name == null || name.trim().isEmpty()) {
-            model.addAttribute("error", "폴더 이름을 입력해 주세요.");
-            return list(model, principal);
-        }
-
-        SiteUser user = userService.getUser(principal.getName());
-        Folder folder = new Folder();
-        folder.setName(name.trim());
-        folder.setUser(user);
-        folderRepository.save(folder);
-
-        return "redirect:/folders";
+        return "redirect:/";
     }
 
     @PostMapping("/delete")
@@ -74,34 +58,6 @@ public class FolderController {
     public String delete(@RequestParam("folderId") Long folderId,
                          Principal principal,
                          Model model) {
-        if (principal == null) return "redirect:/login";
-        SiteUser user = userService.getUser(principal.getName());
-        Folder folder = folderRepository.findByIdAndUser(folderId, user).orElse(null);
-        if (folder == null) {
-            model.addAttribute("error", "삭제할 폴더를 찾을 수 없습니다.");
-            return list(model, principal);
-        }
-
-        // 폴더 안에 데이터가 있어도 바로 삭제: 연관 데이터도 함께 제거
-        List<DocumentFile> docs = documentFileRepository.findByFolder(folder);
-        for (DocumentFile doc : docs) {
-            try {
-                Path path = Paths.get(System.getProperty("user.dir"), "uploads", doc.getStoredFilename());
-                Files.deleteIfExists(path);
-            } catch (Exception ignored) {}
-            problemRepository.deleteAllByDocumentFile(doc);
-            quizQuestionRepository.deleteAllByDocument(doc);
-            documentFileRepository.delete(doc);
-        }
-        List<QuizQuestion> folderQuestions = quizQuestionRepository.findByFolder(folder);
-        if (!folderQuestions.isEmpty()) {
-            List<Long> questionIds = folderQuestions.stream().map(QuizQuestion::getId).toList();
-            pendingNotificationRepository.deleteAllByQuestion_IdIn(questionIds);
-            friendShareRequestRepository.deleteAllByQuestion_IdIn(questionIds);
-            sharedQuestionRepository.deleteAllByQuestion_IdIn(questionIds);
-            quizQuestionRepository.deleteAll(folderQuestions);
-        }
-        folderRepository.delete(folder);
-        return "redirect:/folders";
+        return "redirect:/";
     }
 }

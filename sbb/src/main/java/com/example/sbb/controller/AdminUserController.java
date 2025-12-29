@@ -36,7 +36,9 @@ public class AdminUserController {
             rttr.addFlashAttribute("error", "관리자 이상만 접근할 수 있습니다.");
             return "redirect:/";
         }
-        var users = userService.findAll();
+        var users = userService.findAll().stream()
+                .filter(u -> !"ROLE_DELETED".equals(u.getRole()))
+                .toList();
         model.addAttribute("users", users);
         model.addAttribute("rootUsername", actor.getUsername());
         model.addAttribute("bySchool", groupBySchool(users));

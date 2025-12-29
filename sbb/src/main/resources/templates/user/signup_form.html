@@ -13,7 +13,7 @@
 
             <h1 class="page-title" style="margin-bottom:6px; text-align:center;">회원가입</h1>
             <p style="text-align:center; color:#6b7280; font-size:14px; margin-bottom:16px;">
-                학원 페이지에서 사용할 계정 유형을 선택하고 정보를 입력해주세요.
+                계정 유형을 선택하고 정보를 입력해주세요.
             </p>
 
             <div th:if="${errorMessage}" class="alert alert-danger" style="margin-bottom:14px;">
@@ -49,35 +49,53 @@
                         </option>
                     </select>
                     <p class="muted" style="font-size:12px; margin-top:4px;">
-                        조교는 루트 계정이 관리자 권한을 부여할 수 있습니다.
+                        
                     </p>
                 </div>
 
                 <div>
-                    <label for="fullName" style="font-size:14px; font-weight:500; margin-bottom:4px; display:block;">
+                    <label id="fullNameLabel" for="fullName" style="font-size:14px; font-weight:500; margin-bottom:4px; display:block;">
                         이름
                     </label>
                     <input type="text" id="fullName" name="fullName"
                            placeholder="예: 홍길동"
                            th:value="${enteredFullName}">
+                    <p id="nameHelper" class="muted" style="font-size:12px; margin-top:4px; display:none;">
+                        
+                    </p>
                 </div>
 
                 <div id="studentFields" style="display:none;">
+                    <div style="margin-bottom:6px;">
+                        <span style="font-size:13px; color:#374151; font-weight:600;">학생 정보</span>
+                        <p class="muted" style="font-size:12px; margin-top:2px;">
+                            학생 또는 학부모 선택 시 학생의 학교와 학년을 입력해주세요.
+                        </p>
+                    </div>
                     <div style="margin-top:6px;">
                         <label for="schoolName" style="font-size:14px; font-weight:500; margin-bottom:4px; display:block;">
                             학교
                         </label>
-                        <input type="text" id="schoolName" name="schoolName"
-                               placeholder="예: 서울고등학교"
-                               th:value="${enteredSchoolName}">
+                        <select id="schoolName" name="schoolName">
+                            <option value="">학교를 선택하세요</option>
+                            <option th:selected="${enteredSchoolName} == '세화고'">세화고</option>
+                            <option th:selected="${enteredSchoolName} == '세화여고'">세화여고</option>
+                            <option th:selected="${enteredSchoolName} == '반포고'">반포고</option>
+                            <option th:selected="${enteredSchoolName} == '서울고'">서울고</option>
+                        </select>
                     </div>
                     <div style="margin-top:10px;">
                         <label for="grade" style="font-size:14px; font-weight:500; margin-bottom:4px; display:block;">
                             학년
                         </label>
-                        <input type="text" id="grade" name="grade"
-                               placeholder="예: 2학년"
-                               th:value="${enteredGrade}">
+                        <select id="grade" name="grade">
+                            <option value="">학년을 선택하세요</option>
+                            <option th:selected="${enteredGrade} == '예비 1학년'">예비 1학년</option>
+                            <option th:selected="${enteredGrade} == '1학년'">1학년</option>
+                            <option th:selected="${enteredGrade} == '2학년'">2학년</option>
+                            <option th:selected="${enteredGrade} == '3학년'">3학년</option>
+                            <option th:selected="${enteredGrade} == '졸업생'">졸업생</option>
+                        </select>
                     </div>
                 </div>
 
@@ -90,17 +108,37 @@
             <script th:inline="javascript">
                 const accountTypeSelect = document.getElementById('accountType');
                 const studentFields = document.getElementById('studentFields');
+                const fullNameLabel = document.getElementById('fullNameLabel');
                 const fullNameInput = document.getElementById('fullName');
+                const nameHelper = document.getElementById('nameHelper');
                 const schoolInput = document.getElementById('schoolName');
                 const gradeInput = document.getElementById('grade');
 
                 const syncVisibility = () => {
                     const type = accountTypeSelect.value;
-                    const isStudent = type === 'STUDENT';
-                    studentFields.style.display = isStudent ? 'block' : 'none';
+                    const requiresStudentInfo = type === 'STUDENT' || type === 'PARENT';
+                    const isParent = type === 'PARENT';
+
+                    studentFields.style.display = requiresStudentInfo ? 'block' : 'none';
                     fullNameInput.required = type !== '';
-                    schoolInput.required = isStudent;
-                    gradeInput.required = isStudent;
+                    schoolInput.required = requiresStudentInfo;
+                    gradeInput.required = requiresStudentInfo;
+
+                    if (isParent) {
+                        fullNameLabel.textContent = '학생 이름';
+                        fullNameInput.placeholder = '예: 홍길동 (학생)';
+                        nameHelper.style.display = 'block';
+                        nameHelper.textContent = '학부모 계정에 연결될 학생 이름을 입력해주세요.';
+                    } else if (requiresStudentInfo) {
+                        fullNameLabel.textContent = '학생 이름';
+                        fullNameInput.placeholder = '예: 홍길동';
+                        nameHelper.style.display = 'block';
+                        nameHelper.textContent = '학생 이름을 입력해주세요.';
+                    } else {
+                        fullNameLabel.textContent = '이름';
+                        fullNameInput.placeholder = '예: 홍길동';
+                        nameHelper.style.display = 'none';
+                    }
                 };
 
                 accountTypeSelect.addEventListener('change', syncVisibility);

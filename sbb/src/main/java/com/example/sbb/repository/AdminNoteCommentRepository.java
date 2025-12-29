@@ -1,0 +1,7 @@
+package com.example.sbb.repository;
+
+import com.example.sbb.domain.AdminNoteComment;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface AdminNoteCommentRepository extends JpaRepository<AdminNoteComment, Long> {
+}

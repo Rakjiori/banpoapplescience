@@ -13,4 +13,5 @@ public interface AttendanceRecordRepository extends JpaRepository<AttendanceReco
     List<AttendanceRecord> findByGroupAndDate(StudyGroup group, LocalDate date);
     Optional<AttendanceRecord> findByGroupAndStudentAndDate(StudyGroup group, SiteUser student, LocalDate date);
     List<AttendanceRecord> findByGroupAndDateBetween(StudyGroup group, LocalDate start, LocalDate end);
+    List<AttendanceRecord> findByGroup(StudyGroup group);
 }

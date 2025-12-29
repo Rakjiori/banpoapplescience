@@ -72,6 +72,20 @@
             <button type="submit" class="btn" style="margin-top:6px;">저장하기</button>
         </form>
     </div>
+
+    <div class="card" style="margin-top:16px; padding:18px; border:1px solid #fecdd3; background:#fff1f2;">
+        <div class="title-md" style="color:#b91c1c; margin-bottom:6px;">계정 탈퇴</div>
+        <p class="muted" style="margin-bottom:10px;">모든 학습 기록과 업로드 자료가 삭제/비활성화되며, 되돌릴 수 없습니다.</p>
+        <form th:action="@{/account/delete}" method="post" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <input type="password" name="currentPassword" placeholder="현재 비밀번호 확인" required
+                   style="flex:1; min-width:200px;">
+            <button type="submit" class="btn btn-outline" style="color:#b91c1c; border-color:#fca5a5;"
+                    onclick="return confirm('정말 탈퇴하시겠습니까? 되돌릴 수 없습니다.');">
+                계정 탈퇴
+            </button>
+        </form>
+    </div>
 </div>
 </body>
 </html>

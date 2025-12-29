@@ -2,7 +2,7 @@
 <nav class="navbar" th:fragment="nav">
   <div class="navbar-inner">
     <a class="brand" th:href="@{/}">
-      <img class="brand-logo" th:src="@{/image/logo.png}" alt="애플과학 로고">
+      <img class="brand-logo" th:src="@{/image/logo2.png}" alt="애플과학 로고">
       <div class="brand-text">
         <div class="brand-name">애플과학</div>
         <div class="brand-sub">Banpo Apple Science</div>
@@ -48,12 +48,15 @@
           <div class="profile-list">
             <a href="/learning" class="profile-item">학습 포털</a>
             <a href="/groups" class="profile-item">내 그룹 보기</a>
-            <a href="/folders" class="profile-item">내 폴더</a>
             <a href="/account" class="profile-item">내 정보 수정</a>
             <a href="/admin/content" class="profile-item"
                th:if="${#authorization.expression('hasAnyAuthority(''ROLE_ADMIN'',''ROLE_ROOT'')')}">학원 콘텐츠 관리</a>
             <a href="/admin/users" class="profile-item"
                th:if="${#authorization.expression('hasAnyAuthority(''ROLE_ADMIN'',''ROLE_ROOT'')')}">관리자/계정 현황</a>
+            <a href="/admin/members" class="profile-item"
+               th:if="${#authorization.expression('hasAnyAuthority(''ROLE_ADMIN'',''ROLE_ROOT'')')}">학원생 출석/회비 관리</a>
+            <a href="/admin/notes" class="profile-item"
+               th:if="${#authorization.expression('hasAnyAuthority(''ROLE_ADMIN'',''ROLE_ROOT'')')}">관리자 인수인계 게시판</a>
             <a href="/logout" class="profile-item">로그아웃</a>
           </div>
         </div>

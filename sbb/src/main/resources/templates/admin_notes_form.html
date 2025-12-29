@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout :: layout(~{::body})">
+<body>
+<div class="page-card" style="max-width:820px;">
+    <div class="page-header">
+        <div>
+            <div class="pill">관리자/루트</div>
+            <h1 class="page-title" th:text="${note != null ? '글 수정' : '새 글 작성'}">글 작성</h1>
+            <p class="muted">인수인계, 운영 팁, 주의사항 등을 공유하세요.</p>
+        </div>
+        <a class="btn btn-outline" href="/admin/notes">← 목록</a>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger" style="margin-bottom:12px;">
+        <span th:text="${error}"></span>
+    </div>
+
+    <div class="card" style="padding:16px;">
+        <form th:action="${note != null ? '/admin/notes/' + note.id : '/admin/notes'}" method="post" style="display:flex; flex-direction:column; gap:12px;">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <div>
+                <label class="form-label" for="title">제목</label>
+                <input type="text" id="title" name="title" required th:value="${note != null ? note.title : ''}">
+            </div>
+            <div>
+                <label class="form-label" for="content">내용</label>
+                <textarea id="content" name="content" rows="12" required th:text="${note != null ? note.content : ''}"></textarea>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button type="submit" class="btn">저장</button>
+                <a href="/admin/notes" class="btn btn-outline">취소</a>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

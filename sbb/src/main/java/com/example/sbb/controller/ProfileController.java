@@ -17,6 +17,14 @@ import java.security.Principal;
 public class ProfileController {
 
     private final UserService userService;
+    private final com.example.sbb.repository.GroupMemberRepository groupMemberRepository;
+    private final com.example.sbb.repository.FriendRepository friendRepository;
+    private final com.example.sbb.repository.FriendRequestRepository friendRequestRepository;
+    private final com.example.sbb.repository.FriendShareRequestRepository friendShareRequestRepository;
+    private final com.example.sbb.repository.GroupInviteRepository groupInviteRepository;
+    private final com.example.sbb.repository.DocumentFileRepository documentFileRepository;
+    private final com.example.sbb.repository.QuizQuestionRepository quizQuestionRepository;
+    private final com.example.sbb.repository.ProblemRepository problemRepository;
 
     @GetMapping("/profile")
     public String redirectProfile() {
@@ -61,6 +69,23 @@ public class ProfileController {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("user", previewUser(user, username, fullName, schoolName, grade));
             return "account_settings";
+        }
+    }
+
+    @PostMapping("/account/delete")
+    public String deleteAccount(@RequestParam("currentPassword") String currentPassword,
+                                Principal principal,
+                                RedirectAttributes rttr) {
+        if (principal == null) return "redirect:/login";
+        SiteUser user = userService.getUser(principal.getName());
+        try {
+            userService.selfDelete(user, currentPassword, groupMemberRepository, friendRepository, friendRequestRepository,
+                    friendShareRequestRepository, groupInviteRepository, documentFileRepository, quizQuestionRepository, problemRepository);
+            rttr.addFlashAttribute("message", "계정을 탈퇴했습니다.");
+            return "redirect:/logout";
+        } catch (IllegalArgumentException e) {
+            rttr.addFlashAttribute("error", e.getMessage());
+            return "redirect:/account";
         }
     }
 

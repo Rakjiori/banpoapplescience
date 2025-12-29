@@ -47,6 +47,15 @@ public class UserService {
             "extra20", 25
     );
 
+    private static final List<String> ALLOWED_SCHOOLS = List.of("세화고", "세화여고", "반포고", "서울고");
+    private static final List<String> ALLOWED_GRADES = List.of("예비 1학년", "1학년", "2학년", "3학년", "졸업생");
+    private static final Map<String, String> GRADE_PROMOTION_MAP = Map.of(
+            "예비 1학년", "1학년",
+            "1학년", "2학년",
+            "2학년", "3학년",
+            "3학년", "졸업생"
+    );
+
     /**
      * 회원 가입용 유저 생성 (계정 유형별 기본 정보 포함)
      */
@@ -58,6 +67,9 @@ public class UserService {
                                String schoolName,
                                String grade) {
         String trimmedUsername = trimToNull(username);
+        String trimmedFullName = trimToNull(fullName);
+        String trimmedSchool = trimToNull(schoolName);
+        String trimmedGrade = trimToNull(grade);
         if (!StringUtils.hasText(trimmedUsername) || !StringUtils.hasText(password)) {
             throw new IllegalArgumentException("아이디와 비밀번호를 모두 입력해주세요.");
         }
@@ -72,36 +84,80 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(password)); // 비밀번호 암호화
         user.setRole("ROLE_USER"); // 기본 권한
         user.setAccountType(accountType);
-        user.setFullName(trimToNull(fullName));
+        user.setFullName(trimmedFullName);
 
         switch (accountType) {
             case STUDENT -> {
-                if (!StringUtils.hasText(fullName)) {
+                if (!StringUtils.hasText(trimmedFullName)) {
                     throw new IllegalArgumentException("학생 이름을 입력해주세요.");
                 }
-                if (!StringUtils.hasText(schoolName)) {
-                    throw new IllegalArgumentException("학교를 입력해주세요.");
+                if (!StringUtils.hasText(trimmedSchool)) {
+                    throw new IllegalArgumentException("학교를 선택해주세요.");
                 }
-                if (!StringUtils.hasText(grade)) {
-                    throw new IllegalArgumentException("학년을 입력해주세요.");
+                if (!StringUtils.hasText(trimmedGrade)) {
+                    throw new IllegalArgumentException("학년을 선택해주세요.");
                 }
-                user.setSchoolName(trimToNull(schoolName));
-                user.setGrade(trimToNull(grade));
+                if (!ALLOWED_SCHOOLS.contains(trimmedSchool)) {
+                    throw new IllegalArgumentException("등록된 학교만 선택할 수 있습니다.");
+                }
+                if (!ALLOWED_GRADES.contains(trimmedGrade)) {
+                    throw new IllegalArgumentException("등록된 학년만 선택할 수 있습니다.");
+                }
+                user.setSchoolName(trimmedSchool);
+                user.setGrade(trimmedGrade);
             }
             case ASSISTANT -> {
-                if (!StringUtils.hasText(fullName)) {
+                if (!StringUtils.hasText(trimmedFullName)) {
                     throw new IllegalArgumentException("조교 이름을 입력해주세요.");
                 }
             }
             case PARENT -> {
-                if (!StringUtils.hasText(fullName)) {
-                    throw new IllegalArgumentException("학부모 이름을 입력해주세요.");
+                if (!StringUtils.hasText(trimmedFullName)) {
+                    throw new IllegalArgumentException("학생 이름을 입력해주세요.");
                 }
+                if (!StringUtils.hasText(trimmedSchool)) {
+                    throw new IllegalArgumentException("학생 학교를 선택해주세요.");
+                }
+                if (!StringUtils.hasText(trimmedGrade)) {
+                    throw new IllegalArgumentException("학생 학년을 선택해주세요.");
+                }
+                if (!ALLOWED_SCHOOLS.contains(trimmedSchool)) {
+                    throw new IllegalArgumentException("등록된 학교만 선택할 수 있습니다.");
+                }
+                if (!ALLOWED_GRADES.contains(trimmedGrade)) {
+                    throw new IllegalArgumentException("등록된 학년만 선택할 수 있습니다.");
+                }
+                user.setSchoolName(trimmedSchool);
+                user.setGrade(trimmedGrade);
             }
             default -> throw new IllegalArgumentException("지원하지 않는 계정 유형입니다.");
         }
 
         return userRepository.save(user);
+    }
+
+    /**
+     * 매년 학년 진급 처리: 예비1학년→1학년→2학년→3학년→졸업생
+     * (졸업생 이후는 변화 없음)
+     */
+    @org.springframework.transaction.annotation.Transactional
+    public int promoteStudentGrades() {
+        List<SiteUser> users = userRepository.findAll();
+        int updated = 0;
+        for (SiteUser user : users) {
+            if (user.getAccountType() != AccountType.STUDENT && user.getAccountType() != AccountType.PARENT) {
+                continue;
+            }
+            String current = trimToNull(user.getGrade());
+            if (current == null) continue;
+            String next = GRADE_PROMOTION_MAP.get(current);
+            if (next != null && !next.equals(current)) {
+                user.setGrade(next);
+                userRepository.save(user);
+                updated++;
+            }
+        }
+        return updated;
     }
 
     /**
@@ -334,6 +390,43 @@ public class UserService {
         SiteUser target = userRepository.findById(targetUserId).orElse(null);
         if (target == null) return false;
         if ("ROLE_ROOT".equals(target.getRole())) return false;
+        removeUserRelations(targetUserId, groupMemberRepository, friendRepository, friendRequestRepository,
+                friendShareRequestRepository, groupInviteRepository, documentFileRepository, quizQuestionRepository, problemRepository);
+        softDeleteUser(target);
+        return true;
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public boolean selfDelete(SiteUser user,
+                              String currentPassword,
+                              com.example.sbb.repository.GroupMemberRepository groupMemberRepository,
+                              com.example.sbb.repository.FriendRepository friendRepository,
+                              com.example.sbb.repository.FriendRequestRepository friendRequestRepository,
+                              com.example.sbb.repository.FriendShareRequestRepository friendShareRequestRepository,
+                              com.example.sbb.repository.GroupInviteRepository groupInviteRepository,
+                              com.example.sbb.repository.DocumentFileRepository documentFileRepository,
+                              com.example.sbb.repository.QuizQuestionRepository quizQuestionRepository,
+                              com.example.sbb.repository.ProblemRepository problemRepository) {
+        if (user == null) throw new IllegalArgumentException("로그인이 필요합니다.");
+        if (isRoot(user)) throw new IllegalArgumentException("루트 계정은 탈퇴할 수 없습니다.");
+        if (!StringUtils.hasText(currentPassword) || !passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 올바르지 않습니다.");
+        }
+        removeUserRelations(user.getId(), groupMemberRepository, friendRepository, friendRequestRepository,
+                friendShareRequestRepository, groupInviteRepository, documentFileRepository, quizQuestionRepository, problemRepository);
+        softDeleteUser(user);
+        return true;
+    }
+
+    private void removeUserRelations(Long targetUserId,
+                                     com.example.sbb.repository.GroupMemberRepository groupMemberRepository,
+                                     com.example.sbb.repository.FriendRepository friendRepository,
+                                     com.example.sbb.repository.FriendRequestRepository friendRequestRepository,
+                                     com.example.sbb.repository.FriendShareRequestRepository friendShareRequestRepository,
+                                     com.example.sbb.repository.GroupInviteRepository groupInviteRepository,
+                                     com.example.sbb.repository.DocumentFileRepository documentFileRepository,
+                                     com.example.sbb.repository.QuizQuestionRepository quizQuestionRepository,
+                                     com.example.sbb.repository.ProblemRepository problemRepository) {
         // 그룹 멤버 제거
         groupMemberRepository.deleteAll(
                 groupMemberRepository.findAll().stream()
@@ -369,18 +462,18 @@ public class UserService {
                     problemRepository.deleteAllByDocumentFile(doc);
                     documentFileRepository.delete(doc);
                 });
-        try {
-            userRepository.delete(target);
-        } catch (Exception e) {
-            // FK 제약 등으로 삭제가 막히면 계정을 비활성/익명화
-            target.setRole("ROLE_DELETED");
-            if (target.getUsername() != null && !target.getUsername().contains("_deleted_")) {
-                target.setUsername(target.getUsername() + "_deleted_" + target.getId());
-            }
-            target.setPassword(passwordEncoder.encode(java.util.UUID.randomUUID().toString()));
-            userRepository.save(target);
+    }
+
+    private void softDeleteUser(SiteUser target) {
+        target.setRole("ROLE_DELETED");
+        if (target.getUsername() != null && !target.getUsername().contains("_deleted_")) {
+            target.setUsername(target.getUsername() + "_deleted_" + target.getId());
         }
-        return true;
+        target.setPassword(passwordEncoder.encode(java.util.UUID.randomUUID().toString()));
+        target.setFullName(null);
+        target.setSchoolName(null);
+        target.setGrade(null);
+        userRepository.save(target);
     }
 
     @org.springframework.transaction.annotation.Transactional
