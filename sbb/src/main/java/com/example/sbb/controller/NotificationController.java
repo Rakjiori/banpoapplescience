@@ -3,6 +3,7 @@ package com.example.sbb.controller;
 import com.example.sbb.domain.notification.PendingNotification;
 import com.example.sbb.domain.user.SiteUser;
 import com.example.sbb.domain.user.UserService;
+import com.example.sbb.repository.ConsultationRequestRepository;
 import com.example.sbb.service.NotificationService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,6 +24,7 @@ public class NotificationController {
 
     private final NotificationService notificationService;
     private final UserService userService;
+    private final ConsultationRequestRepository consultationRequestRepository;
 
     @GetMapping("/due")
     public ResponseEntity<?> due(Principal principal) {
@@ -35,6 +37,10 @@ public class NotificationController {
         notificationService.recentGroupUpdates(user).forEach(n ->
                 payloads.add(NotificationPayload.fromSimple(n))
         );
+        if (userService.isAdminOrRoot(user)) {
+            consultationRequestRepository.findByContactedFalseOrderByCreatedAtDesc()
+                    .forEach(req -> payloads.add(NotificationPayload.fromConsultation(req)));
+        }
         return ResponseEntity.ok(payloads);
     }
 
@@ -54,7 +60,7 @@ public class NotificationController {
         private String url;
 
         static NotificationPayload fromQuiz(PendingNotification pn) {
-            String title = "새 문제 도착";
+            String title = "새 알림";
             String body = pn.getQuestion().getQuestionText();
             String url = "/quiz/solve/" + pn.getQuestion().getId();
             return new NotificationPayload(pn.getId(), title, body, url);
@@ -62,6 +68,12 @@ public class NotificationController {
 
         static NotificationPayload fromSimple(NotificationService.SimpleNotification n) {
             return new NotificationPayload(null, n.title(), n.body(), n.url());
+        }
+
+        static NotificationPayload fromConsultation(com.example.sbb.domain.ConsultationRequest req) {
+            String title = "새 상담 요청 (" + req.getType().name() + ")";
+            String body = req.getMessage() != null ? req.getMessage() : "";
+            return new NotificationPayload(null, title, body, "/admin/consultations");
         }
     }
 }

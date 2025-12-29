@@ -29,6 +29,9 @@ public class ConsultationRequest {
     @Column(columnDefinition = "TEXT")
     private String message;
 
+    @Column(name = "contacted", nullable = false)
+    private boolean contacted = false; // 전화/응대 완료 여부
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;

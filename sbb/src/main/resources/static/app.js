@@ -39,7 +39,7 @@ function renderNotificationCenter(){
   if(!items.length){
     const empty = document.createElement('div');
     empty.className = 'notification-empty';
-    empty.innerHTML = '알람이 없습니다.<br>모든 문제를 풀었어요.';
+    empty.innerHTML = '새 알림이 없습니다.';
     list.appendChild(empty);
   } else {
     items.forEach(n=>{
@@ -205,8 +205,8 @@ async function pollNotifications(){
     addNotificationsToCenter(items);
     if(('Notification' in window) && Notification.permission === 'granted'){
       items.forEach(n=>{
-        const noti = new Notification(n.title || '새 알림', { body:n.body || '', data:{url:n.url||'/learning'} });
-        noti.onclick = () => { window.open(n.data.url || '/learning', '_blank'); };
+        const noti = new Notification(n.title || '새 알림', { body:n.body || '', data:{ url: n.url || '/learning' } });
+        noti.onclick = () => { window.open(n.url || '/learning', '_blank'); };
       });
     }
   }catch(e){

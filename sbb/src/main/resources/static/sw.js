@@ -1,7 +1,7 @@
 self.addEventListener('push', e=>{
   const data = e.data?.json() || {};
-  e.waitUntil(self.registration.showNotification(data.title||'오늘의 문제', {
-    body: data.body || '2문제가 도착했어요!', data:{ url: data.url || '/question/list' }
+  e.waitUntil(self.registration.showNotification(data.title||'새 알림', {
+    body: data.body || '새 소식이 도착했어요!', data:{ url: data.url || '/' }
   }));
 });
 self.addEventListener('notificationclick', e=>{

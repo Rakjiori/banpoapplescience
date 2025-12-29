@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.security.Principal;
 import java.util.Map;
@@ -49,5 +50,18 @@ public class ConsultationController {
         }
         model.addAttribute("consultations", repository.findAllByOrderByCreatedAtDesc());
         return "admin_consultations";
+    }
+
+    @PostMapping("/admin/consultations/{id}/toggle")
+    public String toggleContacted(@PathVariable Long id, Principal principal) {
+        SiteUser actor = principal != null ? userService.getUser(principal.getName()) : null;
+        if (!userService.isAdminOrRoot(actor)) {
+            return "redirect:/";
+        }
+        repository.findById(id).ifPresent(req -> {
+            req.setContacted(!req.isContacted());
+            repository.save(req);
+        });
+        return "redirect:/admin/consultations";
     }
 }

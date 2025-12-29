@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface ConsultationRequestRepository extends JpaRepository<ConsultationRequest, Long> {
     List<ConsultationRequest> findAllByOrderByCreatedAtDesc();
+    List<ConsultationRequest> findByCreatedAtAfterOrderByCreatedAtDesc(java.time.LocalDateTime after);
+    List<ConsultationRequest> findByContactedFalseOrderByCreatedAtDesc();
 }
