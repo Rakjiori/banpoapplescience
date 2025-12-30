@@ -1,38 +1,49 @@
-# TeamOpenSource_Springboot
+# 📘 학원 웹사이트 프로젝트
 
-[최봉규의 실습 레포지토리](https://github.com/grapebongbongs/bong_silsup)  
+Spring Boot 기반의 **학원 관리 웹사이트**입니다.  
+회원 관리, 상담 접수, 학원 콘텐츠 관리, 후기 노출 등 **실제 학원 운영에 필요한 기능**을 중심으로 개발되었습니다.
 
-[김성락의 실습 레포지토리](https://github.com/Rakjiori/Rak_silsup)
+---
 
+## 🛠 기술 스택
 
-🧠 AI-Powered Study Automation Platform
+### Backend
+- Java 17
+- Spring Boot
+- Spring Security
+- Spring Data JPA
+- Gradle
 
-An intelligent web service that automatically generates study questions from uploaded documents and delivers daily learning tasks through push notifications.
-Built with Spring Boot, React, Azure, and OpenAI GPT.
+### Frontend
+- Thymeleaf
+- HTML / CSS / JavaScript
 
-🚀 Overview
+### Database
+- MySQL (개발/운영 환경에 따라 변경 가능)
 
-This project helps users maintain consistent learning habits by automatically analyzing their uploaded PDFs or documents, creating AI-generated quiz sets, and delivering personalized review tasks every day.
-Users can join groups, share problem sets, and track their learning progress together.
+---
 
-🏗️ System Flow
+## ✨ 주요 기능
 
-Upload PDF → stored in Azure Blob Storage
+### 👤 회원 기능
+- 회원가입 / 로그인
+- 회원가입 시 **전화번호 입력**
+- 권한 기반 접근 제어 (USER / ADMIN / ROOT)
 
-AI Analysis (GPT) → extracts text, summarizes content, and generates quiz questions
+### 🗂 학원 콘텐츠
+- 학원 공지 및 콘텐츠 조회
+- 관리자 전용 콘텐츠 등록 / 삭제
 
-Question Set Storage → quiz JSON saved in Blob; link + metadata stored in DB
+### 📝 상담 및 후기
+- 상담 접수 기능
+- 수강 후기 조회
 
-Push Notifications → scheduled via Azure Application Service for daily reminders
+### 🔐 관리자 기능
+- 관리자/루트 계정 관리
+- 학원 콘텐츠 및 후기 관리
+- 관리자 전용 페이지 접근 제어
 
-User Interaction → solve quizzes, record answers, and review wrong questions
+---
 
-Group Sharing → share question sets, compare results, and discuss answers
+## 📂 프로젝트 구조
 
-⚙️ Tech Stack
-
-Frontend: React + TypeScript
-Backend: Spring Boot (Java, JPA, Gradle)
-Database: Azure MySQL / Oracle Cloud (optional)
-Cloud Services: Azure Blob Storage, Application Service, Notification Hub
-AI Integration: OpenAI GPT API for text extraction, summarization, and question generation
