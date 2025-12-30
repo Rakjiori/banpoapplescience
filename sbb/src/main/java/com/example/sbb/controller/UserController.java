@@ -25,21 +25,31 @@ public class UserController {
     @PostMapping("/signup")
     public String signupSubmit(@RequestParam String username,
                                @RequestParam String password,
+                               @RequestParam(name = "confirmPassword") String confirmPassword,
                                @RequestParam(required = false, name = "accountType") String accountTypeRaw,
                                @RequestParam(required = false, name = "fullName") String fullName,
                                @RequestParam(required = false, name = "schoolName") String schoolName,
                                @RequestParam(required = false, name = "grade") String grade,
+                               @RequestParam(required = false, name = "studentPhone") String studentPhone,
+                               @RequestParam(required = false, name = "parentPhone") String parentPhone,
+                               @RequestParam(required = false, name = "assistantPhone") String assistantPhone,
                                Model model) {
         model.addAttribute("accountTypes", AccountType.values());
         model.addAttribute("enteredUsername", username);
         model.addAttribute("enteredFullName", fullName);
         model.addAttribute("enteredSchoolName", schoolName);
         model.addAttribute("enteredGrade", grade);
+        model.addAttribute("enteredStudentPhone", studentPhone);
+        model.addAttribute("enteredParentPhone", parentPhone);
+        model.addAttribute("enteredAssistantPhone", assistantPhone);
         model.addAttribute("selectedAccountType", accountTypeRaw);
 
         try {
+            if (password == null || !password.equals(confirmPassword)) {
+                throw new IllegalArgumentException("비밀번호와 비밀번호 확인이 일치하지 않습니다.");
+            }
             AccountType accountType = parseAccountType(accountTypeRaw);
-            userService.createUser(username, password, accountType, fullName, schoolName, grade);
+            userService.createUser(username, password, accountType, fullName, schoolName, grade, studentPhone, parentPhone, assistantPhone);
             return "redirect:/login";
         } catch (IllegalArgumentException e) {
             model.addAttribute("errorMessage", e.getMessage());

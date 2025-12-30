@@ -137,6 +137,7 @@ public class AdminContentController {
 
     @PostMapping("/reviews")
     public String addReview(@RequestParam String author,
+                            @RequestParam(required = false) String highlight,
                             @RequestParam int rating,
                             @RequestParam String content,
                             Principal principal,
@@ -148,7 +149,7 @@ public class AdminContentController {
             return "redirect:/";
         }
         try {
-            contentService.createReview(author, rating, content);
+            contentService.createReview(author, highlight, rating, content);
             rttr.addFlashAttribute("message", "수강후기를 추가했습니다.");
         } catch (Exception e) {
             rttr.addFlashAttribute("error", e.getMessage());

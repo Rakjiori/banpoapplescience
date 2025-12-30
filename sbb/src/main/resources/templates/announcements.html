@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout :: layout(~{::body})">
+<body>
+<div class="page-card">
+    <div class="page-header">
+        <div>
+            <div class="pill-soft">공지사항</div>
+            <h1 class="page-title">전체 공지 모음</h1>
+            <p class="muted">학원 소식을 날짜순으로 확인하세요.</p>
+        </div>
+        <a class="btn btn-outline" href="/">← 홈으로</a>
+    </div>
+
+    <div th:if="${#lists.isEmpty(announcements)}" class="card" style="padding:18px;">등록된 공지사항이 없습니다.</div>
+
+    <div th:if="${not #lists.isEmpty(announcements)}"
+         style="max-height:640px; overflow:auto; padding-right:6px; display:grid; gap:12px;">
+        <article class="card" th:each="n : ${announcements}" style="padding:14px; background:linear-gradient(160deg, #ffffff, #f5f8ff); border:1px solid #e2e8f0;">
+            <div class="muted" th:text="${n.publishedAt != null ? n.publishedAt : #temporals.format(n.createdAt, 'yyyy.MM.dd')}">날짜</div>
+            <h2 style="margin:6px 0; font-size:18px;" th:text="${n.title}">공지 제목</h2>
+            <p class="muted" style="margin:0;" th:text="${n.content}">내용</p>
+        </article>
+    </div>
+</div>
+</body>
+</html>

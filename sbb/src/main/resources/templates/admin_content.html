@@ -197,6 +197,9 @@
                     <label>작성자
                         <input type="text" name="author" placeholder="예: 고1 학생" required>
                     </label>
+                    <label>한줄 소개(선택)
+                        <input type="text" name="highlight" placeholder="예: 서울대 화학과 합격 / 전 과목 1등급">
+                    </label>
                     <label>별점(1~5)
                         <input type="number" name="rating" min="1" max="5" value="5" required>
                     </label>
@@ -216,7 +219,10 @@
                     <div th:each="r : ${reviews}" class="table-row">
                         <div>
                             <div class="review-stars" th:text="${#strings.repeat('★', r.rating) + #strings.repeat('☆', 5 - r.rating)}">★★★★★</div>
-                            <div class="title-md" th:text="${r.author}">작성자</div>
+                            <div class="title-md" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                                <span th:text="${r.author}">작성자</span>
+                                <span class="reviewer-meta" th:if="${r.highlight}" th:text="${r.highlight}">서울대 합격</span>
+                            </div>
                             <div th:text="${r.content}" style="margin-top:6px; max-height:80px; overflow:hidden;"></div>
                         </div>
                         <form th:action="@{/admin/content/reviews/{id}/delete(id=${r.id})}" method="post"

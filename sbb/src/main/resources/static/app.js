@@ -189,7 +189,6 @@ function setupConsultation(){
         body: JSON.stringify({ type, message })
       }).then(res=>{
         if(res.ok){ alert('상담 요청이 접수되었습니다. (관리자에게 알림)'); form.reset(); modal.style.display='none'; }
-        else if(res.status === 401) alert('로그인 후 이용해주세요.');
         else alert('요청을 처리하지 못했습니다.');
       }).catch(()=> alert('요청을 처리하지 못했습니다.'));
     });

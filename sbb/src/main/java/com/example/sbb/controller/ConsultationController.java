@@ -26,8 +26,7 @@ public class ConsultationController {
 
     @PostMapping("/consultations/request")
     public ResponseEntity<?> create(@RequestBody Map<String, String> payload, Principal principal) {
-        if (principal == null) return ResponseEntity.status(401).body("login required");
-        SiteUser user = userService.getUser(principal.getName());
+        SiteUser user = principal != null ? userService.getUser(principal.getName()) : null;
         try {
             String type = payload.get("type");
             String message = payload.getOrDefault("message", "");

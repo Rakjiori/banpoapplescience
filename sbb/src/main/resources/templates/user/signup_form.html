@@ -37,6 +37,13 @@
                 </div>
 
                 <div>
+                    <label for="confirmPassword" style="font-size:14px; font-weight:500; margin-bottom:4px; display:block;">
+                        비밀번호 확인
+                    </label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                </div>
+
+                <div>
                     <label for="accountType" style="font-size:14px; font-weight:500; margin-bottom:4px; display:block;">
                         계정 유형
                     </label>
@@ -62,6 +69,18 @@
                            th:value="${enteredFullName}">
                     <p id="nameHelper" class="muted" style="font-size:12px; margin-top:4px; display:none;">
                         
+                    </p>
+                </div>
+
+                <div id="assistantFields" style="display:none;">
+                    <label for="assistantPhone" style="font-size:14px; font-weight:500; margin-bottom:4px; display:block;">
+                        조교 전화번호
+                    </label>
+                    <input type="tel" id="assistantPhone" name="assistantPhone"
+                           placeholder="예: 010-1234-5678"
+                           th:value="${enteredAssistantPhone}">
+                    <p class="muted" style="font-size:12px; margin-top:4px;">
+                        조교 연락을 위한 번호를 입력해주세요.
                     </p>
                 </div>
 
@@ -97,6 +116,28 @@
                             <option th:selected="${enteredGrade} == '졸업생'">졸업생</option>
                         </select>
                     </div>
+                    <div>
+                        <label for="studentPhone" style="font-size:14px; font-weight:500; margin-bottom:4px; display:block;">
+                            학생 전화번호
+                        </label>
+                        <input type="tel" id="studentPhone" name="studentPhone"
+                               placeholder="예: 010-1234-5678"
+                               th:value="${enteredStudentPhone}">
+                        <p class="muted" style="font-size:12px; margin-top:4px;">
+                            학생 본인의 연락처를 입력해주세요.
+                        </p>
+                    </div>
+                    <div>
+                        <label for="parentPhone" style="font-size:14px; font-weight:500; margin-bottom:4px; display:block;">
+                            학부모 전화번호
+                        </label>
+                        <input type="tel" id="parentPhone" name="parentPhone"
+                               placeholder="예: 010-0000-0000"
+                               th:value="${enteredParentPhone}">
+                        <p class="muted" style="font-size:12px; margin-top:4px;">
+                            상담 및 안내를 위한 보호자 연락처를 입력해주세요.
+                        </p>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn" style="width:100%; margin-top:10px;">
@@ -108,21 +149,30 @@
             <script th:inline="javascript">
                 const accountTypeSelect = document.getElementById('accountType');
                 const studentFields = document.getElementById('studentFields');
+                const assistantFields = document.getElementById('assistantFields');
                 const fullNameLabel = document.getElementById('fullNameLabel');
                 const fullNameInput = document.getElementById('fullName');
                 const nameHelper = document.getElementById('nameHelper');
                 const schoolInput = document.getElementById('schoolName');
                 const gradeInput = document.getElementById('grade');
+                const studentPhoneInput = document.getElementById('studentPhone');
+                const parentPhoneInput = document.getElementById('parentPhone');
+                const assistantPhoneInput = document.getElementById('assistantPhone');
 
                 const syncVisibility = () => {
                     const type = accountTypeSelect.value;
                     const requiresStudentInfo = type === 'STUDENT' || type === 'PARENT';
                     const isParent = type === 'PARENT';
+                    const isAssistant = type === 'ASSISTANT';
 
                     studentFields.style.display = requiresStudentInfo ? 'block' : 'none';
+                    assistantFields.style.display = isAssistant ? 'block' : 'none';
                     fullNameInput.required = type !== '';
                     schoolInput.required = requiresStudentInfo;
                     gradeInput.required = requiresStudentInfo;
+                    studentPhoneInput.required = requiresStudentInfo;
+                    parentPhoneInput.required = requiresStudentInfo;
+                    assistantPhoneInput.required = isAssistant;
 
                     if (isParent) {
                         fullNameLabel.textContent = '학생 이름';
@@ -134,6 +184,11 @@
                         fullNameInput.placeholder = '예: 홍길동';
                         nameHelper.style.display = 'block';
                         nameHelper.textContent = '학생 이름을 입력해주세요.';
+                    } else if (isAssistant) {
+                        fullNameLabel.textContent = '조교 이름';
+                        fullNameInput.placeholder = '예: 김조교';
+                        nameHelper.style.display = 'block';
+                        nameHelper.textContent = '조교 실명을 입력해주세요.';
                     } else {
                         fullNameLabel.textContent = '이름';
                         fullNameInput.placeholder = '예: 홍길동';
