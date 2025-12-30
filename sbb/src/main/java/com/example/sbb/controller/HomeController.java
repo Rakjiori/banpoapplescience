@@ -70,4 +70,10 @@ public class HomeController {
         model.addAttribute("courseReviews", contentService.listReviews());
         return "reviews";
     }
+
+    @GetMapping("/announcements")
+    public String announcements(Model model) {
+        model.addAttribute("announcements", contentService.listAnnouncements());
+        return "announcements";
+    }
 }

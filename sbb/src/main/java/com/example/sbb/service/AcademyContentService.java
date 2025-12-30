@@ -76,13 +76,14 @@ public class AcademyContentService {
     }
 
     @Transactional
-    public CourseReview createReview(String author, int rating, String content) {
+    public CourseReview createReview(String author, String highlight, int rating, String content) {
         if (!StringUtils.hasText(author) || !StringUtils.hasText(content)) {
             throw new IllegalArgumentException("작성자와 본문은 필수입니다.");
         }
         int safeRating = Math.min(5, Math.max(1, rating));
         CourseReview review = new CourseReview();
         review.setAuthor(author.trim());
+        review.setHighlight(StringUtils.hasText(highlight) ? highlight.trim() : null);
         review.setRating(safeRating);
         review.setContent(content.trim());
         return reviewRepository.save(review);

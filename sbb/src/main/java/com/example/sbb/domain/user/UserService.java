@@ -63,13 +63,19 @@ public class UserService {
     public SiteUser createUser(String username,
                                String password,
                                AccountType accountType,
-                               String fullName,
+                                String fullName,
                                String schoolName,
-                               String grade) {
+                               String grade,
+                               String studentPhone,
+                               String parentPhone,
+                               String assistantPhone) {
         String trimmedUsername = trimToNull(username);
         String trimmedFullName = trimToNull(fullName);
         String trimmedSchool = trimToNull(schoolName);
         String trimmedGrade = trimToNull(grade);
+        String trimmedStudentPhone = trimToNull(studentPhone);
+        String trimmedParentPhone = trimToNull(parentPhone);
+        String trimmedAssistantPhone = trimToNull(assistantPhone);
         if (!StringUtils.hasText(trimmedUsername) || !StringUtils.hasText(password)) {
             throw new IllegalArgumentException("아이디와 비밀번호를 모두 입력해주세요.");
         }
@@ -91,6 +97,12 @@ public class UserService {
                 if (!StringUtils.hasText(trimmedFullName)) {
                     throw new IllegalArgumentException("학생 이름을 입력해주세요.");
                 }
+                if (!StringUtils.hasText(trimmedStudentPhone)) {
+                    throw new IllegalArgumentException("학생 전화번호를 입력해주세요.");
+                }
+                if (!StringUtils.hasText(trimmedParentPhone)) {
+                    throw new IllegalArgumentException("학부모 전화번호를 입력해주세요.");
+                }
                 if (!StringUtils.hasText(trimmedSchool)) {
                     throw new IllegalArgumentException("학교를 선택해주세요.");
                 }
@@ -103,6 +115,8 @@ public class UserService {
                 if (!ALLOWED_GRADES.contains(trimmedGrade)) {
                     throw new IllegalArgumentException("등록된 학년만 선택할 수 있습니다.");
                 }
+                user.setStudentPhone(trimmedStudentPhone);
+                user.setParentPhone(trimmedParentPhone);
                 user.setSchoolName(trimmedSchool);
                 user.setGrade(trimmedGrade);
             }
@@ -110,10 +124,20 @@ public class UserService {
                 if (!StringUtils.hasText(trimmedFullName)) {
                     throw new IllegalArgumentException("조교 이름을 입력해주세요.");
                 }
+                if (!StringUtils.hasText(trimmedAssistantPhone)) {
+                    throw new IllegalArgumentException("조교 전화번호를 입력해주세요.");
+                }
+                user.setAssistantPhone(trimmedAssistantPhone);
             }
             case PARENT -> {
                 if (!StringUtils.hasText(trimmedFullName)) {
                     throw new IllegalArgumentException("학생 이름을 입력해주세요.");
+                }
+                if (!StringUtils.hasText(trimmedStudentPhone)) {
+                    throw new IllegalArgumentException("학생 전화번호를 입력해주세요.");
+                }
+                if (!StringUtils.hasText(trimmedParentPhone)) {
+                    throw new IllegalArgumentException("학부모 전화번호를 입력해주세요.");
                 }
                 if (!StringUtils.hasText(trimmedSchool)) {
                     throw new IllegalArgumentException("학생 학교를 선택해주세요.");
@@ -127,6 +151,8 @@ public class UserService {
                 if (!ALLOWED_GRADES.contains(trimmedGrade)) {
                     throw new IllegalArgumentException("등록된 학년만 선택할 수 있습니다.");
                 }
+                user.setStudentPhone(trimmedStudentPhone);
+                user.setParentPhone(trimmedParentPhone);
                 user.setSchoolName(trimmedSchool);
                 user.setGrade(trimmedGrade);
             }

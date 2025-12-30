@@ -43,7 +43,7 @@
             gap: 20px;
             align-items: center;
         }
-        .eyebrow { text-transform: uppercase; letter-spacing: 0.14em; font-weight: 700; font-size: 12px; margin: 0 0 12px; color: #1e3a8a; }
+        .eyebrow { text-transform: none; letter-spacing: 0.02em; font-weight: 800; font-size: 15px; margin: 0 0 12px; color: #0f172a; }
         .landing-hero h1 { margin: 0 0 12px; font-size: 38px; letter-spacing: -0.03em; line-height:1.1; color:#0f172a; }
         .hero-kicker { font-size: 18px; color:#1f3557; margin: 0 0 12px; font-weight:700; }
         .hero-sub { margin: 0 0 16px; color: #334155; font-size: 15px; max-width: 560px; }
@@ -72,8 +72,12 @@
         .panel-time { font-weight:800; min-width:68px; }
         .panel-desc { color:#334155; font-size:13px; }
         .panel-metrics { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
-        .metric { background: rgba(219,234,254,0.6); border:1px solid rgba(148,163,184,0.35); border-radius:10px; padding:8px 10px; display:flex; align-items:center; gap:8px; color:#0f172a; font-weight:700; font-size:12px; }
-        .metric-icon { width:22px; height:22px; display:grid; place-items:center; background:rgba(255,255,255,0.95); border-radius:8px; color:#1e3a8a; font-size:12px; }
+        .metric { background: rgba(219,234,254,0.6); border:1px solid rgba(148,163,184,0.35); border-radius:10px; padding:10px 12px; display:flex; align-items:center; gap:10px; color:#0f172a; font-weight:700; font-size:12px; text-decoration:none; transition:0.18s ease; }
+        .metric-icon { width:24px; height:24px; display:grid; place-items:center; background:rgba(255,255,255,0.95); border-radius:8px; color:#1e3a8a; font-size:13px; }
+        .metric-title { font-weight:800; font-size:13px; }
+        .metric-sub { font-weight:600; color:#1e293b; opacity:0.8; font-size:12px; }
+        .metric.clickable { cursor:pointer; }
+        .metric.clickable:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(15,23,42,0.14); }
 
         .landing-section { margin-top: 28px; padding: 24px; background: #ffffff; border-radius: 18px; border:1px solid #e2e8f0; box-shadow:0 18px 38px rgba(15,23,42,0.08); }
         .section-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-bottom:16px; }
@@ -95,31 +99,64 @@
         .notice-title { font-weight:800; margin:6px 0; color:#0f172a; }
         .notice-body { color:#475569; font-size:13px; }
 
-        .review-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; }
+        .review-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
         .review-card { border:1px solid #d9e4f2; border-radius:14px; padding:16px; background:#ffffff; box-shadow:0 12px 28px rgba(15,23,42,0.08); position:relative; overflow:hidden; }
         .review-card::after { content:''; position:absolute; inset:-18% auto auto -8%; width:120px; height:120px; background:radial-gradient(circle, rgba(155,215,255,0.28), transparent 55%); transform:rotate(8deg); filter: blur(2px); }
         .review-stars { color:#f59e0b; font-weight:800; position:relative; text-shadow:0 0 8px rgba(155,215,255,0.65), 0 0 14px rgba(155,215,255,0.45); }
         .review-stars::after { content:''; position:absolute; left:-8px; right:-8px; top:50%; height:16px; transform:translateY(-50%); background:radial-gradient(circle, rgba(155,215,255,0.5), transparent 65%); filter:blur(8px); pointer-events:none; }
         .review-text { color:#0f172a; font-size:14px; margin:8px 0 12px; line-height:1.6; position:relative; }
         .reviewer { font-weight:700; color:#1e3a8a; position:relative; }
+        .review-grid-wrap { max-height: 360px; overflow: auto; padding-right: 6px; }
 
         .dual { display:grid; grid-template-columns:1fr 1.1fr; gap:16px; align-items:stretch; }
         .location-copy h3 { margin:8px 0 10px; }
         .location-points { list-style:none; padding:0; margin:0; display:grid; gap:8px; color:#334155; }
         .location-points li { display:flex; gap:8px; align-items:flex-start; }
-        .map-wrap { border-radius:14px; overflow:hidden; border:1px solid #e2e8f0; box-shadow:0 14px 30px rgba(15,23,42,0.12); min-height:260px; }
+        .map-wrap { position:relative; border-radius:14px; overflow:hidden; border:1px solid #e2e8f0; box-shadow:0 14px 30px rgba(15,23,42,0.12); min-height:260px; }
         .map-wrap iframe { width:100%; height:100%; border:0; }
 
         .callout { background:linear-gradient(120deg, #0f172a, #0f766e); color:#e2e8f0; overflow:hidden; }
         .callout-inner { display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap; }
         .callout-actions { display:flex; gap:10px; flex-wrap:wrap; }
 
+        .question-board { display:grid; gap:12px; }
+        .question-form { display:grid; gap:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:14px; box-shadow:0 10px 24px rgba(15,23,42,0.08); }
+        .question-form input, .question-form textarea { width:100%; border:1px solid #d9e4f2; border-radius:10px; padding:10px; font-size:14px; }
+        .question-form textarea { min-height:110px; }
+        .question-list { border:1px solid #e2e8f0; border-radius:14px; overflow:hidden; box-shadow:0 10px 24px rgba(15,23,42,0.08); }
+        .question-row { display:grid; grid-template-columns: 68px 1fr 140px; align-items:center; gap:10px; padding:10px; border-bottom:1px solid #e5e7eb; }
+        .question-row.header { background:#f8fafc; font-weight:700; }
+        .question-row:last-child { border-bottom:none; }
+        .question-title { font-weight:700; color:#0f172a; }
+        .question-meta { font-size:12px; color:#64748b; }
+        .question-actions { display:flex; gap:8px; justify-content:flex-end; }
+        .question-title-btn { background:none; border:none; padding:0; text-align:left; color:#0f172a; font-weight:800; cursor:pointer; }
+        .question-title-btn:hover { text-decoration:underline; }
+
+        .question-modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; padding:16px; z-index:50; }
+        .question-modal.open { display:flex; }
+        .question-modal .backdrop { position:absolute; inset:0; background:rgba(15,23,42,0.4); backdrop-filter:blur(4px); }
+        .question-dialog { position:relative; background:#ffffff; padding:18px; width:min(620px, 100%); border-radius:16px; box-shadow:0 24px 48px rgba(15,23,42,0.2); z-index:1; border:1px solid #e2e8f0; display:grid; gap:12px; }
+        .comment-list { display:grid; gap:10px; max-height:220px; overflow:auto; padding-right:4px; }
+        .comment { border:1px solid #e2e8f0; border-radius:12px; padding:10px; background:#f8fafc; }
+        .comment-meta { font-size:12px; color:#94a3b8; }
+        .comment-form { display:grid; gap:8px; }
+
+        .portal-modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; padding:16px; z-index:40; }
+        .portal-modal.open { display:flex; }
+        .portal-backdrop { position:absolute; inset:0; background:rgba(15,23,42,0.38); backdrop-filter: blur(4px); }
+        .portal-dialog { position:relative; background:#ffffff; padding:18px; width:min(540px, 100%); max-height:80vh; overflow:auto; border-radius:14px; box-shadow:0 24px 48px rgba(15,23,42,0.18); z-index:1; border:1px solid #e2e8f0; }
+        .portal-list { list-style:none; padding:0; margin:12px 0 0; display:grid; gap:10px; }
+        .portal-link { display:flex; justify-content:space-between; align-items:center; gap:10px; border:1px solid #e2e8f0; border-radius:12px; padding:12px; background:linear-gradient(135deg, #f8fbff, #eef2ff); }
+        .portal-name { font-weight:800; color:#0f172a; }
+        .portal-desc { font-size:13px; color:#475569; }
+
         @keyframes float { 0%,100% { transform:translateY(0);} 50% { transform:translateY(-8px);} }
         @keyframes aurora { 0% { transform: translateX(-10px) scale(1); } 100% { transform: translateX(14px) scale(1.05); } }
 
         @media (max-width: 900px) {
             .hero-grid { grid-template-columns: 1fr; }
-            .dual { grid-template-columns: 1fr; }
+            .dual, .schedule-grid, .notice-grid, .review-grid { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 640px) {
@@ -145,14 +182,13 @@
             <div class="hero-glow-2"></div>
             <div class="hero-grid">
                 <div>
-                    <p class="eyebrow">애플과학 · Banpo Apple Science</p>
+                    <p class="eyebrow">애플과학</p>
                     <h1>개념이 선명해지는 순간,<br>성적이 달라집니다.</h1>
                     <div class="hero-kicker">개념을 완성하고, 문제를 쌓는다.</div>
                     <p class="hero-sub">모든 학생에게 같은 수업은 없습니다. 1:1 클리닉이 기본입니다. 공부를 관리받는 순간, 목표는 현실이 됩니다.</p>
                     <div class="hero-tags">
                         <span class="hero-tag">1:1 클리닉</span>
-                        <span class="hero-tag">실험/데이터 기반</span>
-                        <span class="hero-tag">맞춤 리포트</span>
+                        <span class="hero-tag">맞춤 수업</span>
                     </div>
                     <div class="hero-actions">
                         <a class="cta primary" href="#schedule" data-scroll>시간표 보기</a>
@@ -170,25 +206,31 @@
                     </div>
                     <div class="panel-row">
                         <div class="panel-time">화 18:00</div>
-                        <div class="panel-desc">중등 물리 실험 랩 · Motion Lab · 실측 데이터로 그래프 분석</div>
+                        <div class="panel-desc">세화고1 시험 직전 보충 수업</div>
                     </div>
                     <div class="panel-row">
                         <div class="panel-time">목 19:30</div>
-                        <div class="panel-desc">고1 내신 대비 · 학교별 기출+빈칸 노트 정리, 라이브 풀이</div>
+                        <div class="panel-desc">고1 내신 대비 · 학교별 기출+빈칸 노트 정리</div>
                     </div>
                     <div class="panel-row">
                         <div class="panel-time">토 14:00</div>
-                        <div class="panel-desc">고3 파이널 모의 · 개인 오답 리포트 피드백 & 현장 질의응답</div>
+                        <div class="panel-desc">고3 파이널 모의 · 개인 오답 리포트 피드백</div>
                     </div>
                     <div class="panel-metrics">
-                        <div class="metric">
-                            <div class="metric-icon">✔</div>
-                            <div>출결 · 숙제 실시간 알림</div>
-                        </div>
-                        <div class="metric">
+                        <a class="metric clickable" href="/learning">
+                            <div class="metric-icon">📚</div>
+                            <div>
+                                <div class="metric-title">학습 포털</div>
+                                <div class="metric-sub">출결 · 숙제 · 공지 한 번에</div>
+                            </div>
+                        </a>
+                        <button class="metric clickable" type="button" id="portalLinksTrigger">
                             <div class="metric-icon">🌐</div>
-                            <div>온라인 포털 연동</div>
-                        </div>
+                            <div>
+                                <div class="metric-title">온라인 포털 연동</div>
+                                <div class="metric-sub">공부 사이트 바로가기</div>
+                            </div>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -201,7 +243,6 @@
                     <h2>주중·주말 운영, 1:1 클리닉 중심 편성</h2>
                     <p class="section-sub">과목별 1:1 클리닉과 실험 수업을 함께 운영합니다.</p>
                 </div>
-                <button class="cta ghost" type="button" id="scheduleConsultBtn">상담 문의</button>
             </div>
             <div class="schedule-grid" th:if="${not #lists.isEmpty(schedules)}">
                 <div class="schedule-card" th:each="s : ${schedules}">
@@ -221,6 +262,7 @@
                     <div class="pill">공지사항</div>
                     <h2>반포 애플과학 소식</h2>
                 </div>
+                <a class="btn btn-outline" href="/announcements" style="padding:8px 12px;">전체 공지 보기 →</a>
             </div>
             <div class="notice-grid" th:if="${not #lists.isEmpty(announcements)}">
                 <article class="notice-card" th:each="n : ${announcements}">
@@ -239,19 +281,45 @@
                     <h2>학부모·학생이 말하는 변화</h2>
                 </div>
                 <div class="section-sub" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                    <span>실제 상담 기록과 리포트를 바탕으로 요약했습니다.</span>
                     <a class="btn btn-outline" href="/reviews" style="padding:8px 12px;">전체 후기 보기 →</a>
                 </div>
             </div>
-            <div class="review-grid" th:if="${not #lists.isEmpty(courseReviews)}" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; max-height:320px; overflow:auto; padding-right:6px;">
-                <div class="review-card" th:each="r : ${courseReviews}" style="min-height:140px; display:flex; flex-direction:column;">
+            <div class="review-grid-wrap" th:if="${not #lists.isEmpty(courseReviews)}">
+                <div class="review-grid">
+                <div class="review-card"
+                     th:each="r : ${courseReviews}"
+                     th:data-author="${r.author}"
+                     th:data-highlight="${r.highlight}"
+                     th:data-rating="${r.rating}"
+                     th:data-content="${r.content}"
+                     style="min-height:160px; display:flex; flex-direction:column; cursor:pointer;">
                     <div class="review-stars" th:text="${#strings.repeat('★', r.rating) + #strings.repeat('☆', 5 - r.rating)}">★★★★★</div>
-                    <div class="review-text" th:text="${#strings.abbreviate(r.content,100)}" style="flex:1;">후기 내용</div>
-                    <div class="reviewer" th:text="${r.author}">작성자</div>
+                    <div class="review-text" th:text="${#strings.abbreviate(r.content,180)}" style="flex:1;">후기 내용</div>
+                    <div class="reviewer">
+                        <span class="reviewer-name" th:text="${r.author}">작성자</span>
+                        <span class="reviewer-meta" th:if="${r.highlight}" th:text="${r.highlight}">서울대 합격</span>
+                    </div>
+                </div>
                 </div>
             </div>
             <div th:if="${#lists.isEmpty(courseReviews)}" class="muted">등록된 수강후기가 없습니다.</div>
         </section>
+
+        <!-- 리뷰 상세 팝업 -->
+        <div class="review-modal" id="reviewModal" hidden>
+            <div class="review-modal__backdrop"></div>
+            <div class="review-modal__card">
+                <button class="review-modal__close" type="button" aria-label="닫기">✕</button>
+                <div class="review-modal__header">
+                    <div class="review-stars" id="modalRating">★★★★★</div>
+                    <div class="reviewer" style="margin-top:6px;">
+                        <span class="reviewer-name" id="modalAuthor">작성자</span>
+                        <span class="reviewer-meta" id="modalHighlight" hidden>한줄 소개</span>
+                    </div>
+                </div>
+                <div class="review-modal__body" id="modalContent">내용</div>
+            </div>
+        </div>
 
         <section class="landing-section dual" id="location">
             <div class="location-copy">
@@ -269,12 +337,172 @@
             </div>
             <div class="map-wrap">
                 <iframe
-                    src="https://www.google.com/maps?q=%EC%84%9C%EC%9A%B8%20%EC%84%9C%EC%B4%88%EA%B5%AC%20%EB%B0%98%ED%8F%AC%EB%8F%99&output=embed"
+                    src="https://www.google.com/maps?q=%EC%95%A0%ED%94%8C%EA%B3%BC%ED%95%99%EA%B5%90%EC%8A%B5%EC%86%8C&output=embed"
                     allowfullscreen=""
                     loading="lazy"
                     referrerpolicy="no-referrer-when-downgrade"></iframe>
             </div>
         </section>
+
+        <section class="landing-section" id="questions">
+            <div class="section-head">
+                <div>
+                    <div class="pill">질문게시판</div>
+                    <h2>무엇이든 자유롭게 질문하세요</h2>
+                    <p class="section-sub">수업 중 궁금했던 점, 추가 자료 요청 등 무엇이든 남기면 답변을 도와드릴게요.</p>
+                </div>
+            </div>
+            <div class="question-board" id="questionBoard" th:data-admin="${#authorization.expression('hasAnyAuthority(''ROLE_ADMIN'',''ROLE_ROOT'')')}">
+                <form class="question-form" id="questionForm">
+                    <div style="display:grid; gap:8px;">
+                        <input type="text" id="questionTitle" placeholder="제목" required>
+                        <textarea id="questionContent" placeholder="궁금한 점을 작성해주세요." required></textarea>
+                        <div style="display:flex; justify-content:flex-end; gap:8px;">
+                            <button class="cta ghost" type="reset">초기화</button>
+                            <button class="cta primary" type="submit">등록</button>
+                        </div>
+                    </div>
+                </form>
+                <div class="question-list" id="questionList">
+                    <div class="question-row header">
+                        <div>#</div>
+                        <div>제목</div>
+                        <div>작성일</div>
+                    </div>
+                    <div class="question-row">
+                        <div class="pill-soft">1</div>
+                        <div>
+                            <div class="question-title">질문 예시: 심화 문제 자료 요청</div>
+                            <div class="question-meta">실험 수업 자료 추가로 받을 수 있을까요?</div>
+                        </div>
+                        <div class="question-meta">샘플</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="question-modal" id="questionModal" aria-hidden="true">
+            <div class="backdrop"></div>
+            <div class="question-dialog" role="dialog" aria-modal="true">
+                <div class="section-head" style="margin-bottom:0;">
+                    <div>
+                        <div class="pill">질문 상세</div>
+                        <h2 id="modalQuestionTitle" style="margin:6px 0 0; font-size:18px;">제목</h2>
+                        <p class="section-sub" id="modalQuestionDate" style="margin:4px 0 0;">날짜</p>
+                    </div>
+                    <div class="question-actions">
+                        <button class="cta ghost" type="button" id="questionDeleteBtn" style="display:none;">삭제</button>
+                        <button class="cta outline" type="button" id="questionCloseBtn">닫기</button>
+                    </div>
+                </div>
+                <div class="card" style="padding:12px; border:1px solid #e2e8f0; box-shadow:none; background:#f8fafc;">
+                    <p class="muted" id="modalQuestionContent" style="margin:0;">내용</p>
+                </div>
+                <div>
+                    <div class="title-md" style="margin-bottom:6px;">댓글</div>
+                    <div class="comment-list" id="commentList"></div>
+                    <form class="comment-form" id="commentForm">
+                        <textarea id="commentContent" placeholder="익명으로 댓글을 남겨주세요." required></textarea>
+                        <div style="display:flex; justify-content:flex-end; gap:8px;">
+                            <button class="cta primary" type="submit">댓글 등록</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="portal-modal" id="portalModal" aria-hidden="true">
+            <div class="portal-backdrop"></div>
+            <div class="portal-dialog" role="dialog" aria-modal="true">
+                <div class="section-head" style="margin-bottom:10px;">
+                    <div>
+                        <div class="pill">학습 포털</div>
+                        <h2 style="margin:6px 0 0; font-size:18px;">공부에 도움이 되는 링크</h2>
+                    </div>
+                    <button class="cta ghost" type="button" id="portalCloseBtn">닫기</button>
+                </div>
+                <p class="section-sub" style="margin-top:0;">자주 사용하는 학습 사이트를 모아서 열어보세요.</p>
+                <ul class="portal-list">
+                    <li class="portal-link">
+                        <div>
+                            <div class="portal-name">EBS</div>
+                            <div class="portal-desc">공부에 도움이 되는 대표 포털 (ebs.com)</div>
+                        </div>
+                        <a class="cta primary" href="https://www.ebs.co.kr" target="_blank" rel="noreferrer">바로가기</a>
+                    </li>
+                    <li class="portal-link">
+                        <div>
+                            <div class="portal-name">메가스터디</div>
+                            <div class="portal-desc">전 과목 인강</div>
+                        </div>
+                        <a class="cta primary" href="https://www.megastudy.net/" target="_blank" rel="noreferrer">바로가기</a>
+                    </li>
+                    <li class="portal-link">
+                        <div>
+                            <div class="portal-name">대성마이맥</div>
+                            <div class="portal-desc">기본+심화 강의</div>
+                        </div>
+                        <a class="cta primary" href="https://www.mymac.co.kr/" target="_blank" rel="noreferrer">바로가기</a>
+                    </li>
+                    <li class="portal-link">
+                        <div>
+                            <div class="portal-name">이투스</div>
+                            <div class="portal-desc">수능/내신 강의</div>
+                        </div>
+                        <a class="cta primary" href="https://www.etutors.com/" target="_blank" rel="noreferrer">바로가기</a>
+                    </li>
+                    <li class="portal-link">
+                        <div>
+                            <div class="portal-name">EBSi 기출</div>
+                            <div class="portal-desc">공식 무료 기출/학습자료</div>
+                        </div>
+                            <a class="cta primary" href="https://www.ebs.co.kr/ebsapp/front/main" target="_blank" rel="noreferrer">바로가기</a>
+                    </li>
+                    <li class="portal-link">
+                        <div>
+                            <div class="portal-name">족보닷컴</div>
+                            <div class="portal-desc">학교 시험/기출 자료 공유</div>
+                        </div>
+                        <a class="cta primary" href="https://www.jokbo.com/" target="_blank" rel="noreferrer">바로가기</a>
+                    </li>
+                    <li class="portal-link">
+                        <div>
+                            <div class="portal-name">마더텅 기출</div>
+                            <div class="portal-desc">기출 문제집 출판사</div>
+                        </div>
+                        <a class="cta primary" href="https://www.mdotung.co.kr/" target="_blank" rel="noreferrer">바로가기</a>
+                    </li>
+                    <li class="portal-link">
+                        <div>
+                            <div class="portal-name">Notion</div>
+                            <div class="portal-desc">노트/오답노트/플래너</div>
+                        </div>
+                        <a class="cta primary" href="https://www.notion.so/" target="_blank" rel="noreferrer">바로가기</a>
+                    </li>
+                    <li class="portal-link">
+                        <div>
+                            <div class="portal-name">Anki</div>
+                            <div class="portal-desc">암기 플래시카드</div>
+                        </div>
+                        <a class="cta primary" href="https://apps.ankiweb.net/" target="_blank" rel="noreferrer">바로가기</a>
+                    </li>
+                    <li class="portal-link">
+                        <div>
+                            <div class="portal-name">Forest</div>
+                            <div class="portal-desc">집중 타이머 앱</div>
+                        </div>
+                        <a class="cta primary" href="https://www.forestapp.cc/" target="_blank" rel="noreferrer">바로가기</a>
+                    </li>
+                    <li class="portal-link">
+                        <div>
+                            <div class="portal-name">Study Bunny</div>
+                            <div class="portal-desc">집중 타이머 앱</div>
+                        </div>
+                        <a class="cta primary" href="https://studybunny.com/" target="_blank" rel="noreferrer">바로가기</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
 
     </div>
 
@@ -291,6 +519,190 @@
             }
         });
     });
+
+    const portalModal = document.getElementById('portalModal');
+    const portalBackdrop = portalModal?.querySelector('.portal-backdrop');
+    const portalClose = document.getElementById('portalCloseBtn');
+    const openPortalModal = () => portalModal?.classList.add('open');
+    const closePortalModal = () => portalModal?.classList.remove('open');
+
+    document.querySelectorAll('#portalLinksTrigger').forEach(btn => {
+        btn.addEventListener('click', openPortalModal);
+    });
+    portalBackdrop?.addEventListener('click', closePortalModal);
+    portalClose?.addEventListener('click', closePortalModal);
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closePortalModal();
+    });
+
+    // 수강후기 팝업
+    const reviewModal = document.getElementById('reviewModal');
+    if (reviewModal) {
+        const modalAuthor = document.getElementById('modalAuthor');
+        const modalHighlight = document.getElementById('modalHighlight');
+        const modalContent = document.getElementById('modalContent');
+        const modalRating = document.getElementById('modalRating');
+        const closeReviewModal = () => reviewModal.setAttribute('hidden', '');
+
+        reviewModal.querySelector('.review-modal__backdrop')?.addEventListener('click', closeReviewModal);
+        reviewModal.querySelector('.review-modal__close')?.addEventListener('click', closeReviewModal);
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeReviewModal(); });
+
+        document.querySelectorAll('.review-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const author = card.dataset.author || '';
+                const highlight = card.dataset.highlight || '';
+                const content = card.dataset.content || '';
+                const rating = Number(card.dataset.rating || 0);
+
+                modalAuthor.textContent = author;
+                if (highlight && modalHighlight) {
+                    modalHighlight.textContent = highlight;
+                    modalHighlight.hidden = false;
+                } else if (modalHighlight) {
+                    modalHighlight.hidden = true;
+                }
+                modalContent.textContent = content;
+                modalRating.textContent = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+                reviewModal.removeAttribute('hidden');
+            });
+        });
+    }
+
+    // 간단한 프런트엔드 질문 게시판 (로컬 저장)
+    const boardEl = document.getElementById('questionBoard');
+    const form = document.getElementById('questionForm');
+    const listEl = document.getElementById('questionList');
+    const titleEl = document.getElementById('questionTitle');
+    const contentEl = document.getElementById('questionContent');
+    const modal = document.getElementById('questionModal');
+    const modalTitle = document.getElementById('modalQuestionTitle');
+    const modalDate = document.getElementById('modalQuestionDate');
+    const modalContent = document.getElementById('modalQuestionContent');
+    const commentList = document.getElementById('commentList');
+    const commentForm = document.getElementById('commentForm');
+    const commentContent = document.getElementById('commentContent');
+    const deleteBtn = document.getElementById('questionDeleteBtn');
+    const closeBtn = document.getElementById('questionCloseBtn');
+    const isAdmin = boardEl?.dataset?.admin === 'true';
+    const STORAGE_KEY = 'apple_science_questions_v2';
+    let activeQuestionId = null;
+
+    const loadQuestions = () => {
+        try {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        } catch (e) {
+            return [];
+        }
+    };
+    const saveQuestions = (items) => localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+
+    const renderQuestions = () => {
+        if (!listEl) return;
+        const items = loadQuestions();
+        listEl.querySelectorAll('.question-row:not(.header)').forEach(el => el.remove());
+        const fragment = document.createDocumentFragment();
+        items.forEach((q, idx) => {
+            const row = document.createElement('div');
+            row.className = 'question-row';
+            const btn = document.createElement('button');
+            btn.className = 'question-title-btn';
+            btn.type = 'button';
+            btn.textContent = q.title;
+            btn.addEventListener('click', () => openQuestion(q.id));
+
+            row.appendChild(Object.assign(document.createElement('div'), { className: 'pill-soft', textContent: idx + 1 }));
+            const desc = document.createElement('div');
+            desc.appendChild(btn);
+            desc.appendChild(Object.assign(document.createElement('div'), { className: 'question-meta', textContent: q.content }));
+            row.appendChild(desc);
+            row.appendChild(Object.assign(document.createElement('div'), { className: 'question-meta', textContent: q.date }));
+            fragment.appendChild(row);
+        });
+        listEl.appendChild(fragment);
+    };
+
+    const openQuestion = (id) => {
+        const q = loadQuestions().find(item => item.id === id);
+        if (!q || !modal) return;
+        activeQuestionId = id;
+        modalTitle.textContent = q.title;
+        modalDate.textContent = q.date;
+        modalContent.textContent = q.content;
+        deleteBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+        renderComments(q);
+        modal.classList.add('open');
+    };
+
+    const closeQuestion = () => {
+        modal?.classList.remove('open');
+        activeQuestionId = null;
+    };
+
+    const renderComments = (q) => {
+        if (!commentList) return;
+        commentList.innerHTML = '';
+        const items = q.comments || [];
+        if (!items.length) {
+            const empty = document.createElement('div');
+            empty.className = 'muted';
+            empty.textContent = '아직 댓글이 없습니다. 첫 댓글을 남겨보세요.';
+            commentList.appendChild(empty);
+            return;
+        }
+        items.forEach(c => {
+            const el = document.createElement('div');
+            el.className = 'comment';
+            el.innerHTML = `<div>${c.content}</div><div class="comment-meta">${c.date} · 익명</div>`;
+            commentList.appendChild(el);
+        });
+    };
+
+    form?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const title = titleEl?.value?.trim();
+        const content = contentEl?.value?.trim();
+        if (!title || !content) return;
+        const now = new Date();
+        const date = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
+        const items = loadQuestions();
+        items.unshift({ id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`, title, content, date, comments: [] });
+        saveQuestions(items.slice(0, 50));
+        form.reset();
+        renderQuestions();
+    });
+
+    commentForm?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!activeQuestionId) return;
+        const text = commentContent?.value?.trim();
+        if (!text) return;
+        const now = new Date();
+        const date = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
+        const items = loadQuestions();
+        const idx = items.findIndex(q => q.id === activeQuestionId);
+        if (idx === -1) return;
+        const q = items[idx];
+        q.comments = q.comments || [];
+        q.comments.unshift({ id: `${Date.now()}-${Math.random()}`, content: text, date });
+        saveQuestions(items);
+        commentForm.reset();
+        renderComments(q);
+        renderQuestions();
+    });
+
+    deleteBtn?.addEventListener('click', () => {
+        if (!isAdmin || !activeQuestionId) return;
+        const items = loadQuestions().filter(q => q.id !== activeQuestionId);
+        saveQuestions(items);
+        closeQuestion();
+        renderQuestions();
+    });
+
+    closeBtn?.addEventListener('click', closeQuestion);
+    modal?.querySelector('.backdrop')?.addEventListener('click', closeQuestion);
+
+    renderQuestions();
 </script>
 </body>
 </html>

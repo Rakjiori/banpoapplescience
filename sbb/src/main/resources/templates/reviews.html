@@ -15,15 +15,75 @@
     <div th:if="${#lists.isEmpty(courseReviews)}" class="card" style="padding:18px;">등록된 수강후기가 없습니다.</div>
 
     <div th:if="${not #lists.isEmpty(courseReviews)}"
-         style="max-height:600px; overflow:auto; padding-right:6px;">
+         style="padding-right:6px;">
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:12px;">
-            <div class="card" th:each="r : ${courseReviews}" style="display:flex; flex-direction:column; min-height:160px;">
+            <div class="card"
+                 th:each="r : ${courseReviews}"
+                 th:data-author="${r.author}"
+                 th:data-highlight="${r.highlight}"
+                 th:data-rating="${r.rating}"
+                 th:data-content="${r.content}"
+                 style="display:flex; flex-direction:column; min-height:160px; cursor:pointer;">
                 <div class="review-stars" th:text="${#strings.repeat('★', r.rating) + #strings.repeat('☆', 5 - r.rating)}">★★★★★</div>
-                <div class="review-text" th:text="${#strings.abbreviate(r.content,100)}" style="flex:1;">후기 내용</div>
-                <div class="reviewer" th:text="${r.author}">작성자</div>
+                <div class="review-text" th:text="${#strings.abbreviate(r.content,180)}" style="flex:1;">후기 내용</div>
+                <div class="reviewer">
+                    <span class="reviewer-name" th:text="${r.author}">작성자</span>
+                    <span class="reviewer-meta" th:if="${r.highlight}" th:text="${r.highlight}">서울대 합격</span>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- 리뷰 상세 팝업 -->
+    <div class="review-modal" id="reviewModal" hidden>
+        <div class="review-modal__backdrop"></div>
+        <div class="review-modal__card">
+            <button class="review-modal__close" type="button" aria-label="닫기">✕</button>
+            <div class="review-modal__header">
+                <div class="review-stars" id="modalRating">★★★★★</div>
+                <div class="reviewer" style="margin-top:6px;">
+                    <span class="reviewer-name" id="modalAuthor">작성자</span>
+                    <span class="reviewer-meta" id="modalHighlight" hidden>한줄 소개</span>
+                </div>
+            </div>
+            <div class="review-modal__body" id="modalContent">내용</div>
+        </div>
+    </div>
 </div>
+
+<script>
+  const reviewModal = document.getElementById('reviewModal');
+  if (reviewModal) {
+    const modalAuthor = document.getElementById('modalAuthor');
+    const modalHighlight = document.getElementById('modalHighlight');
+    const modalContent = document.getElementById('modalContent');
+    const modalRating = document.getElementById('modalRating');
+    const closeReviewModal = () => reviewModal.setAttribute('hidden', '');
+
+    reviewModal.querySelector('.review-modal__backdrop')?.addEventListener('click', closeReviewModal);
+    reviewModal.querySelector('.review-modal__close')?.addEventListener('click', closeReviewModal);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeReviewModal(); });
+
+    document.querySelectorAll('.card[data-author]').forEach(card => {
+      card.addEventListener('click', () => {
+        const author = card.dataset.author || '';
+        const highlight = card.dataset.highlight || '';
+        const content = card.dataset.content || '';
+        const rating = Number(card.dataset.rating || 0);
+
+        modalAuthor.textContent = author;
+        if (highlight && modalHighlight) {
+          modalHighlight.textContent = highlight;
+          modalHighlight.hidden = false;
+        } else if (modalHighlight) {
+          modalHighlight.hidden = true;
+        }
+        modalContent.textContent = content;
+        modalRating.textContent = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+        reviewModal.removeAttribute('hidden');
+      });
+    });
+  }
+</script>
 </body>
 </html>

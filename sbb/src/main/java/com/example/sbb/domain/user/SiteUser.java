@@ -61,6 +61,15 @@ public class SiteUser {
 
     private String fullName;
 
+    @Column(length = 30)
+    private String assistantPhone;
+
+    @Column(length = 30)
+    private String studentPhone;
+
+    @Column(length = 30)
+    private String parentPhone;
+
     private String schoolName;
 
     private String grade;

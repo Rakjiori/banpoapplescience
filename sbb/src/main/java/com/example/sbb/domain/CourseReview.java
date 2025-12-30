@@ -26,6 +26,9 @@ public class CourseReview {
     @Column(nullable = false, length = 100)
     private String author;
 
+    @Column(length = 120)
+    private String highlight;
+
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
