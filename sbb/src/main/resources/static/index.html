@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>애플과학 | 과학 전문 학원</title>
+  <link rel="icon" href="/image/logo2.png" type="image/png">
+  <link rel="apple-touch-icon" href="/image/logo2.png">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .card-desc { font-size: 14px; color: #555; }
+    .card-title { font-size: 16px; font-weight: 700; }
+    .mobile-only { display: none; }
+    .desktop-only { display: block; }
+    .btn-primary{ background: linear-gradient(135deg, #1e3a8a, #3b82f6); color:#fff; border:none; border-radius:12px; padding:12px 14px; font-weight:800; cursor:pointer; }
+    .btn-secondary{ background:#fff; color:#0f172a; border:1px solid #d7e1f0; border-radius:12px; padding:10px 12px; font-weight:700; cursor:pointer; }
+    .acc-btn{
+      width:100%;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      padding: 12px 12px;
+      border: 1px solid #eee;
+      border-radius: 14px;
+      background: #fff;
+    }
+    .acc-panel{
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 14px;
+      background: #f7f9fc;
+      border: 1px solid #edf1f7;
+    }
+    .schedule-list{
+      list-style:none;
+      padding:0;
+      margin:0;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .schedule-list li{
+      display:flex;
+      gap:10px;
+      font-size:14px;
+      line-height:1.5;
+    }
+    .schedule-list b{ min-width: 72px; }
+    /* ===== Mobile 개선 패치 ===== */
+    @media (max-width: 768px) {
+      :root{
+        --page-pad: 16px;
+        --card-pad: 14px;
+        --radius: 14px;
+      }
+      body{
+        font-size: 15px;
+        line-height: 1.6;
+      }
+      .top-nav{
+        padding: 10px var(--page-pad);
+        overflow-x: auto;
+        white-space: nowrap;
+        gap: 10px;
+      }
+      .top-nav::-webkit-scrollbar{ display:none; }
+      .container, .page, main{
+        padding-left: var(--page-pad);
+        padding-right: var(--page-pad);
+      }
+      .hero{
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+        padding: var(--card-pad) !important;
+        border-radius: var(--radius) !important;
+      }
+      .hero h1{
+        font-size: 22px !important;
+        line-height: 1.25 !important;
+        margin: 0 !important;
+      }
+      .hero .sub{
+        font-size: 14px !important;
+        color: #566 !important;
+        margin-top: 6px !important;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .hero .cta-row{
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+      }
+      .btn-primary{
+        width: 100% !important;
+        padding: 14px 14px !important;
+        border-radius: 12px !important;
+        font-weight: 700 !important;
+        font-size: 15px !important;
+      }
+      .btn-secondary{
+        width: 100% !important;
+        padding: 12px 14px !important;
+        border-radius: 12px !important;
+        font-size: 14px !important;
+      }
+      .hero .hero-right,
+      .hero .timetable-card{
+        display: none !important;
+      }
+      .section-card{
+        padding: var(--card-pad) !important;
+        border-radius: var(--radius) !important;
+      }
+      .grid, .card-grid, .review-grid, .notice-grid{
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+      }
+      .card-title{
+        font-size: 16px !important;
+        font-weight: 700 !important;
+        margin-bottom: 6px !important;
+      }
+      .card-desc{
+        font-size: 14px !important;
+        color: #555 !important;
+        line-height: 1.6 !important;
+      }
+      .clamp-2{
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .mobile-cta{
+        position: fixed;
+        left: 0; right: 0; bottom: 0;
+        padding: 10px var(--page-pad);
+        background: rgba(255,255,255,0.92);
+        backdrop-filter: blur(8px);
+        border-top: 1px solid #eee;
+        z-index: 999;
+      }
+      .mobile-cta .btn-primary{
+        width: 100%;
+      }
+      .page-bottom-spacer{
+        height: 76px;
+      }
+      .mobile-only { display: block; }
+      .desktop-only { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar top-nav">
+    <div class="navbar-inner">
+      <a class="brand" href="#top" data-scroll>
+        <img class="brand-logo" src="/image/logo2.png" alt="애플과학 로고">
+        <div class="brand-text">
+          <div class="brand-name">애플과학</div>
+        </div>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#schedule" data-scroll>시간표</a></li>
+        <li><a href="#notice" data-scroll>공지사항</a></li>
+        <li><a href="#reviews" data-scroll>수강후기</a></li>
+        <li><a href="#location" data-scroll>오시는길</a></li>
+      </ul>
+      <div class="nav-actions">
+        <a class="nav-pill solid" href="tel:02-532-1706">전화 문의</a>
+        <a class="nav-pill outline" href="#contact" data-scroll>상담 예약</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container landing-shell" id="top">
+
+    <section class="landing-hero hero">
+      <div class="hero-grid">
+        <div>
+          <p class="eyebrow">애플과학</p>
+          <h1>개념이 잡히면, 성적은 따라옵니다.</h1>
+          <p class="hero-sub sub">과학 전문 1:1 클리닉으로 개념부터 문제까지 빠르게 정리하세요.</p>
+          <div class="hero-actions cta-row">
+            <a class="cta primary btn-primary" href="#contact" data-scroll>1:1 무료 상담</a>
+          </div>
+          <div class="hero-footnote">
+            <span>문의 02-532-1706</span>
+            <span>고속버스터미널 8-2번 출구 앞</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 모바일 전용 아코디언 시간표 -->
+    <section class="section-card mobile-only" id="mobileSchedule">
+      <button class="acc-btn" type="button" aria-expanded="false" aria-controls="acc-panel">
+        <div>
+          <div style="font-weight:800;">📅 이번 주 수업 시간표</div>
+          <div style="font-size:13px;color:#666;">탭해서 펼쳐보기</div>
+        </div>
+        <span class="acc-icon" aria-hidden="true">▾</span>
+      </button>
+
+      <div class="acc-panel" id="acc-panel" hidden>
+        <ul class="schedule-list">
+          <li><b>화 18:00</b> <span>고1 개념 정리 + 문제풀이</span></li>
+          <li><b>목 19:30</b> <span>고1 내신 대비 + 쌍둥이 기출</span></li>
+          <li><b>토 14:00</b> <span>고3 모의고사 + 개인 오답 리포트</span></li>
+        </ul>
+        <div style="margin-top:10px;">
+          <button class="btn-secondary" type="button">시간표 전체 보기</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="landing-section desktop-only" id="schedule">
+      <div class="section-head">
+        <div>
+          <div class="pill">시간표</div>
+          <h2>이번 주 수업 시간표</h2>
+          <p class="section-sub">필요한 시간만 펼쳐서 확인하세요.</p>
+        </div>
+      </div>
+      <details>
+        <summary style="cursor:pointer; font-weight:800; padding:10px 0;">펼쳐보기 ▾</summary>
+        <div class="schedule-grid">
+          <div class="schedule-card">
+            <div class="schedule-title">중등 개념+실험</div>
+            <div class="schedule-meta">주 2회 · 소수정원 · 실험 병행</div>
+            <div class="time-row"><span>화/목</span><span>17:00 ~ 19:00</span></div>
+          </div>
+          <div class="schedule-card">
+            <div class="schedule-title">고1 내신 대비</div>
+            <div class="schedule-meta">개념완성 + 기출 분석</div>
+            <div class="time-row"><span>월/수</span><span>18:00 ~ 20:00</span></div>
+          </div>
+          <div class="schedule-card">
+            <div class="schedule-title">고2 심화 클리닉</div>
+            <div class="schedule-meta">킬러 문항 집중 · 개인 맞춤</div>
+            <div class="time-row"><span>금</span><span>18:00 ~ 21:00</span></div>
+          </div>
+          <div class="schedule-card">
+            <div class="schedule-title">수능 파이널</div>
+            <div class="schedule-meta">주말 모의+피드백</div>
+            <div class="time-row"><span>토</span><span>14:00 ~ 18:00</span></div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <section class="landing-section" id="notice">
+      <div class="section-head">
+        <div>
+          <div class="pill">공지사항</div>
+          <h2>반포 애플과학 소식</h2>
+        </div>
+      </div>
+      <div class="notice-grid">
+        <article class="notice-card">
+          <div class="notice-date">2025.01.05</div>
+          <div class="notice-title card-title">[공지] 겨울방학 집중 클리닉</div>
+          <div class="notice-body card-desc clamp-2">개념+실험 통합 과정</div>
+        </article>
+        <article class="notice-card">
+          <div class="notice-date">2025.01.02</div>
+          <div class="notice-title card-title">[공지] 주말 모의고사 프로그램</div>
+          <div class="notice-body card-desc clamp-2">토요일 14:00 피드백 포함</div>
+        </article>
+        <article class="notice-card">
+          <div class="notice-date">2024.12.28</div>
+          <div class="notice-title card-title">[공지] 신규 상담 이벤트</div>
+          <div class="notice-body card-desc clamp-2">상담 예약 시 학습 로드맵 제공</div>
+        </article>
+      </div>
+    </section>
+
+    <section class="landing-section" id="reviews">
+      <div class="section-head">
+        <div>
+          <div class="pill">수강후기</div>
+          <h2>학부모·학생이 말하는 변화</h2>
+        </div>
+      </div>
+      <div class="review-grid">
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <div class="review-text card-desc clamp-2">“개념 설명이 잘 돼요. 내신 준비 자신감 업!”</div>
+          <div class="reviewer">
+            <span class="reviewer-name">김○○ (고1)</span>
+            <span class="reviewer-meta">내신 상승</span>
+          </div>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <div class="review-text card-desc clamp-2">“1:1 클리닉으로 취약 파트를 보완, 킬러 접근법 배웠어요.”</div>
+          <div class="reviewer">
+            <span class="reviewer-name">박○○ (고2)</span>
+            <span class="reviewer-meta">심화 클리닉</span>
+          </div>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★☆</div>
+          <div class="review-text card-desc clamp-2">“주말 모의+피드백 덕분에 실전 감각이 잡혔습니다.”</div>
+          <div class="reviewer">
+            <span class="reviewer-name">이○○ (고3)</span>
+            <span class="reviewer-meta">수능 대비</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="landing-section dual" id="location">
+      <div class="location-copy">
+        <div class="pill">오시는 길</div>
+        <h3>서울 서초구 신반포로 189 반포쇼핑타운 4동 402호</h3>
+        <ul class="location-points">
+          <li><span class="label-ghost">주소</span><span>서울 서초구 신반포로 189 반포쇼핑타운 4동 402호</span></li>
+          <li><span class="label-ghost">지하철</span><span>고속버스터미널역 8-2번 출구 앞 KFC 건물</span></li>
+          <li><span class="label-ghost">문의</span><span>02-532-1706 / 상담 가능 시간 10:00~22:00</span></li>
+        </ul>
+        <div class="hero-actions" style="margin-top:14px;">
+          <a class="cta primary" href="tel:02-532-1706">전화 상담</a>
+          <a class="cta ghost" href="https://map.naver.com/p/search/%EB%B0%98%ED%8F%AC%EC%95%A0%ED%94%8C%EA%B3%BC%ED%95%99" target="_blank" rel="noreferrer">지도 열기</a>
+        </div>
+      </div>
+      <div class="map-wrap">
+        <iframe
+          src="https://www.google.com/maps?q=%EC%95%A0%ED%94%8C%EA%B3%BC%ED%95%99%EA%B5%90%EC%8A%B5%EC%86%8C&output=embed"
+          allowfullscreen
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+    </section>
+
+    <section class="landing-section" id="contact">
+      <div class="section-head">
+        <div>
+          <div class="pill">상담 예약</div>
+          <h2>전화 또는 방문 상담을 예약하세요</h2>
+        </div>
+      </div>
+      <div class="callout">
+        <div class="callout-inner">
+          <div>
+            <div class="hero-kicker" style="color:#dbeafe;">상담 가능 시간 10:00 ~ 22:00</div>
+            <p class="hero-sub" style="color:#e2e8f0;">전화로 바로 연결하거나 지도에서 위치를 확인하세요.</p>
+          </div>
+          <div class="callout-actions">
+            <a class="cta primary" href="tel:02-532-1706">전화 연결</a>
+            <a class="cta ghost" href="#location" data-scroll>위치 보기</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <div class="footer-title">애플과학</div>
+        <div class="footer-line">문의: <a href="tel:02-532-1706">02-532-1706</a></div>
+        <div class="footer-line">서울 서초구 신반포로 189 반포쇼핑타운 4동 402호</div>
+      </div>
+      <div class="footer-right"></div>
+    </div>
+  </footer>
+
+  <div class="mobile-cta">
+    <button class="btn-primary" type="button" onclick="location.href='tel:02-532-1706'">1:1 무료 상담 신청</button>
+  </div>
+  <div class="page-bottom-spacer"></div>
+
+  <script>
+    (function(){
+      const btn = document.querySelector('#mobileSchedule .acc-btn');
+      const panel = document.querySelector('#acc-panel');
+      const icon = document.querySelector('#mobileSchedule .acc-icon');
+      if(!btn || !panel) return;
+      btn.addEventListener('click', () => {
+        const expanded = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', String(!expanded));
+        panel.hidden = expanded;
+        if(icon) icon.textContent = expanded ? '▾' : '▴';
+      });
+    })();
+  </script>
+
+</body>
+</html>
