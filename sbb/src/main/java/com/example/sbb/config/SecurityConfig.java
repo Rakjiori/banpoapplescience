@@ -28,6 +28,7 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/api/notices/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/schedules/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/mobile/**").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/notices/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_ROOT")
                     .requestMatchers(HttpMethod.PUT, "/api/notices/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_ROOT")
                     .requestMatchers(HttpMethod.DELETE, "/api/notices/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_ROOT")
