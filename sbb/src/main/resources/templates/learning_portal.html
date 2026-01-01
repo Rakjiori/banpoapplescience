@@ -9,58 +9,119 @@
             <h1 class="page-title">나의 수업, 과제, 공지 한눈에</h1>
             <p class="muted">그룹(수업)에서 올라온 과제와 공지사항을 한 곳에서 확인하세요.</p>
         </div>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <a class="btn btn-outline" href="/groups">그룹 관리</a>
-            <a class="btn" href="/groups">수업 참여하기</a>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-start; margin-top:8px;">
+            <a class="btn" href="/groups">내 그룹 보기</a>
         </div>
     </div>
 
-    <div style="display:flex; flex-direction:column; gap:10px;">
-        <div class="card" style="background: linear-gradient(135deg, #eef2ff, #e0f2fe); padding:18px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <div class="title-md">나의 수업 보기</div>
-                <a class="btn btn-outline" href="/groups">수업으로 이동</a>
+    <div class="card-grid" style="display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(260px,1fr));">
+        <div class="card portal-tile" style="min-height:260px; display:flex; flex-direction:column; background:linear-gradient(135deg,#eef2ff,#e0f2fe);">
+            <div class="tile-head">
+                <div class="title-md">내 그룹</div>
+                <span class="pill-soft" th:text="${#lists.size(memberships)} + '개'">0개</span>
             </div>
-            <div th:if="${#lists.isEmpty(memberships)}" class="muted">아직 참여한 수업이 없습니다.</div>
-            <div th:if="${!#lists.isEmpty(memberships)}" style="max-height:180px; overflow:auto; display:flex; flex-direction:column; gap:8px;">
-                <div class="pill-soft" th:each="m : ${memberships}">
-                    <div class="title-md" th:text="${m.group.name}">수업명</div>
-                    <div class="muted" th:text="${m.group.joinCode != null ? '코드: ' + m.group.joinCode : ''}">코드</div>
-                    <div class="muted" th:text="${m.role == 'OWNER' ? '담당자' : '수강생'}">역할</div>
+            <div class="tile-body" style="overflow:auto; flex:1;">
+                <div th:if="${#lists.isEmpty(memberships)}" class="muted">아직 참여한 그룹이 없습니다.</div>
+                <div th:each="m : ${memberships}" class="portal-item" data-title="내 그룹" th:data-body="${m.group.name}" th:data-url="@{'/groups/' + ${m.group.id}}">
+                    <div class="item-title" th:text="${m.group.name}">수업명</div>
+                    <div class="item-meta" th:text="${m.role == 'OWNER' ? '담당자' : '수강생'}">역할</div>
+                    <div class="item-meta" th:text="${m.group.joinCode != null ? '코드 ' + m.group.joinCode : ''}">코드</div>
                 </div>
             </div>
         </div>
-        <div class="card" style="background: linear-gradient(135deg, #ecfdf3, #e0f7e9); padding:18px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <div class="card portal-tile" style="min-height:260px; display:flex; flex-direction:column; background:linear-gradient(135deg,#ecfdf3,#e0f7e9);">
+            <div class="tile-head">
                 <div class="title-md">과제</div>
                 <span class="pill-soft" th:text="${#lists.size(portalTasks)} + '건'">0건</span>
             </div>
-            <div th:if="${#lists.isEmpty(portalTasks)}" class="muted">등록된 과제가 없습니다.</div>
-            <div th:if="${!#lists.isEmpty(portalTasks)}" style="max-height:180px; overflow:auto; display:flex; flex-direction:column; gap:8px;">
-                <div class="pill-soft" th:each="item : ${portalTasks}">
-                    <div class="title-md" th:text="${item.task.title}">과제 제목</div>
-                    <div class="muted" th:text="${item.task.description}">설명</div>
-                    <div class="muted" th:text="${item.task.dueDate != null ? '마감: ' + item.task.dueDate : '마감일 없음'}">마감</div>
-                    <div class="muted" th:text="${item.group.name}">그룹</div>
+            <div class="tile-body" style="overflow:auto; flex:1;">
+                <div th:if="${#lists.isEmpty(portalTasks)}" class="muted">등록된 과제가 없습니다.</div>
+                <div th:each="item : ${portalTasks}" class="portal-item"
+                     th:data-title="${item.group.name}"
+                     th:data-body="${item.task.title}"
+                     th:data-url="@{'/groups/' + ${item.group.id}}"
+                     th:data-extra="${item.task.dueDate != null ? '마감 ' + item.task.dueDate : '마감일 없음'}">
+                    <div class="item-title" th:text="${item.task.title}">과제 제목</div>
+                    <div class="item-meta" th:text="${item.group.name}">그룹</div>
+                    <div class="item-meta" th:text="${item.task.dueDate != null ? '마감: ' + item.task.dueDate : '마감일 없음'}">마감</div>
                 </div>
             </div>
         </div>
-        <div class="card" style="background: linear-gradient(135deg, #fff7ed, #fffbeb); padding:18px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <div class="card portal-tile" style="min-height:260px; display:flex; flex-direction:column; background:linear-gradient(135deg,#fff7ed,#fffbeb);">
+            <div class="tile-head">
                 <div class="title-md">공지사항</div>
                 <span class="pill-soft" th:text="${#lists.size(portalNotices)} + '건'">0건</span>
             </div>
-            <div th:if="${#lists.isEmpty(portalNotices)}" class="muted">새 공지가 없습니다.</div>
-            <div th:if="${!#lists.isEmpty(portalNotices)}" style="max-height:180px; overflow:auto; display:flex; flex-direction:column; gap:8px;">
-                <div class="pill-soft" th:each="item : ${portalNotices}">
-                    <div class="title-md" th:text="${item.notice.title}">공지 제목</div>
-                    <div class="muted" th:text="${item.notice.content}">내용</div>
-                    <div class="muted" th:text="${#temporals.format(item.notice.createdAt, 'yyyy.MM.dd HH:mm')}">작성일</div>
-                    <div class="muted" th:text="${item.group.name}">그룹</div>
+            <div class="tile-body" style="overflow:auto; flex:1;">
+                <div th:if="${#lists.isEmpty(portalNotices)}" class="muted">새 공지가 없습니다.</div>
+                <div th:each="item : ${portalNotices}" class="portal-item"
+                     th:data-title="${item.group.name}"
+                     th:data-body="${item.notice.title}"
+                     th:data-url="@{'/groups/' + ${item.group.id}}"
+                     th:data-extra="${#temporals.format(item.notice.createdAt, 'yyyy.MM.dd HH:mm')}">
+                    <div class="item-title" th:text="${item.notice.title}">공지 제목</div>
+                    <div class="item-meta" th:text="${item.group.name}">그룹</div>
+                    <div class="item-meta" th:text="${#temporals.format(item.notice.createdAt, 'yyyy.MM.dd HH:mm')}">작성일</div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<div id="portalModal" class="portal-modal" hidden>
+    <div class="portal-backdrop"></div>
+    <div class="portal-dialog">
+        <div class="portal-dialog__head">
+            <div class="title-md" id="modalTitle">제목</div>
+            <button type="button" class="btn btn-outline btn-sm" id="modalClose">닫기</button>
+        </div>
+        <div class="portal-dialog__body">
+            <div class="muted" id="modalExtra"></div>
+            <div style="margin-top:8px; font-weight:600;" id="modalBody"></div>
+        </div>
+        <div class="portal-dialog__footer">
+            <a id="modalLink" class="btn" href="#">상세 보기</a>
+        </div>
+    </div>
+</div>
+<style>
+    .portal-tile .item-title { font-weight:700; color:#0f172a; font-size:14px; }
+    .portal-tile .item-meta { color:#6b7280; font-size:12px; margin-top:2px; }
+    .portal-item { padding:10px; border:1px solid #e5e7eb; border-radius:10px; background:#f9fafb; cursor:pointer; }
+    .portal-item + .portal-item { margin-top:8px; }
+    .tile-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .tile-body { padding:2px; }
+    .portal-modal { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:9999; }
+    .portal-modal[hidden] { display:none; }
+    .portal-backdrop { position:absolute; inset:0; background:rgba(0,0,0,0.4); }
+    .portal-dialog { position:relative; background:#fff; padding:16px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.18); width:min(420px, 90vw); }
+    .portal-dialog__head { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+    .portal-dialog__body { margin-top:10px; font-size:14px; }
+    .portal-dialog__footer { margin-top:12px; text-align:right; }
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', ()=>{
+        const modal = document.getElementById('portalModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+        const modalExtra = document.getElementById('modalExtra');
+        const modalLink = document.getElementById('modalLink');
+        const closeBtn = document.getElementById('modalClose');
+        const hide = ()=> modal.setAttribute('hidden','hidden');
+        const show = (title, body, extra, url)=>{
+            modalTitle.textContent = title || '상세';
+            modalBody.textContent = body || '';
+            modalExtra.textContent = extra || '';
+            modalLink.href = url || '#';
+            modal.removeAttribute('hidden');
+        };
+        closeBtn?.addEventListener('click', hide);
+        modal?.querySelector('.portal-backdrop')?.addEventListener('click', hide);
+        document.querySelectorAll('.portal-item').forEach(item=>{
+            item.addEventListener('click', ()=>{
+                show(item.dataset.title, item.dataset.body, item.dataset.extra, item.dataset.url);
+            });
+        });
+    });
+</script>
 </body>
 </html>

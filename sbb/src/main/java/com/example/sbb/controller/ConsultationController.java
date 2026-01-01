@@ -28,7 +28,8 @@ public class ConsultationController {
 
     @PostMapping("/consultations/request")
     public ResponseEntity<?> create(@RequestBody Map<String, String> payload, Principal principal) {
-        SiteUser user = principal != null ? userService.getUser(principal.getName()) : null;
+        if (principal == null) return ResponseEntity.status(401).build();
+        SiteUser user = userService.getUser(principal.getName());
         try {
             String type = payload.get("type");
             String message = payload.getOrDefault("message", "");

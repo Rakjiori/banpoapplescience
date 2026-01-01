@@ -26,11 +26,12 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/", "/signup", "/login", "/css/**", "/js/**", "/sw.js", "/image/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/notices/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/questions/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/schedules/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/mobile/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/push/public-key").permitAll()
-                    .requestMatchers(HttpMethod.POST, "/consultations/**").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/consultations/**").authenticated()
                     .requestMatchers(HttpMethod.POST, "/api/notices/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_ROOT")
                     .requestMatchers(HttpMethod.PUT, "/api/notices/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_ROOT")
                     .requestMatchers(HttpMethod.DELETE, "/api/notices/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_ROOT")

@@ -30,7 +30,7 @@ public class NotificationController {
 
     @GetMapping("/due")
     public ResponseEntity<?> due(Principal principal) {
-        if (principal == null) return ResponseEntity.status(401).build();
+        if (principal == null) return ResponseEntity.ok(List.of());
         SiteUser user = userService.getUser(principal.getName());
         List<PendingNotification> due = notificationService.consumeDue(user);
         List<NotificationPayload> payloads = due.stream()
@@ -79,7 +79,7 @@ public class NotificationController {
             String title = "상담 요청 (" + req.getType().name() + ")";
             String state = req.isContacted() ? "상담 완료" : "상담 대기";
             String body = (req.getMessage() != null ? req.getMessage() : "") + " [" + state + "]";
-            return new NotificationPayload(null, title, body, "/admin/consultations", "상담");
+            return new NotificationPayload(null, title, body, "/admin/consultations", "공지");
         }
 
         @Override

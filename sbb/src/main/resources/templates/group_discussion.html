@@ -48,45 +48,23 @@
                         <div style="display:flex; align-items:center; gap:6px;">
                             <span style="color:#9ca3af; font-size:11px;"
                                   th:text="${#temporals.format(item.createdAt, 'yyyy.MM.dd HH:mm')}">date</span>
-                            <div th:if="${currentUserId != null and currentUserId == item.user.id}" style="display:flex; gap:4px;">
-                                <button type="button"
+                            <form th:if="${(currentUserId != null and currentUserId == item.user.id) or isAdmin}"
+                                  th:action="@{/groups/{groupId}/discussion/{questionId}/comment/{commentId}/delete(groupId=${group.id},questionId=${question.id},commentId=${item.id})}"
+                                  method="post"
+                                  style="margin:0;">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                <button type="submit"
                                         class="btn btn-outline"
                                         style="padding:4px 8px; font-size:11px;"
-                                        th:attr="data-edit-target=${item.id}"
-                                        onclick="toggleEdit(this)">
-                                    수정
+                                        onclick="return confirm('댓글을 삭제할까요?');">
+                                    삭제
                                 </button>
-                                <form th:action="@{/groups/{groupId}/discussion/{questionId}/comment/{commentId}/delete(groupId=${group.id},questionId=${question.id},commentId=${item.id})}"
-                                      method="post"
-                                      style="margin:0;">
-                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                                    <button type="submit"
-                                            class="btn btn-outline"
-                                            style="padding:4px 8px; font-size:11px;"
-                                            onclick="return confirm('댓글을 삭제할까요?');">
-                                        삭제
-                                    </button>
-                                </form>
-                            </div>
+                            </form>
                         </div>
                     </div>
                     <div th:attr="data-comment-text=${item.id}"
                          style="margin-top:4px; white-space:pre-wrap; font-size:12px;"
                          th:text="${item.content}"></div>
-                    <form th:action="@{/groups/{groupId}/discussion/{questionId}/comment/{commentId}/edit(groupId=${group.id},questionId=${question.id},commentId=${item.id})}"
-                          method="post"
-                          th:attr="data-edit-form=${item.id}"
-                          style="display:none; margin-top:6px; gap:6px; align-items:flex-start;">
-                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                        <textarea name="content"
-                                  rows="2"
-                                  style="flex:1; padding:10px; border:1px solid #cbd5e1; border-radius:10px; resize:vertical; font-size:12px; font-family:'Segoe UI','Noto Sans KR',sans-serif;"
-                                  th:text="${item.content}"></textarea>
-                        <div style="display:flex; flex-direction:column; gap:4px;">
-                            <button type="submit" class="btn" style="padding:8px 10px; font-size:12px;">저장</button>
-                            <button type="button" class="btn btn-outline" style="padding:8px 10px; font-size:12px;" onclick="toggleEditButton(this)">취소</button>
-                        </div>
-                    </form>
                 </div>
             </div>
             <div th:if="${#lists.isEmpty(comments)}" style="color:#6b7280;">첫 댓글을 남겨 보세요.</div>
@@ -103,25 +81,5 @@
         </form>
     </div>
 </div>
-<script>
-    function toggleEdit(button) {
-        const id = button?.dataset?.editTarget;
-        if (!id) return;
-        const form = document.querySelector(`[data-edit-form="${id}"]`);
-        const text = document.querySelector(`[data-comment-text="${id}"]`);
-        if (!form || !text) return;
-        const isOpen = form.style.display === 'flex';
-        form.style.display = isOpen ? 'none' : 'flex';
-        text.style.display = isOpen ? 'block' : 'none';
-    }
-    function toggleEditButton(btn) {
-        const form = btn?.closest('form');
-        if (!form) return;
-        const id = form.dataset.editForm;
-        const text = document.querySelector(`[data-comment-text="${id}"]`);
-        form.style.display = 'none';
-        if (text) text.style.display = 'block';
-    }
-</script>
 </body>
 </html>

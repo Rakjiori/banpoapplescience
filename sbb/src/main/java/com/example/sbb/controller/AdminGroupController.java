@@ -107,7 +107,7 @@ public class AdminGroupController {
                     .map(n -> {
                         String title = n.getTitle() != null ? n.getTitle() : "";
                         String date = n.getCreatedAt() != null ? n.getCreatedAt().toLocalDate().toString() : "";
-                        return (title + " " + date).trim();
+                        return (title + " [" + date + "]").trim();
                     })
                     .filter(s -> !s.isBlank())
                     .collect(Collectors.joining("||"));

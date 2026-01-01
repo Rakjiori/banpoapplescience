@@ -20,9 +20,9 @@
              th:each="g : ${groups}"
              th:data-text="${(g.name + ' ' + g.joinCode + ' ' + g.memberCount).toLowerCase()}"
              th:data-members="${g.memberLines}"
-             th:data-notice-count="${g.noticeCount}"
-             th:data-task-count="${g.taskCount}"
-             th:data-attendance-count="${g.attendanceCount}">
+             th:data-notices="${g.noticeLines}"
+             th:data-tasks="${g.taskLines}"
+             th:data-attendance="${g.attendanceLines}">
             <div class="group-card__top">
                 <div class="group-card__name" th:text="${g.name}">그룹</div>
                 <span class="group-card__code">
@@ -34,9 +34,10 @@
             </p>
             <div class="group-card__footer" style="gap:8px; flex-wrap:wrap;">
                 <button type="button" class="btn btn-outline btn-sm member-view-btn">멤버 보기</button>
-                <button type="button" class="btn btn-outline btn-sm notice-view-btn">공지</button>
-                <button type="button" class="btn btn-outline btn-sm task-view-btn">과제</button>
-                <button type="button" class="btn btn-outline btn-sm attendance-view-btn">출결</button>
+                <button type="button" class="btn btn-outline btn-sm notice-view-btn">공지 상세</button>
+                <button type="button" class="btn btn-outline btn-sm task-view-btn">과제 상세</button>
+                <button type="button" class="btn btn-outline btn-sm attendance-view-btn">출결 상세</button>
+                <a class="btn btn-sm" th:href="@{/groups/{id}(id=${g.id})}">그룹 페이지</a>
             </div>
         </div>
     </div>
@@ -112,24 +113,24 @@
             btn.addEventListener('click', ()=>{
                 const parent = btn.closest('.group-card-modern');
                 const name = parent?.querySelector('.group-card__name')?.textContent || '';
-                const count = parent?.dataset.noticeCount || '0';
-                showPopup(`${name} 공지`, [`총 ${count}건`]);
+                const notices = (parent?.dataset.notices || '').split('||').filter(Boolean);
+                showPopup(`${name} 공지`, notices);
             });
         });
         document.querySelectorAll('.task-view-btn').forEach(btn=>{
             btn.addEventListener('click', ()=>{
                 const parent = btn.closest('.group-card-modern');
                 const name = parent?.querySelector('.group-card__name')?.textContent || '';
-                const count = parent?.dataset.taskCount || '0';
-                showPopup(`${name} 과제`, [`총 ${count}건`]);
+                const tasks = (parent?.dataset.tasks || '').split('||').filter(Boolean);
+                showPopup(`${name} 과제`, tasks);
             });
         });
         document.querySelectorAll('.attendance-view-btn').forEach(btn=>{
             btn.addEventListener('click', ()=>{
                 const parent = btn.closest('.group-card-modern');
                 const name = parent?.querySelector('.group-card__name')?.textContent || '';
-                const count = parent?.dataset.attendanceCount || '0';
-                showPopup(`${name} 출결`, [`최근 1개월 출결 ${count}건`]);
+                const attendance = (parent?.dataset.attendance || '').split('||').filter(Boolean);
+                showPopup(`${name} 출결`, attendance);
             });
         });
     });

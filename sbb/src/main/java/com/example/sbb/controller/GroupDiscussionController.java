@@ -52,6 +52,7 @@ public class GroupDiscussionController {
         model.addAttribute("question", question);
         model.addAttribute("comments", discussionService.list(question));
         model.addAttribute("currentUserId", user.getId());
+        model.addAttribute("isAdmin", userService.isAdminOrRoot(user));
         return "group_discussion";
     }
 
@@ -131,40 +132,6 @@ public class GroupDiscussionController {
         ));
     }
 
-    @PostMapping("/{groupId}/discussion/{questionId}/comment/{commentId}/edit-inline")
-    @ResponseBody
-    public ResponseEntity<?> editInline(@PathVariable Long groupId,
-                                        @PathVariable Long questionId,
-                                        @PathVariable Long commentId,
-                                        @RequestParam("content") String content,
-                                        Principal principal,
-                                        RedirectAttributes rttr) {
-        if (principal == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        SiteUser user = userService.getUser(principal.getName());
-        StudyGroup group = ensureMembership(groupId, user, rttr);
-        if (group == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).body("no group");
-
-        QuizQuestion question = discussionService.getQuestion(questionId);
-        QuestionDiscussion comment = discussionService.getComment(commentId);
-        if (question == null || comment == null || !comment.getQuestion().getId().equals(questionId)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("no comment");
-        }
-        if (!comment.getUser().getId().equals(user.getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("not owner");
-        }
-        QuestionDiscussion updated = discussionService.updateComment(comment, content);
-        if (updated == null) return ResponseEntity.badRequest().body("invalid");
-        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm");
-        return ResponseEntity.ok(new DiscussionDto(
-                updated.getId(),
-                updated.getUser().getId(),
-                updated.getUser().getUsername(),
-                updated.getUser().getAvatar(),
-                updated.getContent(),
-                updated.getCreatedAt() != null ? updated.getCreatedAt().format(fmt) : ""
-        ));
-    }
-
     @PostMapping("/{groupId}/discussion/{questionId}/comment/{commentId}/delete-inline")
     @ResponseBody
     public ResponseEntity<?> deleteInline(@PathVariable Long groupId,
@@ -189,36 +156,6 @@ public class GroupDiscussionController {
         }
         discussionService.deleteComment(comment);
         return ResponseEntity.ok("deleted");
-    }
-
-    @PostMapping("/{groupId}/discussion/{questionId}/comment/{commentId}/edit")
-    public String edit(@PathVariable Long groupId,
-                       @PathVariable Long questionId,
-                       @PathVariable Long commentId,
-                       @RequestParam("content") String content,
-                       Principal principal,
-                       RedirectAttributes rttr) {
-        if (principal == null) return "redirect:/login";
-        SiteUser user = userService.getUser(principal.getName());
-        StudyGroup group = ensureMembership(groupId, user, rttr);
-        if (group == null) return "redirect:/groups";
-
-        QuizQuestion question = discussionService.getQuestion(questionId);
-        QuestionDiscussion comment = discussionService.getComment(commentId);
-        if (question == null || comment == null || !comment.getQuestion().getId().equals(questionId)) {
-            rttr.addFlashAttribute("error", "댓글을 찾을 수 없습니다.");
-            return "redirect:/groups/" + groupId + "/discussion/" + questionId;
-        }
-        if (!comment.getUser().getId().equals(user.getId())) {
-            rttr.addFlashAttribute("error", "본인 댓글만 수정할 수 있습니다.");
-            return "redirect:/groups/" + groupId + "/discussion/" + questionId;
-        }
-        if (discussionService.updateComment(comment, content) == null) {
-            rttr.addFlashAttribute("error", "댓글을 수정할 수 없습니다.");
-            return "redirect:/groups/" + groupId + "/discussion/" + questionId;
-        }
-        rttr.addFlashAttribute("message", "댓글을 수정했습니다.");
-        return "redirect:/groups/" + groupId + "/discussion/" + questionId;
     }
 
     @PostMapping("/{groupId}/discussion/{questionId}/comment/{commentId}/delete")

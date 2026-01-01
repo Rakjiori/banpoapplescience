@@ -28,7 +28,7 @@
             animation: aurora 12s ease-in-out infinite alternate;
             pointer-events:none;
         }
-        .hero-glow, .hero-glow-2 {
+        .hero-glow {
             position:absolute; inset:-20% -20% auto auto;
             width: 320px; height: 320px; border-radius: 50%;
             background: radial-gradient(circle, rgba(183,212,255,0.4), transparent 55%);
@@ -36,7 +36,6 @@
             animation: float 12s ease-in-out infinite;
             pointer-events:none;
         }
-        .hero-glow-2 { inset:auto auto -28% -12%; width:360px; height:360px; animation-duration: 10s; animation-direction: reverse; }
         .hero-grid {
             display: grid;
             grid-template-columns: 1fr 0.9fr;
@@ -179,7 +178,6 @@
         <section class="landing-hero" id="top">
             <div class="hero-aurora"></div>
             <div class="hero-glow"></div>
-            <div class="hero-glow-2"></div>
             <div class="hero-grid">
                 <div>
                     <p class="eyebrow">애플과학</p>
@@ -352,8 +350,10 @@
                     <p class="section-sub">수업 중 궁금했던 점, 추가 자료 요청 등 무엇이든 남기면 답변을 도와드릴게요.</p>
                 </div>
             </div>
-            <div class="question-board" id="questionBoard" th:data-admin="${#authorization.expression('hasAnyAuthority(''ROLE_ADMIN'',''ROLE_ROOT'')')}">
-                <form class="question-form" id="questionForm">
+            <div class="question-board" id="questionBoard"
+                 th:data-admin="${#authorization.expression('hasAnyAuthority(''ROLE_ADMIN'',''ROLE_ROOT'')')}"
+                 th:data-auth="${#authorization.expression('isAuthenticated()')}">
+                <form class="question-form" id="questionForm" th:if="${#authorization.expression('isAuthenticated()')}">
                     <div style="display:grid; gap:8px;">
                         <input type="text" id="questionTitle" placeholder="제목" required>
                         <textarea id="questionContent" placeholder="궁금한 점을 작성해주세요." required></textarea>
@@ -363,19 +363,12 @@
                         </div>
                     </div>
                 </form>
+                <div th:if="${#authorization.expression('!isAuthenticated()')}" class="muted" style="padding:12px;">로그인 후 질문을 남길 수 있습니다.</div>
                 <div class="question-list" id="questionList">
                     <div class="question-row header">
                         <div>#</div>
                         <div>제목</div>
                         <div>작성일</div>
-                    </div>
-                    <div class="question-row">
-                        <div class="pill-soft">1</div>
-                        <div>
-                            <div class="question-title">질문 예시: 심화 문제 자료 요청</div>
-                            <div class="question-meta">실험 수업 자료 추가로 받을 수 있을까요?</div>
-                        </div>
-                        <div class="question-meta">샘플</div>
                     </div>
                 </div>
             </div>
@@ -558,6 +551,7 @@
     const editBtn = document.getElementById('questionEditBtn');
     const closeBtn = document.getElementById('questionCloseBtn');
     const isAdmin = boardEl?.dataset?.admin === 'true';
+    const isAuthed = boardEl?.dataset?.auth === 'true';
     const STORAGE_KEY = 'apple_science_questions_v2';
     const DEVICE_KEY = 'apple_science_device_id';
     const DEVICE_ID = (() => {
@@ -664,6 +658,13 @@
             commentList.appendChild(el);
         });
     };
+
+    if (!isAuthed) {
+        if (form) form.style.display = 'none';
+        if (commentForm) commentForm.style.display = 'none';
+        renderQuestions();
+        return;
+    }
 
     form?.addEventListener('submit', (e) => {
         e.preventDefault();
