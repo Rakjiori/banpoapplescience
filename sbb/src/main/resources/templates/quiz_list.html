@@ -400,12 +400,6 @@
                     style="flex:0 0 auto;">
                 다음 문제
             </button>
-            <button type="button"
-                    class="btn btn-outline"
-                    id="openShareButton"
-                    style="flex:0 0 auto;">
-                친구에게 공유하기
-            </button>
         </div>
 
         <p id="inlineResultMessage" style="margin-top:10px; font-size:14px;"></p>
@@ -509,28 +503,6 @@
                    th:unless="${hasNext}"
                    href="#">다음 →</a>
             </div>
-        </div>
-    </div>
-
-    <!-- 함께 풀기 모달 -->
-    <div class="share-modal" id="shareModal">
-        <div class="share-card">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div style="font-weight:700;">친구와 함께 풀기</div>
-                <button type="button" class="btn btn-outline" id="closeShareButton" style="padding:6px 12px;">닫기</button>
-            </div>
-            <p style="margin:6px 0 10px; color:#6b7280; font-size:13px;">친구를 선택하면 함께 풀기 요청을 보냅니다.</p>
-            <div id="shareFriendList">
-                <div th:if="${#lists.isEmpty(friends)}" style="color:#6b7280;">친구가 없습니다. 먼저 친구를 추가하세요.</div>
-                <label class="friend-checkbox" th:each="fr : ${friends}">
-                    <input type="checkbox" name="shareFriendIds" th:value="${fr.id}">
-                    <div>
-                        <div style="font-weight:700;" th:text="${fr.to.username}">friend</div>
-                        <div style="font-size:12px; color:#6b7280;">포인트: <span th:text="${fr.to.points}">0</span> · 연속 풀이: <span th:text="${fr.to.streak}">0</span>일</div>
-                    </div>
-                </label>
-            </div>
-            <button type="button" class="btn" id="sendShareButton">요청 보내기</button>
         </div>
     </div>
 
@@ -656,11 +628,6 @@
         const wrongList = document.getElementById('wrongList');
         const csrfToken = document.querySelector('meta[name=\"_csrf\"]')?.content || '';
         const csrfHeader = document.querySelector('meta[name=\"_csrf_header\"]')?.content || 'X-CSRF-TOKEN';
-        const shareModal = document.getElementById('shareModal');
-        const openShareButton = document.getElementById('openShareButton');
-        const closeShareButton = document.getElementById('closeShareButton');
-        const sendShareButton = document.getElementById('sendShareButton');
-        const shareFriendList = document.getElementById('shareFriendList');
         const formatDateTime = (value) => {
             if (!value) return '';
             const date = new Date(value);
@@ -697,7 +664,7 @@
             const q = filteredQuestions[idx];
             currentIndex = idx;
             selectedValue = '';
-            [checkBtn, nextBtn, openShareButton, bookmarkButton].forEach(btn => {
+            [checkBtn, nextBtn, bookmarkButton].forEach(btn => {
                 if (btn) btn.disabled = false;
             });
 
@@ -940,54 +907,6 @@
             });
         }
 
-        // 함께 풀기 모달
-        const toggleShareModal = (show) => {
-            if (!shareModal) return;
-            shareModal.style.display = show ? 'flex' : 'none';
-        };
-        openShareButton?.addEventListener('click', (e) => {
-            e.preventDefault();
-            toggleShareModal(true);
-        });
-        closeShareButton?.addEventListener('click', (e) => {
-            e.preventDefault();
-            toggleShareModal(false);
-        });
-        sendShareButton?.addEventListener('click', async () => {
-            if (!shareFriendList) return;
-            const checked = Array.from(shareFriendList.querySelectorAll('input[name="shareFriendIds"]:checked'));
-            if (!checked.length) {
-                alert('친구를 선택해 주세요.');
-                return;
-            }
-            const q = filteredQuestions[currentIndex];
-            if (!q || !q.id) {
-                alert('문제를 선택해 주세요.');
-                return;
-            }
-            const params = new URLSearchParams();
-            checked.forEach(c => params.append('friendIds', c.value));
-            params.append('questionId', q.id);
-            await fetch('/api/friends/share/bulk', {
-                method:'POST',
-                headers:{
-                    'Content-Type':'application/x-www-form-urlencoded',
-                    [csrfHeader]: csrfToken
-                },
-                body: params.toString()
-            });
-            alert('함께 풀기 요청을 보냈습니다.');
-            toggleShareModal(false);
-        });
-        // 공유 대상 없으면 버튼 비활성화
-        if (shareFriendList && sendShareButton) {
-            const hasOption = shareFriendList.querySelector('input[name="shareFriendIds"]');
-            if (!hasOption) {
-                sendShareButton.disabled = true;
-                sendShareButton.textContent = '친구가 없습니다';
-            }
-        }
-
         const renderList = (container, listEl, items, color) => {
             if (!container || !listEl) return;
             container.style.display = 'none';
@@ -1065,7 +984,7 @@
             } else if (textEl) {
                 textEl.textContent = '';
                 if (resultMsg) resultMsg.textContent = '';
-                [checkBtn, nextBtn, openShareButton, bookmarkButton].forEach(btn => {
+                [checkBtn, nextBtn, bookmarkButton].forEach(btn => {
                     if (btn) btn.disabled = true;
                 });
             }

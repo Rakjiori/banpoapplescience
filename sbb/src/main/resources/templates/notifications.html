@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout :: layout(~{::body})">
+<body>
+<div class="page-card">
+    <div class="page-header">
+        <div>
+            <div class="pill">알림</div>
+            <h1 class="page-title">알림 전체보기</h1>
+            <p class="muted">공지 · 과제 · (관리자) 상담요청을 한 눈에 봅니다.</p>
+        </div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <div class="pill-soft">필터</div>
+        <div class="btn-group" role="group">
+            <button class="btn btn-outline btn-sm" data-kind="ALL">전체</button>
+            <button class="btn btn-outline btn-sm" data-kind="공지">공지</button>
+            <button class="btn btn-outline btn-sm" data-kind="과제">과제</button>
+            <button class="btn btn-outline btn-sm" data-kind="상담">상담</button>
+            <button class="btn btn-outline btn-sm" data-kind="기타">기타</button>
+        </div>
+        <input type="text" id="notificationSearch" placeholder="제목/내용 검색" style="flex:1; min-width:200px; padding:10px; border:1px solid #e5e7eb; border-radius:10px;">
+    </div>
+
+    <div id="notificationGrid" style="display:grid; gap:12px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));"></div>
+    <div id="notificationEmpty" class="muted" style="margin-top:8px;">알림이 없습니다.</div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', ()=>{
+        const grid = document.getElementById('notificationGrid');
+        const empty = document.getElementById('notificationEmpty');
+        const search = document.getElementById('notificationSearch');
+        let data = [];
+
+        let currentKind = 'ALL';
+
+        const render = ()=>{
+            if(!grid) return;
+            const term = (search?.value || '').toLowerCase();
+            grid.innerHTML = '';
+            const items = data.filter(d => {
+                const kindOk = currentKind === 'ALL' || d.kind === currentKind;
+                const textOk = !term || (d.title + ' ' + d.body).toLowerCase().includes(term);
+                return kindOk && textOk;
+            });
+            empty.style.display = items.length ? 'none' : 'block';
+            items.forEach(item=>{
+                const card = document.createElement('a');
+                card.className = 'card';
+                card.href = item.url || '#';
+                card.style.padding = '12px';
+                card.style.border = '1px solid #e5e7eb';
+                card.style.borderRadius = '12px';
+                card.style.boxShadow = '0 8px 18px rgba(0,0,0,0.05)';
+                card.style.textDecoration = 'none';
+                card.style.color = 'inherit';
+                const title = document.createElement('div');
+                title.className = 'title-md';
+                title.textContent = item.title || '알림';
+                const body = document.createElement('div');
+                body.className = 'muted';
+                body.style.marginTop = '4px';
+                body.textContent = item.body || '';
+                const meta = document.createElement('div');
+                meta.className = 'pill-soft';
+                meta.style.display = 'inline-block';
+                meta.style.marginTop = '6px';
+                meta.textContent = item.kind;
+                card.appendChild(title);
+                card.appendChild(body);
+                card.appendChild(meta);
+                grid.appendChild(card);
+            });
+        };
+
+        const classify = (n)=>{
+            const title = (n.title || '').toLowerCase();
+            const body = (n.body || '').toLowerCase();
+            const url = n.url || '';
+            if(url.includes('/admin/consultations') || title.includes('상담')) return '상담';
+            if(url.includes('/groups')) {
+                if (title.includes('과제') || body.includes('과제')) return '과제';
+                return '공지';
+            }
+            if(title.includes('과제')) return '과제';
+            if(title.includes('공지')) return '공지';
+            return '기타';
+        };
+
+        fetch('/api/notifications/due', { credentials:'same-origin' })
+            .then(res => res.ok ? res.json() : [])
+            .then(items => {
+                data = (items || []).map(n => ({
+                    title: n.title || '알림',
+                    body: n.body || '',
+                    kind: n.kind || classify(n),
+                    url: n.url || ''
+                }));
+                render();
+            }).catch(()=>{ data=[]; render(); });
+
+        search?.addEventListener('input', render);
+        document.querySelectorAll('[data-kind]').forEach(btn=>{
+            btn.addEventListener('click', ()=>{
+                currentKind = btn.dataset.kind || 'ALL';
+                document.querySelectorAll('[data-kind]').forEach(b => b.classList.toggle('active', b.dataset.kind === currentKind));
+                render();
+            });
+        });
+        const initialBtn = document.querySelector(`[data-kind="${currentKind}"]`);
+        initialBtn?.classList.add('active');
+    });
+</script>
+</body>
+</html>

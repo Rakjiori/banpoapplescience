@@ -1,5 +1,9 @@
 package com.example.sbb.domain.user;
 
+/*
+친구 문제 공유 엔티티는 사용하지 않습니다.
+*/
+
 import com.example.sbb.domain.quiz.QuizQuestion;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -8,7 +12,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
-@Entity
+//@Entity
 @Getter
 @Setter
 public class FriendShareRequest {

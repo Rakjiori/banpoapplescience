@@ -1,10 +1,8 @@
 package com.example.sbb.controller;
 
-import com.example.sbb.domain.user.Friend;
 import com.example.sbb.domain.user.SiteUser;
 import com.example.sbb.domain.user.UserService;
 import com.example.sbb.service.AcademyContentService;
-import com.example.sbb.service.FriendService;
 import com.example.sbb.service.ProgressService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -19,7 +17,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class HomeController {
     private final UserService userService;
-    private final FriendService friendService;
     private final ProgressService progressService;
     private final AcademyContentService contentService;
 
@@ -40,10 +37,6 @@ public class HomeController {
 
             List<SiteUser> pool = new ArrayList<>();
             pool.add(user);
-            List<Friend> friends = friendService.myFriends(user);
-            for (Friend f : friends) {
-                if (f.getTo() != null) pool.add(f.getTo());
-            }
 
             pool.sort(Comparator.comparingInt((SiteUser u) -> u.getPoints()).reversed()
                     .thenComparing(SiteUser::getUsername));

@@ -5,7 +5,6 @@ import com.example.sbb.domain.quiz.QuestionDiscussion;
 import com.example.sbb.domain.quiz.QuizQuestion;
 import com.example.sbb.domain.user.SiteUser;
 import com.example.sbb.domain.user.UserService;
-import com.example.sbb.service.FriendService;
 import com.example.sbb.service.DiscussionService;
 import com.example.sbb.repository.QuizQuestionRepository;
 import com.example.sbb.repository.FolderRepository;
@@ -38,7 +37,6 @@ public class QuizController {
     private final UserService userService;
     private final FolderRepository folderRepository;
     private final GroupService groupService;
-    private final FriendService friendService;
     private final DiscussionService discussionService;
 
     // 전체 퀴즈 목록(간단히)
@@ -90,7 +88,6 @@ public class QuizController {
     model.addAttribute("totalElements", pageData.getTotalElements());
     model.addAttribute("folders", folders);
     model.addAttribute("selectedFolder", folder);
-    model.addAttribute("friends", friendService.myFriends(user));
     if (firstQuestion != null) {
         model.addAttribute("firstQuestion", firstQuestion);
         model.addAttribute("firstChoiceList", extractChoices(firstQuestion.getChoices()));

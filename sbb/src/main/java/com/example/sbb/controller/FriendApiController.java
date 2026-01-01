@@ -1,25 +1,21 @@
 package com.example.sbb.controller;
 
-import com.example.sbb.domain.user.SiteUser;
-import com.example.sbb.domain.user.FriendRequest;
-import com.example.sbb.service.FriendService;
-import com.example.sbb.domain.user.UserService;
-import lombok.RequiredArgsConstructor;
+// Friend API is deprecated and will be removed.
+
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.security.Principal;
-import java.util.List;
-import java.util.Map;
-
-@Controller
+@RestController
 @RequestMapping("/api/friends")
-@RequiredArgsConstructor
 public class FriendApiController {
-    private final FriendService friendService;
-    private final UserService userService;
+    @RequestMapping("/**")
+    public ResponseEntity<?> removed() {
+        return ResponseEntity.status(410).body("친구 기능이 제거되었습니다.");
+    }
+}
 
+/* 기존 친구 기능 (비활성화됨)
     @GetMapping("/inbox")
     @ResponseBody
     public ResponseEntity<?> inbox(Principal principal) {
@@ -146,3 +142,4 @@ public class FriendApiController {
         return ResponseEntity.ok(Map.of("status","ok"));
     }
 }
+*/

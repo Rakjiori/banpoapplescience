@@ -24,11 +24,9 @@ dependencies {
   implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
   implementation 'org.springframework.boot:spring-boot-starter-security'
   
-  // PDF 텍스트 추출
-  implementation 'org.apache.pdfbox:pdfbox:2.0.30'
-
   // Web Push (추후 발송 연동)
   implementation 'nl.martijndwars:web-push:5.1.1'
+  implementation 'org.bouncycastle:bcprov-jdk18on:1.78.1'
 
   // Lombok(선택)
   compileOnly 'org.projectlombok:lombok'

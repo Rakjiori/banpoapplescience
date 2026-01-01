@@ -2,15 +2,56 @@
 const csrfTokenMeta=document.querySelector('meta[name="_csrf"]');const csrfHeaderMeta=document.querySelector('meta[name="_csrf_header"]');window.csrfToken=csrfTokenMeta?csrfTokenMeta.content:'';window.csrfHeader=csrfHeaderMeta?csrfHeaderMeta.content:'X-CSRF-TOKEN';
 async function registerSW(){ if(!('serviceWorker'in navigator)) return null; return navigator.serviceWorker.register('/sw.js'); }
 function b64ToU8(b64){const p='='.repeat((4-b64.length%4)%4);const a=(b64+p).replace(/-/g,'+').replace(/_/g,'/');const r=atob(a),u=new Uint8Array(r.length);for(let i=0;i<r.length;i++)u[i]=r.charCodeAt(i);return u;}
+async function fetchVapidPublicKey(){
+  if(window.VAPID_PUBLIC) return window.VAPID_PUBLIC;
+  try{
+    const res = await fetch('/api/push/public-key');
+    if(!res.ok) return '';
+    return await res.text();
+  }catch(e){ return ''; }
+}
+
 async function subscribePush(){
   if(!('Notification'in window)) { alert('브라우저가 알림을 지원하지 않습니다.'); return; }
   const perm = await Notification.requestPermission();
   if(perm!=='granted'){ alert('알림 허용이 필요합니다.'); return; }
   const reg = await registerSW();
-  const pub = window.VAPID_PUBLIC || ''; // 추후 서버에서 주입
+  const pub = await fetchVapidPublicKey();
   if(!pub){ alert('VAPID 공개키가 설정되지 않았습니다.'); return; }
   const sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey: b64ToU8(pub) });
-  console.log('Subscribed:', sub);
+  const json = sub.toJSON();
+  await fetch('/api/push/subscribe', {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      [window.csrfHeader || 'X-CSRF-TOKEN']: window.csrfToken || ''
+    },
+    body: JSON.stringify({
+      endpoint: json.endpoint,
+      p256dh: json.keys?.p256dh,
+      auth: json.keys?.auth,
+      userAgent: navigator.userAgent || ''
+    })
+  });
+  alert('브라우저 알림이 활성화되었습니다.');
+}
+
+async function unsubscribePush(){
+  const reg = await registerSW();
+  const sub = await reg?.pushManager.getSubscription();
+  if(sub){
+    const json = sub.toJSON();
+    await sub.unsubscribe();
+    await fetch('/api/push/unsubscribe', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        [window.csrfHeader || 'X-CSRF-TOKEN']: window.csrfToken || ''
+      },
+      body: JSON.stringify({ endpoint: json.endpoint })
+    });
+  }
+  alert('브라우저 알림이 해제되었습니다.');
 }
 
 async function scheduleNotificationsNow(){
@@ -137,10 +178,6 @@ function setupNotificationBell(){
   renderNotificationCenter();
 }
 
-function setupFriendDropdown(){
-  // 친구/초대 기능 비활성화
-}
-
 function setupProfileDropdown(){
   const btn = document.getElementById('profileButton');
   const panel = document.getElementById('profilePanel');
@@ -186,11 +223,18 @@ function setupConsultation(){
           'Content-Type':'application/json',
           [window.csrfHeader || 'X-CSRF-TOKEN']: window.csrfToken || ''
         },
+        credentials:'same-origin',
         body: JSON.stringify({ type, message })
-      }).then(res=>{
-        if(res.ok){ alert('상담 요청이 접수되었습니다. (관리자에게 알림)'); form.reset(); modal.style.display='none'; }
-        else alert('요청을 처리하지 못했습니다.');
-      }).catch(()=> alert('요청을 처리하지 못했습니다.'));
+      }).then(async res=>{
+        if(res.ok){
+          alert('상담 요청이 접수되었습니다. (관리자에게 알림)');
+          form.reset();
+          if(modal) modal.style.display='none';
+        } else {
+          const txt = await res.text();
+          alert('요청을 처리하지 못했습니다. ' + (txt || res.status));
+        }
+      }).catch((err)=> alert('요청을 처리하지 못했습니다. ' + err));
     });
   }
 }
@@ -279,10 +323,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
       scheduleNotificationsNow();
     }
   }
-  setInterval(pollNotifications, 60_000);
   pollNotifications();
+  setInterval(pollNotifications, 60_000);
   setupNotificationBell();
-  setupFriendDropdown();
   setupProfileDropdown();
   setupRevealAnimations();
   setupRipple();

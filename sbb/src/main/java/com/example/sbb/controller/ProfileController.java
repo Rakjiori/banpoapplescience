@@ -18,9 +18,6 @@ public class ProfileController {
 
     private final UserService userService;
     private final com.example.sbb.repository.GroupMemberRepository groupMemberRepository;
-    private final com.example.sbb.repository.FriendRepository friendRepository;
-    private final com.example.sbb.repository.FriendRequestRepository friendRequestRepository;
-    private final com.example.sbb.repository.FriendShareRequestRepository friendShareRequestRepository;
     private final com.example.sbb.repository.GroupInviteRepository groupInviteRepository;
     private final com.example.sbb.repository.DocumentFileRepository documentFileRepository;
     private final com.example.sbb.repository.QuizQuestionRepository quizQuestionRepository;
@@ -79,8 +76,8 @@ public class ProfileController {
         if (principal == null) return "redirect:/login";
         SiteUser user = userService.getUser(principal.getName());
         try {
-            userService.selfDelete(user, currentPassword, groupMemberRepository, friendRepository, friendRequestRepository,
-                    friendShareRequestRepository, groupInviteRepository, documentFileRepository, quizQuestionRepository, problemRepository);
+            userService.selfDelete(user, currentPassword, groupMemberRepository,
+                    groupInviteRepository, documentFileRepository, quizQuestionRepository, problemRepository);
             rttr.addFlashAttribute("message", "계정을 탈퇴했습니다.");
             return "redirect:/logout";
         } catch (IllegalArgumentException e) {

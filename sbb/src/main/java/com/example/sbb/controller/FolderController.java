@@ -11,7 +11,6 @@ import com.example.sbb.repository.QuizQuestionRepository;
 import com.example.sbb.repository.ProblemRepository;
 import com.example.sbb.repository.GroupSharedQuestionRepository;
 import com.example.sbb.repository.PendingNotificationRepository;
-import com.example.sbb.repository.FriendShareRequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -39,7 +38,6 @@ public class FolderController {
     private final ProblemRepository problemRepository;
     private final GroupSharedQuestionRepository sharedQuestionRepository;
     private final PendingNotificationRepository pendingNotificationRepository;
-    private final FriendShareRequestRepository friendShareRequestRepository;
 
     @GetMapping
     public String list(Model model, Principal principal) {

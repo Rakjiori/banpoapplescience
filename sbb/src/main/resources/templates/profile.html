@@ -98,72 +98,11 @@
     </div>
 
     <div class="card">
-        <h3 style="margin:0 0 8px;">스터디 / 알림</h3>
-        <div style="display:flex; flex-wrap:wrap; gap:10px;">
-            <div class="pill-soft" style="background:#eef2ff;">그룹 참여: <span th:text="${memberships != null ? memberships.size() : 0}">0</span></div>
-            <div class="pill-soft" style="background:#ecfccb;">공유 요청: <span th:text="${shareInbox != null ? shareInbox.size() : 0}">0</span></div>
-            <a class="btn btn-outline" href="/shared">공유 모아보기</a>
-        </div>
-        <div style="margin-top:10px;">
-            <div style="font-weight:700; margin-bottom:6px;">최근 공유 요청</div>
-            <div th:if="${shareInbox == null or #lists.isEmpty(shareInbox)}" style="color:#6b7280;">도착한 공유 요청이 없습니다.</div>
-            <div th:each="s : ${shareInbox}" style="padding:8px 10px; border:1px solid #e5e7eb; border-radius:10px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                    <div style="font-weight:700;" th:text="${s.fromUser.username}">보낸이</div>
-                    <div style="font-size:12px; color:#6b7280;" th:text="${s.question.questionText}">문제</div>
-                </div>
-                <a class="btn btn-outline" th:href="@{/quiz/solve/{id}(id=${s.question.id})}">풀어보기</a>
-            </div>
-        </div>
+        <h3 style="margin:0 0 8px;">안내</h3>
+        <p style="margin:0; color:#6b7280;">친구 추가와 문제 공유 기능은 더 이상 제공하지 않습니다.</p>
     </div>
 
-    <div class="card" style="margin-top:12px;">
-        <h3 style="margin:0 0 8px;">친구 추가</h3>
-        <form th:action="@{/friends/request}" method="post" style="display:flex; gap:8px; align-items:center;">
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-            <input type="text" name="username" placeholder="친구 아이디" style="padding:8px 10px; border:1px solid #d1d5db; border-radius:8px; flex:1;">
-            <button type="submit" class="btn btn-outline" style="padding:6px 12px;">친구 추가</button>
-        </form>
-    </div>
 
-    <div class="card">
-        <h3 style="margin:0 0 8px;">친구 목록</h3>
-        <div style="display:flex; gap:8px; margin-bottom:8px;">
-            <input type="text" id="friendSearch" placeholder="친구 검색" style="flex:1; padding:8px 10px; border:1px solid #d1d5db; border-radius:8px;">
-            <select id="friendSort" style="padding:8px 10px; border:1px solid #d1d5db; border-radius:8px;">
-                <option value="name">이름순</option>
-                <option value="points">포인트순</option>
-                <option value="streak">연속 풀이순</option>
-            </select>
-        </div>
-        <div th:if="${#lists.isEmpty(friends)}" style="color:#6b7280;">아직 친구가 없습니다.</div>
-        <div id="friendListContainer">
-            <div th:each="f : ${friends}" class="friend-row" style="padding:8px 10px; border:1px solid #e5e7eb; border-radius:10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:8px;"
-                 th:data-name="${f.to.username}"
-                 th:data-points="${f.to.points}"
-                 th:data-streak="${f.to.streak}">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:18px;" th:text="${f.to.avatar != null ? f.to.avatar : '🧑'}">🧑</span>
-                    <div>
-                        <strong th:text="${f.to.username}">friend</strong>
-                        <span style="color:#9ca3af; font-size:12px;" th:text="${#temporals.format(f.createdAt,'yyyy.MM.dd HH:mm')}">날짜</span>
-                        <div style="color:#6b7280; font-size:12px; margin-top:4px;">
-                            포인트: <span th:text="${f.to.points}">0</span> · 연속 풀이: <span th:text="${f.to.streak}">0</span>일
-                        </div>
-                    </div>
-                </div>
-                <div style="display:flex; gap:6px; align-items:center;" data-role="friend-share" th:data-friend-id="${f.id}">
-                    <input type="text" placeholder="문제 ID" style="width:90px; padding:6px 8px; border:1px solid #d1d5db; border-radius:8px;">
-                    <button class="btn btn-outline" style="padding:6px 10px;">공유</button>
-                    <form th:action="@{/friends/remove}" method="post" style="margin:0;">
-                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                        <input type="hidden" name="friendId" th:value="${f.id}">
-                        <button type="submit" class="btn btn-outline" style="padding:4px 10px;">삭제</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -177,26 +116,6 @@
             else if (banner === 'aurora') bannerEl.style.background = 'linear-gradient(90deg,#6366f1,#06b6d4,#22d3ee)';
             bannerEl.style.color = '#fff';
         }
-
-        const search = document.getElementById('friendSearch');
-        const sort = document.getElementById('friendSort');
-        const rows = Array.from(document.querySelectorAll('.friend-row'));
-        const render = () => {
-            const term = (search?.value || '').toLowerCase();
-            const sorted = rows.slice().filter(r => r.dataset.name?.toLowerCase().includes(term));
-            sorted.sort((a,b) => {
-                if (sort?.value === 'points') return (parseInt(b.dataset.points||0) - parseInt(a.dataset.points||0));
-                if (sort?.value === 'streak') return (parseInt(b.dataset.streak||0) - parseInt(a.dataset.streak||0));
-                return (a.dataset.name||'').localeCompare(b.dataset.name||'');
-            });
-            const container = document.getElementById('friendListContainer');
-            if (!container) return;
-            container.innerHTML = '';
-            sorted.forEach(r => container.appendChild(r));
-        };
-        search?.addEventListener('input', render);
-        sort?.addEventListener('change', render);
-        render();
 
         const bindDropdown = (toggleId, dropdownId) => {
             const btn = document.getElementById(toggleId);

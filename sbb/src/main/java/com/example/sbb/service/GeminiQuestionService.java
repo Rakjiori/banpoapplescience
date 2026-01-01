@@ -3,13 +3,13 @@ package com.example.sbb.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
-import org.springframework.stereotype.Service;
+// Gemini 기반 기능 제거됨
+// @Service
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Map;
 
-@Service
 @RequiredArgsConstructor
 public class GeminiQuestionService {
 

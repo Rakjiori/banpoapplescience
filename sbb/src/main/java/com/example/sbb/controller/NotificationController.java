@@ -5,6 +5,7 @@ import com.example.sbb.domain.user.SiteUser;
 import com.example.sbb.domain.user.UserService;
 import com.example.sbb.repository.ConsultationRequestRepository;
 import com.example.sbb.service.NotificationService;
+import com.example.sbb.service.WebPushService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class NotificationController {
     private final NotificationService notificationService;
     private final UserService userService;
     private final ConsultationRequestRepository consultationRequestRepository;
+    private final WebPushService webPushService;
 
     @GetMapping("/due")
     public ResponseEntity<?> due(Principal principal) {
@@ -41,6 +43,8 @@ public class NotificationController {
             consultationRequestRepository.findByContactedFalseOrderByCreatedAtDesc()
                     .forEach(req -> payloads.add(NotificationPayload.fromConsultation(req)));
         }
+        // push to browser if VAPID configured
+        webPushService.pushNotifications(user, payloads);
         return ResponseEntity.ok(payloads);
     }
 
@@ -53,27 +57,44 @@ public class NotificationController {
 
     @Data
     @AllArgsConstructor
-    static class NotificationPayload {
+    static class NotificationPayload implements WebPushService.PushPayload {
         private Long id;
         private String title;
         private String body;
         private String url;
+        private String kind;
 
         static NotificationPayload fromQuiz(PendingNotification pn) {
             String title = "새 알림";
             String body = pn.getQuestion().getQuestionText();
             String url = "/quiz/solve/" + pn.getQuestion().getId();
-            return new NotificationPayload(pn.getId(), title, body, url);
+            return new NotificationPayload(pn.getId(), title, body, url, "공지");
         }
 
         static NotificationPayload fromSimple(NotificationService.SimpleNotification n) {
-            return new NotificationPayload(null, n.title(), n.body(), n.url());
+            return new NotificationPayload(null, n.title(), n.body(), n.url(), n.kind());
         }
 
         static NotificationPayload fromConsultation(com.example.sbb.domain.ConsultationRequest req) {
-            String title = "새 상담 요청 (" + req.getType().name() + ")";
-            String body = req.getMessage() != null ? req.getMessage() : "";
-            return new NotificationPayload(null, title, body, "/admin/consultations");
+            String title = "상담 요청 (" + req.getType().name() + ")";
+            String state = req.isContacted() ? "상담 완료" : "상담 대기";
+            String body = (req.getMessage() != null ? req.getMessage() : "") + " [" + state + "]";
+            return new NotificationPayload(null, title, body, "/admin/consultations", "상담");
+        }
+
+        @Override
+        public String title() {
+            return title;
+        }
+
+        @Override
+        public String body() {
+            return body;
+        }
+
+        @Override
+        public String url() {
+            return url;
         }
     }
 }

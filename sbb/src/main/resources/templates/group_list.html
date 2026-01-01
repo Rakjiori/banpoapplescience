@@ -4,18 +4,15 @@
 <body>
 <div>
     <section class="group-hero">
-        <div class="group-hero__eyebrow">Study group</div>
-        <div class="group-hero__heading">
-            <h1 class="page-title">스터디 그룹</h1>
-            <p class="group-hero__text">수업별로 그룹 관리하세요.</p>
-        </div>
-        <div class="group-hero__stats">
-            <div class="stat-chip">
-                <span>내 그룹</span>
-                <strong th:text="${#lists.size(memberships)}">0</strong>개
+        <div class="group-hero__summary">
+            <div class="summary-chip">
+                <div class="pill-soft">Study group</div>
+                <h1 class="page-title" style="margin:6px 0 4px;">스터디 그룹</h1>
+                <p class="group-hero__text" style="margin:0;">수업별로 그룹 관리하세요.</p>
             </div>
-            <div class="stat-chip stat-chip--ghost">
-                <span>실시간 초대 코드 초대 가능</span>
+            <div class="summary-chip stat-chip">
+                <span class="muted">내 그룹</span>
+                <strong th:text="${#lists.size(memberships)}" style="font-size:20px;">0</strong>
             </div>
         </div>
     </section>
@@ -27,7 +24,7 @@
         <span th:text="${error}"></span>
     </div>
 
-    <div class="group-grid group-grid--actions">
+<div class="group-grid group-grid--actions">
         <div class="group-action-card">
             <div>
                 <div class="group-action__title">새 그룹 만들기</div>
@@ -78,6 +75,7 @@
             </div>
         </a>
     </div>
+
 </div>
 </body>
 </html>

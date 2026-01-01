@@ -18,8 +18,8 @@
         <span th:text="${error}"></span>
     </div>
 
-    <div class="admin-grid">
-        <div class="admin-tile" data-modal="scheduleModal">
+    <div class="admin-grid" style="display:grid; gap:14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+        <div class="admin-tile" data-modal="scheduleModal" style="min-height:180px;">
             <div class="pill-soft">시간표</div>
             <h3>시간표 관리</h3>
             <p class="muted">과목/학교/과정 + 회차 추가</p>
@@ -29,7 +29,7 @@
             </div>
             <button type="button" class="btn" data-open-modal="scheduleModal">열기</button>
         </div>
-        <div class="admin-tile" data-modal="reviewModal">
+        <div class="admin-tile" data-modal="reviewModal" style="min-height:180px;">
             <div class="pill-soft">수강후기</div>
             <h3>수강후기 관리</h3>
             <p class="muted">별점과 후기를 등록/삭제</p>
@@ -38,7 +38,7 @@
             </div>
             <button type="button" class="btn" data-open-modal="reviewModal">열기</button>
         </div>
-        <div class="admin-tile" data-modal="noticeModal">
+        <div class="admin-tile" data-modal="noticeModal" style="min-height:180px;">
             <div class="pill-soft">공지사항</div>
             <h3>공지사항 관리</h3>
             <p class="muted">공지 작성 · 날짜 설정</p>
@@ -46,6 +46,26 @@
                 <span th:text="${#lists.size(announcements)} + '개 등록'">0개 등록</span>
             </div>
             <button type="button" class="btn" data-open-modal="noticeModal">열기</button>
+        </div>
+        <div class="admin-tile">
+            <div class="pill-soft">그룹 관리</div>
+            <h3>전체 그룹 관리</h3>
+            <p class="muted">그룹/멤버/공지/과제 현황 확인</p>
+            <div class="tile-meta">
+                <span th:text="${groupCount} + '개 그룹'">0개 그룹</span>
+                <span th:text="${memberCount} + '명 멤버'">0명 멤버</span>
+            </div>
+            <a class="btn" href="/admin/groups">열기</a>
+        </div>
+        <div class="admin-tile" style="min-height:180px;">
+            <div class="pill-soft">그룹 관리</div>
+            <h3>전체 그룹 관리</h3>
+            <p class="muted">그룹/멤버/공지/과제 현황 확인</p>
+            <div class="tile-meta">
+                <span th:text="${groupCount} + '개 그룹'">0개 그룹</span>
+                <span th:text="${memberCount} + '명 멤버'">0명 멤버</span>
+            </div>
+            <a class="btn" href="/admin/groups">열기</a>
         </div>
     </div>
 </div>

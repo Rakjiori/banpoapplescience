@@ -110,7 +110,8 @@ public class NotificationService {
                             "새 공지: " + n.getTitle(),
                             n.getContent(),
                             "/groups/" + group.getId(),
-                            n.getCreatedAt()
+                            n.getCreatedAt(),
+                            "공지"
                     )));
             groupTaskRepository.findByGroupOrderByDueDateAscCreatedAtDesc(group).stream()
                     .filter(t -> t.getCreatedAt() != null && t.getCreatedAt().isAfter(cutoff))
@@ -118,7 +119,8 @@ public class NotificationService {
                             "새 과제: " + t.getTitle(),
                             t.getDescription(),
                             "/groups/" + group.getId(),
-                            t.getCreatedAt()
+                            t.getCreatedAt(),
+                            "과제"
                     )));
         });
         // 최신순 정렬
@@ -127,5 +129,5 @@ public class NotificationService {
         return out.size() > 10 ? out.subList(0, 10) : out;
     }
 
-    public record SimpleNotification(String title, String body, String url, LocalDateTime createdAt) {}
+    public record SimpleNotification(String title, String body, String url, LocalDateTime createdAt, String kind) {}
 }

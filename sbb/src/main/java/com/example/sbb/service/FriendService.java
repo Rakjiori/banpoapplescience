@@ -1,5 +1,8 @@
 package com.example.sbb.service;
 
+/*
+친구/공유 서비스는 제거되었습니다.
+
 import com.example.sbb.domain.user.Friend;
 import com.example.sbb.domain.user.SiteUser;
 import com.example.sbb.domain.user.FriendRequest;
@@ -258,3 +261,4 @@ public class FriendService {
     }
 
 }
+*/

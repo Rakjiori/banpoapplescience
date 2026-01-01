@@ -391,6 +391,7 @@
                         <p class="section-sub" id="modalQuestionDate" style="margin:4px 0 0;">날짜</p>
                     </div>
                     <div class="question-actions">
+                        <button class="cta ghost" type="button" id="questionEditBtn" style="display:none;">수정</button>
                         <button class="cta ghost" type="button" id="questionDeleteBtn" style="display:none;">삭제</button>
                         <button class="cta outline" type="button" id="questionCloseBtn">닫기</button>
                     </div>
@@ -426,79 +427,50 @@
                     <li class="portal-link">
                         <div>
                             <div class="portal-name">EBS</div>
-                            <div class="portal-desc">공부에 도움이 되는 대표 포털 (ebs.com)</div>
                         </div>
                         <a class="cta primary" href="https://www.ebs.co.kr" target="_blank" rel="noreferrer">바로가기</a>
                     </li>
                     <li class="portal-link">
                         <div>
                             <div class="portal-name">메가스터디</div>
-                            <div class="portal-desc">전 과목 인강</div>
                         </div>
                         <a class="cta primary" href="https://www.megastudy.net/" target="_blank" rel="noreferrer">바로가기</a>
                     </li>
                     <li class="portal-link">
                         <div>
                             <div class="portal-name">대성마이맥</div>
-                            <div class="portal-desc">기본+심화 강의</div>
                         </div>
-                        <a class="cta primary" href="https://www.mymac.co.kr/" target="_blank" rel="noreferrer">바로가기</a>
+                        <a class="cta primary" href="https://www.mimacstudy.com/" target="_blank" rel="noreferrer">바로가기</a>
                     </li>
                     <li class="portal-link">
                         <div>
                             <div class="portal-name">이투스</div>
-                            <div class="portal-desc">수능/내신 강의</div>
                         </div>
-                        <a class="cta primary" href="https://www.etutors.com/" target="_blank" rel="noreferrer">바로가기</a>
+                        <a class="cta primary" href="https://m.etoos.com/" target="_blank" rel="noreferrer">바로가기</a>
                     </li>
                     <li class="portal-link">
                         <div>
-                            <div class="portal-name">EBSi 기출</div>
-                            <div class="portal-desc">공식 무료 기출/학습자료</div>
+                            <div class="portal-name">교육청 모의고사</div>
                         </div>
-                            <a class="cta primary" href="https://www.ebs.co.kr/ebsapp/front/main" target="_blank" rel="noreferrer">바로가기</a>
+                            <a class="cta primary" href="https://www.ebsi.co.kr/ebs/xip/xipc/previousPaperList.ebs" target="_blank" rel="noreferrer">바로가기</a>
                     </li>
                     <li class="portal-link">
                         <div>
                             <div class="portal-name">족보닷컴</div>
-                            <div class="portal-desc">학교 시험/기출 자료 공유</div>
                         </div>
-                        <a class="cta primary" href="https://www.jokbo.com/" target="_blank" rel="noreferrer">바로가기</a>
-                    </li>
-                    <li class="portal-link">
-                        <div>
-                            <div class="portal-name">마더텅 기출</div>
-                            <div class="portal-desc">기출 문제집 출판사</div>
-                        </div>
-                        <a class="cta primary" href="https://www.mdotung.co.kr/" target="_blank" rel="noreferrer">바로가기</a>
+                        <a class="cta primary" href="https://www.zocbo.com/" target="_blank" rel="noreferrer">바로가기</a>
                     </li>
                     <li class="portal-link">
                         <div>
                             <div class="portal-name">Notion</div>
-                            <div class="portal-desc">노트/오답노트/플래너</div>
                         </div>
                         <a class="cta primary" href="https://www.notion.so/" target="_blank" rel="noreferrer">바로가기</a>
                     </li>
                     <li class="portal-link">
                         <div>
                             <div class="portal-name">Anki</div>
-                            <div class="portal-desc">암기 플래시카드</div>
                         </div>
                         <a class="cta primary" href="https://apps.ankiweb.net/" target="_blank" rel="noreferrer">바로가기</a>
-                    </li>
-                    <li class="portal-link">
-                        <div>
-                            <div class="portal-name">Forest</div>
-                            <div class="portal-desc">집중 타이머 앱</div>
-                        </div>
-                        <a class="cta primary" href="https://www.forestapp.cc/" target="_blank" rel="noreferrer">바로가기</a>
-                    </li>
-                    <li class="portal-link">
-                        <div>
-                            <div class="portal-name">Study Bunny</div>
-                            <div class="portal-desc">집중 타이머 앱</div>
-                        </div>
-                        <a class="cta primary" href="https://studybunny.com/" target="_blank" rel="noreferrer">바로가기</a>
                     </li>
                 </ul>
             </div>
@@ -583,9 +555,18 @@
     const commentForm = document.getElementById('commentForm');
     const commentContent = document.getElementById('commentContent');
     const deleteBtn = document.getElementById('questionDeleteBtn');
+    const editBtn = document.getElementById('questionEditBtn');
     const closeBtn = document.getElementById('questionCloseBtn');
     const isAdmin = boardEl?.dataset?.admin === 'true';
     const STORAGE_KEY = 'apple_science_questions_v2';
+    const DEVICE_KEY = 'apple_science_device_id';
+    const DEVICE_ID = (() => {
+        const existing = localStorage.getItem(DEVICE_KEY);
+        if (existing) return existing;
+        const v = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
+        localStorage.setItem(DEVICE_KEY, v);
+        return v;
+    })();
     let activeQuestionId = null;
 
     const loadQuestions = () => {
@@ -629,7 +610,9 @@
         modalTitle.textContent = q.title;
         modalDate.textContent = q.date;
         modalContent.textContent = q.content;
-        deleteBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+        const isOwner = q.ownerId === DEVICE_ID;
+        deleteBtn.style.display = (isAdmin || isOwner) ? 'inline-flex' : 'none';
+        editBtn.style.display = (isAdmin || isOwner) ? 'inline-flex' : 'none';
         renderComments(q);
         modal.classList.add('open');
     };
@@ -653,7 +636,31 @@
         items.forEach(c => {
             const el = document.createElement('div');
             el.className = 'comment';
-            el.innerHTML = `<div>${c.content}</div><div class="comment-meta">${c.date} · 익명</div>`;
+            const meta = document.createElement('div');
+            meta.className = 'comment-meta';
+            meta.textContent = `${c.date} · 익명`;
+            const body = document.createElement('div');
+            body.textContent = c.content;
+            el.appendChild(body);
+            el.appendChild(meta);
+            const isOwner = c.ownerId === DEVICE_ID;
+            if (isAdmin || isOwner) {
+                const delBtn = document.createElement('button');
+                delBtn.className = 'cta ghost';
+                delBtn.type = 'button';
+                delBtn.textContent = '삭제';
+                delBtn.style.marginTop = '4px';
+                delBtn.addEventListener('click', () => {
+                    const items = loadQuestions();
+                    const idx = items.findIndex(q => q.id === activeQuestionId);
+                    if (idx === -1) return;
+                    items[idx].comments = (items[idx].comments || []).filter(cc => cc.id !== c.id);
+                    saveQuestions(items);
+                    renderComments(items[idx]);
+                    renderQuestions();
+                });
+                el.appendChild(delBtn);
+            }
             commentList.appendChild(el);
         });
     };
@@ -666,7 +673,7 @@
         const now = new Date();
         const date = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
         const items = loadQuestions();
-        items.unshift({ id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`, title, content, date, comments: [] });
+        items.unshift({ id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`, title, content, date, comments: [], ownerId: DEVICE_ID });
         saveQuestions(items.slice(0, 50));
         form.reset();
         renderQuestions();
@@ -684,7 +691,7 @@
         if (idx === -1) return;
         const q = items[idx];
         q.comments = q.comments || [];
-        q.comments.unshift({ id: `${Date.now()}-${Math.random()}`, content: text, date });
+        q.comments.unshift({ id: `${Date.now()}-${Math.random()}`, content: text, date, ownerId: DEVICE_ID });
         saveQuestions(items);
         commentForm.reset();
         renderComments(q);
@@ -692,10 +699,33 @@
     });
 
     deleteBtn?.addEventListener('click', () => {
-        if (!isAdmin || !activeQuestionId) return;
-        const items = loadQuestions().filter(q => q.id !== activeQuestionId);
-        saveQuestions(items);
+        if (!activeQuestionId) return;
+        const items = loadQuestions();
+        const q = items.find(item => item.id === activeQuestionId);
+        const isOwner = q && q.ownerId === DEVICE_ID;
+        if (!isAdmin && !isOwner) return;
+        const filtered = items.filter(q => q.id !== activeQuestionId);
+        saveQuestions(filtered);
         closeQuestion();
+        renderQuestions();
+    });
+
+    editBtn?.addEventListener('click', () => {
+        if (!activeQuestionId) return;
+        const items = loadQuestions();
+        const idx = items.findIndex(q => q.id === activeQuestionId);
+        if (idx === -1) return;
+        const q = items[idx];
+        const isOwner = q.ownerId === DEVICE_ID;
+        if (!isAdmin && !isOwner) return;
+        const newTitle = prompt("제목을 수정하세요", q.title);
+        if (newTitle === null) return;
+        const newContent = prompt("내용을 수정하세요", q.content);
+        if (newContent === null) return;
+        items[idx].title = newTitle.trim();
+        items[idx].content = newContent.trim();
+        saveQuestions(items);
+        openQuestion(q.id);
         renderQuestions();
     });
 

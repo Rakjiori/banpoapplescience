@@ -391,6 +391,47 @@ public class UserService {
         return userRepository.findById(id);
     }
 
+    @org.springframework.transaction.annotation.Transactional
+    public void resetPasswordById(Long userId, String newPassword) {
+        if (userId == null) throw new IllegalArgumentException("유효하지 않은 사용자입니다.");
+        SiteUser user = userRepository.findById(userId)
+                .orElseThrow(() -> new java.util.NoSuchElementException("사용자를 찾을 수 없습니다."));
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void resetPasswordTo(String username, String newPassword) {
+        String trimmedUsername = trimToNull(username);
+        if (!StringUtils.hasText(trimmedUsername)) {
+            throw new IllegalArgumentException("아이디를 입력해주세요.");
+        }
+        SiteUser user = userRepository.findByUsername(trimmedUsername)
+                .orElseThrow(() -> new java.util.NoSuchElementException("사용자를 찾을 수 없습니다."));
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
+    public org.springframework.data.domain.Page<SiteUser> searchUsers(String schoolName,
+                                                                      String grade,
+                                                                      AccountType accountType,
+                                                                      org.springframework.data.domain.Pageable pageable) {
+        org.springframework.data.jpa.domain.Specification<SiteUser> spec = (root, query, cb) -> {
+            java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
+            if (StringUtils.hasText(trimToNull(schoolName))) {
+                predicates.add(cb.like(cb.lower(root.get("schoolName")), "%" + schoolName.trim().toLowerCase() + "%"));
+            }
+            if (StringUtils.hasText(trimToNull(grade))) {
+                predicates.add(cb.like(cb.lower(root.get("grade")), "%" + grade.trim().toLowerCase() + "%"));
+            }
+            if (accountType != null) {
+                predicates.add(cb.equal(root.get("accountType"), accountType));
+            }
+            return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
+        return userRepository.findAll(spec, pageable);
+    }
+
     public boolean isRoot(SiteUser user) {
         return user != null && "ROLE_ROOT".equals(user.getRole());
     }
@@ -401,12 +442,16 @@ public class UserService {
         return "ROLE_ADMIN".equals(role) || "ROLE_ROOT".equals(role);
     }
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public List<SiteUser> findAdminsAndRoot() {
+        List<SiteUser> admins = new java.util.ArrayList<>(userRepository.findByRoleOrderByIdAsc("ROLE_ADMIN"));
+        admins.addAll(userRepository.findByRoleOrderByIdAsc("ROLE_ROOT"));
+        return admins;
+    }
+
     @org.springframework.transaction.annotation.Transactional
     public boolean deleteUser(SiteUser actor, Long targetUserId,
                               com.example.sbb.repository.GroupMemberRepository groupMemberRepository,
-                              com.example.sbb.repository.FriendRepository friendRepository,
-                              com.example.sbb.repository.FriendRequestRepository friendRequestRepository,
-                              com.example.sbb.repository.FriendShareRequestRepository friendShareRequestRepository,
                               com.example.sbb.repository.GroupInviteRepository groupInviteRepository,
                               com.example.sbb.repository.DocumentFileRepository documentFileRepository,
                               com.example.sbb.repository.QuizQuestionRepository quizQuestionRepository,
@@ -416,8 +461,7 @@ public class UserService {
         SiteUser target = userRepository.findById(targetUserId).orElse(null);
         if (target == null) return false;
         if ("ROLE_ROOT".equals(target.getRole())) return false;
-        removeUserRelations(targetUserId, groupMemberRepository, friendRepository, friendRequestRepository,
-                friendShareRequestRepository, groupInviteRepository, documentFileRepository, quizQuestionRepository, problemRepository);
+        removeUserRelations(targetUserId, groupMemberRepository, groupInviteRepository, documentFileRepository, quizQuestionRepository, problemRepository);
         softDeleteUser(target);
         return true;
     }
@@ -426,9 +470,6 @@ public class UserService {
     public boolean selfDelete(SiteUser user,
                               String currentPassword,
                               com.example.sbb.repository.GroupMemberRepository groupMemberRepository,
-                              com.example.sbb.repository.FriendRepository friendRepository,
-                              com.example.sbb.repository.FriendRequestRepository friendRequestRepository,
-                              com.example.sbb.repository.FriendShareRequestRepository friendShareRequestRepository,
                               com.example.sbb.repository.GroupInviteRepository groupInviteRepository,
                               com.example.sbb.repository.DocumentFileRepository documentFileRepository,
                               com.example.sbb.repository.QuizQuestionRepository quizQuestionRepository,
@@ -438,17 +479,13 @@ public class UserService {
         if (!StringUtils.hasText(currentPassword) || !passwordEncoder.matches(currentPassword, user.getPassword())) {
             throw new IllegalArgumentException("현재 비밀번호가 올바르지 않습니다.");
         }
-        removeUserRelations(user.getId(), groupMemberRepository, friendRepository, friendRequestRepository,
-                friendShareRequestRepository, groupInviteRepository, documentFileRepository, quizQuestionRepository, problemRepository);
+        removeUserRelations(user.getId(), groupMemberRepository, groupInviteRepository, documentFileRepository, quizQuestionRepository, problemRepository);
         softDeleteUser(user);
         return true;
     }
 
     private void removeUserRelations(Long targetUserId,
                                      com.example.sbb.repository.GroupMemberRepository groupMemberRepository,
-                                     com.example.sbb.repository.FriendRepository friendRepository,
-                                     com.example.sbb.repository.FriendRequestRepository friendRequestRepository,
-                                     com.example.sbb.repository.FriendShareRequestRepository friendShareRequestRepository,
                                      com.example.sbb.repository.GroupInviteRepository groupInviteRepository,
                                      com.example.sbb.repository.DocumentFileRepository documentFileRepository,
                                      com.example.sbb.repository.QuizQuestionRepository quizQuestionRepository,
@@ -457,22 +494,6 @@ public class UserService {
         groupMemberRepository.deleteAll(
                 groupMemberRepository.findAll().stream()
                         .filter(m -> m.getUser() != null && targetUserId.equals(m.getUser().getId()))
-                        .toList());
-        // 친구/요청/공유 제거
-        friendRepository.deleteAll(
-                friendRepository.findAll().stream()
-                        .filter(f -> (f.getFrom() != null && targetUserId.equals(f.getFrom().getId()))
-                                || (f.getTo() != null && targetUserId.equals(f.getTo().getId())))
-                        .toList());
-        friendRequestRepository.deleteAll(
-                friendRequestRepository.findAll().stream()
-                        .filter(f -> (f.getFromUser() != null && targetUserId.equals(f.getFromUser().getId()))
-                                || (f.getToUser() != null && targetUserId.equals(f.getToUser().getId())))
-                        .toList());
-        friendShareRequestRepository.deleteAll(
-                friendShareRequestRepository.findAll().stream()
-                        .filter(f -> (f.getFromUser() != null && targetUserId.equals(f.getFromUser().getId()))
-                                || (f.getToUser() != null && targetUserId.equals(f.getToUser().getId())))
                         .toList());
         // 그룹 초대 제거
         groupInviteRepository.deleteAll(

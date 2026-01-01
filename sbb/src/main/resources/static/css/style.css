@@ -615,7 +615,7 @@ main.container.landing-shell {
   background: linear-gradient(135deg, var(--group-hero-start), var(--group-hero-mid), var(--group-hero-end));
   color: #0f172a;
   border-radius: 16px;
-  padding: 20px 22px;
+  padding: 14px 16px;
   border: 1px solid rgba(148,163,184,0.35);
   box-shadow: 0 18px 44px rgba(20,58,115,0.18);
   display: flex;
@@ -644,6 +644,18 @@ main.container.landing-shell {
   gap: 10px;
   flex-wrap: wrap;
   margin-top: 6px;
+}
+.group-hero__summary {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.summary-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 180px;
 }
 .stat-chip {
   display: inline-flex;
@@ -784,9 +796,50 @@ main.container.landing-shell {
   align-items: center;
   gap: 8px;
 }
+.group-card__footer .btn.btn-outline.btn-sm {
+  padding: 6px 8px;
+}
 .group-card__chevron {
   color: var(--brand-dark);
   font-weight: 800;
+}
+.popup-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+.popup-modal.open { display: flex; }
+.popup-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+}
+.popup-dialog {
+  position: relative;
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  width: min(540px, 90%);
+  box-shadow: 0 18px 44px rgba(0,0,0,0.25);
+  z-index: 1;
+}
+.popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.popup-list {
+  list-style: disc;
+  margin: 0;
+  padding-left: 18px;
+  max-height: 300px;
+  overflow: auto;
+  color: #0f172a;
 }
 .folder-card-modern {
   display: flex;

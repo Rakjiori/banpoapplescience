@@ -3,6 +3,8 @@ package com.example.sbb.controller;
 import com.example.sbb.domain.user.SiteUser;
 import com.example.sbb.domain.user.UserService;
 import com.example.sbb.service.AcademyContentService;
+import com.example.sbb.repository.StudyGroupRepository;
+import com.example.sbb.repository.GroupMemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,6 +24,8 @@ public class AdminContentController {
 
     private final AcademyContentService contentService;
     private final UserService userService;
+    private final com.example.sbb.repository.StudyGroupRepository studyGroupRepository;
+    private final com.example.sbb.repository.GroupMemberRepository groupMemberRepository;
 
     @GetMapping
     public String page(Model model, Principal principal, RedirectAttributes rttr) {
@@ -35,6 +39,8 @@ public class AdminContentController {
         model.addAttribute("slots", contentService.listSlots());
         model.addAttribute("reviews", contentService.listReviews());
         model.addAttribute("announcements", contentService.listAnnouncements());
+        model.addAttribute("groupCount", studyGroupRepository.count());
+        model.addAttribute("memberCount", groupMemberRepository.count());
         return "admin_content";
     }
 

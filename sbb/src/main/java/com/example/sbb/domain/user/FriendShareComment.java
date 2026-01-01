@@ -1,5 +1,9 @@
 package com.example.sbb.domain.user;
 
+/*
+친구 공유 댓글 엔티티는 사용하지 않습니다.
+*/
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -7,7 +11,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
-@Entity
+//@Entity
 @Getter
 @Setter
 public class FriendShareComment {

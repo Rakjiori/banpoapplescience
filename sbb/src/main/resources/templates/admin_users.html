@@ -15,10 +15,11 @@
     <div class="card" style="margin-bottom:12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
         <input type="text" id="userSearch" placeholder="아이디, 이름, 학교, 학년 검색" style="flex:1; min-width:240px; padding:10px; border:1px solid #e5e7eb; border-radius:10px;">
         <select id="roleFilter" style="padding:10px; border:1px solid #e5e7eb; border-radius:10px;">
-            <option value="admin-only" selected>관리자/루트만 보기</option>
-            <option value="all">전체 보기</option>
+            <option value="all" selected>전체 보기</option>
+            <option value="admin-only">관리자/루트만 보기</option>
             <option value="root-only">루트만 보기</option>
         </select>
+        <button id="userSearchBtn" type="button" class="btn" style="padding:10px 14px;">검색</button>
     </div>
 
     <div th:if="${message}" class="alert alert-success" style="margin-bottom:12px;">
@@ -30,7 +31,7 @@
 
     <div class="card" style="padding:0;">
         <div style="max-height:420px; overflow:auto;">
-            <div class="table-row" style="display:grid; grid-template-columns: 80px 160px 180px 140px 140px 240px; align-items:center; gap:8px; padding:10px; border-bottom:1px solid #e5e7eb; font-weight:600; background:#f8fafc;">
+            <div class="table-row" style="display:grid; grid-template-columns: 48px 160px 180px 140px 140px 280px; align-items:center; gap:8px; padding:10px; border-bottom:1px solid #e5e7eb; font-weight:600; background:#f8fafc;">
                 <div>#</div>
                 <div>아이디</div>
                 <div>학교</div>
@@ -42,15 +43,15 @@
                  th:each="u, stat : ${users}"
                  th:data-role="${u.role}"
                  th:data-text="${(u.id + ' ' + u.username + ' ' + (u.fullName != null ? u.fullName : '') + ' ' + (u.schoolName != null ? u.schoolName : '') + ' ' + (u.grade != null ? u.grade : '')).toLowerCase()}"
-                 style="display:grid; grid-template-columns: 80px 160px 180px 140px 140px 240px; align-items:center; gap:8px; padding:10px; border-bottom:1px solid #f1f5f9;">
-                <div class="pill-soft" th:text="${stat.index + 1}">1</div>
+                 style="display:grid; grid-template-columns: 48px 160px 180px 140px 140px 280px; align-items:center; gap:8px; padding:10px; border-bottom:1px solid #f1f5f9;">
+                <div class="pill-soft" th:text="${stat.index + 1}" style="justify-self:center; min-width:32px; text-align:center;">1</div>
                 <div class="title-md" th:text="${u.username}">username</div>
                 <div class="muted" th:text="${u.schoolName != null ? u.schoolName : '-'}">학교</div>
                 <div class="muted" th:text="${u.grade != null ? u.grade : '-'}">학년</div>
                 <div class="muted" th:text="${u.fullName != null ? u.fullName : ''}">이름</div>
                 <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-                    <span class="pill" th:if="${u.role == 'ROLE_ADMIN'}" th:text="${u.role}">ROLE_ADMIN</span>
-                    <span class="pill" th:if="${u.role == 'ROLE_ROOT'}" th:text="${u.role}">ROLE_ROOT</span>
+                    <span class="pill" th:if="${u.role == 'ROLE_ADMIN'}" th:text="'관리자'">관리자</span>
+                    <span class="pill" th:if="${u.role == 'ROLE_ROOT'}" th:text="'루트'">루트</span>
                     <form th:if="${isRoot and u.role != 'ROLE_ROOT' and u.role != 'ROLE_ADMIN'}"
                           th:action="@{/admin/users/{id}/promote(id=${u.id})}" method="post">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
@@ -62,7 +63,13 @@
                         <button type="submit" class="btn btn-outline" style="padding:6px 10px;"
                                 onclick="return confirm('관리자 권한을 해제할까요?');">관리자 해제</button>
                     </form>
-                    <span th:if="${u.role == 'ROLE_ROOT'}" class="pill-soft">루트</span>
+                <span th:if="${u.role == 'ROLE_ROOT'}" class="pill-soft">루트</span>
+                    <form th:if="${u.role != 'ROLE_ROOT'}"
+                          th:action="@{/admin/users/{id}/reset-password(id=${u.id})}" method="post"
+                          onsubmit="return confirm('${u.username}의 비밀번호를 apple로 초기화할까요?');">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <button type="submit" class="btn" style="padding:6px 10px; background:#eef2ff; color:#4338ca; border:1px solid #c7d2fe;">비밀번호 초기화</button>
+                    </form>
                     <form th:if="${u.role != 'ROLE_ROOT'}"
                           th:action="@{/admin/users/{id}/delete(id=${u.id})}" method="post"
                           onsubmit="return confirm('계정을 삭제할까요? 되돌릴 수 없습니다.');">
@@ -112,21 +119,41 @@
     document.addEventListener('DOMContentLoaded', ()=>{
         const search = document.getElementById('userSearch');
         const filter = document.getElementById('roleFilter');
+        const searchBtn = document.getElementById('userSearchBtn');
         const rows = Array.from(document.querySelectorAll('.user-row'));
         const apply = ()=>{
-            const term = (search?.value || '').toLowerCase();
+            const raw = (search?.value || '').toLowerCase();
+            const terms = raw.split(/\s+/).filter(Boolean);
             const mode = filter?.value || 'admin-only';
+            const matched = [];
             rows.forEach(r=>{
                 const text = (r.dataset.text || '').toLowerCase();
                 const role = r.dataset.role || '';
                 let roleOk = true;
                 if(mode === 'admin-only') roleOk = role === 'ROLE_ADMIN' || role === 'ROLE_ROOT';
                 else if(mode === 'root-only') roleOk = role === 'ROLE_ROOT';
-                if(term && !text.includes(term)) roleOk = false;
-                r.style.display = roleOk ? 'grid' : 'none';
+                let textOk = true;
+                if(terms.length > 0) {
+                    textOk = terms.every(t => text.includes(t));
+                }
+                const show = (roleOk && textOk);
+                r.style.display = show ? 'grid' : 'none';
+                if (show) {
+                    const username = r.querySelector('.title-md')?.textContent || '';
+                    const school = r.querySelector('.muted:nth-of-type(1)')?.textContent || '';
+                    matched.push(`${username} / ${school}`.trim());
+                }
             });
+            if (searchBtn) {
+                const msg = matched.length
+                    ? `검색 결과 (${matched.length}건):\n` + matched.join('\n')
+                    : '검색 결과가 없습니다.';
+                alert(msg);
+            }
         };
         search?.addEventListener('input', apply);
+        search?.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ e.preventDefault(); apply(); }});
+        searchBtn?.addEventListener('click', apply);
         filter?.addEventListener('change', apply);
         apply();
     });

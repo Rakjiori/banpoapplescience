@@ -182,8 +182,10 @@ public class GroupDiscussionController {
         if (question == null || comment == null || !comment.getQuestion().getId().equals(questionId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("no comment");
         }
-        if (!comment.getUser().getId().equals(user.getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("not owner");
+        boolean isOwner = comment.getUser() != null && comment.getUser().getId().equals(user.getId());
+        boolean isAdmin = userService.isAdminOrRoot(user);
+        if (!isOwner && !isAdmin) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("not allowed");
         }
         discussionService.deleteComment(comment);
         return ResponseEntity.ok("deleted");

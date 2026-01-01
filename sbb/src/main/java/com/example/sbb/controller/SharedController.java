@@ -1,5 +1,8 @@
 package com.example.sbb.controller;
 
+/*
+친구 문제 공유 화면은 제거되었습니다.
+
 import com.example.sbb.domain.user.FriendShareRequest;
 import com.example.sbb.domain.user.SiteUser;
 import com.example.sbb.domain.user.UserService;
@@ -29,3 +32,4 @@ public class SharedController {
         return "shared";
     }
 }
+*/

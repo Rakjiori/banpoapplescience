@@ -20,9 +20,6 @@ public class AdminUserController {
 
     private final UserService userService;
     private final com.example.sbb.repository.GroupMemberRepository groupMemberRepository;
-    private final com.example.sbb.repository.FriendRepository friendRepository;
-    private final com.example.sbb.repository.FriendRequestRepository friendRequestRepository;
-    private final com.example.sbb.repository.FriendShareRequestRepository friendShareRequestRepository;
     private final com.example.sbb.repository.GroupInviteRepository groupInviteRepository;
     private final com.example.sbb.repository.DocumentFileRepository documentFileRepository;
     private final com.example.sbb.repository.QuizQuestionRepository quizQuestionRepository;
@@ -90,10 +87,28 @@ public class AdminUserController {
             rttr.addFlashAttribute("error", "관리자 이상만 계정을 삭제할 수 있습니다.");
             return "redirect:/";
         }
-        boolean ok = userService.deleteUser(actor, id, groupMemberRepository, friendRepository, friendRequestRepository,
-                friendShareRequestRepository, groupInviteRepository, documentFileRepository, quizQuestionRepository, problemRepository);
+        boolean ok = userService.deleteUser(actor, id, groupMemberRepository,
+                groupInviteRepository, documentFileRepository, quizQuestionRepository, problemRepository);
         if (ok) rttr.addFlashAttribute("message", "계정을 삭제했습니다.");
         else rttr.addFlashAttribute("error", "계정을 삭제할 수 없습니다.");
+        return "redirect:/admin/users";
+    }
+
+    @PostMapping("/{id}/reset-password")
+    public String resetPassword(@PathVariable Long id, Principal principal, RedirectAttributes rttr) {
+        SiteUser actor = currentUser(principal);
+        if (actor == null) return "redirect:/login";
+        if (!userService.isAdminOrRoot(actor)) {
+            rttr.addFlashAttribute("error", "관리자 이상만 비밀번호를 초기화할 수 있습니다.");
+            return "redirect:/";
+        }
+        try {
+            SiteUser target = userService.findById(id).orElseThrow(() -> new java.util.NoSuchElementException("사용자를 찾을 수 없습니다."));
+            userService.resetPasswordById(id, "apple");
+            rttr.addFlashAttribute("message", target.getUsername() + "의 비밀번호를 apple로 초기화했습니다.");
+        } catch (Exception e) {
+            rttr.addFlashAttribute("error", e.getMessage());
+        }
         return "redirect:/admin/users";
     }
 

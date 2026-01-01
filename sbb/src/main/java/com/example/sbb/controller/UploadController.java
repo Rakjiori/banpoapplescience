@@ -1,7 +1,6 @@
 package com.example.sbb.controller;
 
 import com.example.sbb.domain.document.DocumentFile;
-import com.example.sbb.domain.document.DocumentService;
 import com.example.sbb.domain.Folder;
 import com.example.sbb.domain.quiz.QuizQuestion;
 import com.example.sbb.domain.user.SiteUser;
@@ -12,9 +11,6 @@ import com.example.sbb.repository.GroupSharedQuestionRepository;
 import com.example.sbb.repository.ProblemRepository;
 import com.example.sbb.repository.QuizQuestionRepository;
 import com.example.sbb.repository.PendingNotificationRepository;
-import com.example.sbb.repository.FriendShareRequestRepository;
-import com.example.sbb.service.GeminiQuestionService;
-import com.example.sbb.service.QuizService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -44,15 +40,11 @@ public class UploadController {
 
     private final DocumentFileRepository documentFileRepository;
     private final UserService userService;
-    private final GeminiQuestionService geminiQuestionService;
-    private final QuizService quizService;
     private final QuizQuestionRepository quizQuestionRepository;
-    private final DocumentService documentService;
     private final FolderRepository folderRepository;
     private final ProblemRepository problemRepository;
     private final GroupSharedQuestionRepository sharedQuestionRepository;
     private final PendingNotificationRepository pendingNotificationRepository;
-    private final FriendShareRequestRepository friendShareRequestRepository;
 
     // ===========================
     // 업로드 폼
@@ -124,15 +116,6 @@ public class UploadController {
 
             DocumentFile saved = documentFileRepository.save(doc);
 
-            // PDF 텍스트 추출 → 스케줄러가 활용할 수 있도록 DB에 저장
-            try {
-                String extracted = documentService.extractText(fileBytes);
-                saved.setExtractedText(extracted);
-                documentFileRepository.save(saved);
-            } catch (Exception extractEx) {
-                extractEx.printStackTrace();
-            }
-
             String redirectSuffix = (selectedFolder != null) ? "?folderId=" + selectedFolder.getId() : "";
             return "redirect:/document/list" + redirectSuffix;
 
@@ -170,7 +153,7 @@ public class UploadController {
         return "document_list";
     }
 
-    // ===========================
+    /* // ===========================
     // PDF 내용 요약
     // ===========================
     @GetMapping("/summary/{id}")
@@ -394,6 +377,7 @@ public class UploadController {
 
         return "document_makeprob_result";
     }
+    */
 
     // ===========================
     // 강제 삭제 (문제 포함)
@@ -430,7 +414,6 @@ public class UploadController {
             if (docQuestions != null && !docQuestions.isEmpty()) {
                 List<Long> qIds = docQuestions.stream().map(QuizQuestion::getId).toList();
                 pendingNotificationRepository.deleteAllByQuestion_IdIn(qIds);
-                friendShareRequestRepository.deleteAllByQuestion_IdIn(qIds);
                 sharedQuestionRepository.deleteAllByQuestion_IdIn(qIds);
                 quizQuestionRepository.deleteAll(docQuestions);
             }

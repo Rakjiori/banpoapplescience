@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout :: layout(~{::body})">
+<body>
+<div class="page-card">
+    <div class="page-header">
+        <div>
+            <div class="pill">그룹 관리 (ADMIN/ROOT)</div>
+            <h1 class="page-title">전체 그룹</h1>
+            <p class="muted">그룹 목록/멤버/공지/과제를 빠르게 조회할 수 있습니다.</p>
+        </div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px;">
+        <input type="text" id="groupSearch" placeholder="그룹명/코드/멤버 검색" style="width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:10px;">
+    </div>
+
+    <div class="group-grid">
+        <div class="group-card-modern"
+             th:each="g : ${groups}"
+             th:data-text="${(g.name + ' ' + g.joinCode + ' ' + g.memberCount).toLowerCase()}"
+             th:data-members="${g.memberLines}"
+             th:data-notice-count="${g.noticeCount}"
+             th:data-task-count="${g.taskCount}"
+             th:data-attendance-count="${g.attendanceCount}">
+            <div class="group-card__top">
+                <div class="group-card__name" th:text="${g.name}">그룹</div>
+                <span class="group-card__code">
+                    코드: <strong th:text="${g.joinCode}">000000</strong>
+                </span>
+            </div>
+            <p class="group-card__desc">
+                멤버 <span th:text="${g.memberCount}">0</span>명 · 공지 <span th:text="${g.noticeCount}">0</span> · 과제 <span th:text="${g.taskCount}">0</span> · 출결 <span th:text="${g.attendanceCount}">0</span>
+            </p>
+            <div class="group-card__footer" style="gap:8px; flex-wrap:wrap;">
+                <button type="button" class="btn btn-outline btn-sm member-view-btn">멤버 보기</button>
+                <button type="button" class="btn btn-outline btn-sm notice-view-btn">공지</button>
+                <button type="button" class="btn btn-outline btn-sm task-view-btn">과제</button>
+                <button type="button" class="btn btn-outline btn-sm attendance-view-btn">출결</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="popup-modal" id="popupModal" aria-hidden="true">
+    <div class="popup-backdrop"></div>
+    <div class="popup-dialog" role="dialog" aria-modal="true">
+        <div class="popup-header">
+            <h3 id="popupTitle">상세 보기</h3>
+            <button type="button" class="btn btn-outline btn-sm" id="popupClose">닫기</button>
+        </div>
+        <ul id="popupList" class="popup-list"></ul>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', ()=>{
+        const search = document.getElementById('groupSearch');
+        const cards = Array.from(document.querySelectorAll('.group-card-modern'));
+        const apply = ()=>{
+            const terms = (search?.value || '').toLowerCase().split(/\s+/).filter(Boolean);
+            cards.forEach(c=>{
+                const text = (c.dataset.text || '').toLowerCase();
+                const members = (c.dataset.members || '').toLowerCase();
+                let ok = true;
+                if (terms.length > 0) {
+                    ok = terms.every(t => text.includes(t) || members.includes(t));
+                }
+                c.style.display = ok ? 'flex' : 'none';
+            });
+        };
+        search?.addEventListener('input', apply);
+        apply();
+
+        const popup = document.getElementById('popupModal');
+        const popupTitle = document.getElementById('popupTitle');
+        const popupList = document.getElementById('popupList');
+        const popupClose = document.getElementById('popupClose');
+
+        const showPopup = (title, lines)=>{
+            if (!popup || !popupTitle || !popupList) return;
+            popupTitle.textContent = title;
+            popupList.innerHTML = '';
+            const items = lines.filter(Boolean);
+            if (!items.length) {
+                const li = document.createElement('li');
+                li.textContent = '데이터가 없습니다.';
+                popupList.appendChild(li);
+            } else {
+                items.forEach(line=>{
+                    const li = document.createElement('li');
+                    li.textContent = line;
+                    popupList.appendChild(li);
+                });
+            }
+            popup.classList.add('open');
+        };
+        const closePopup = ()=>{
+            popup?.classList.remove('open');
+        };
+        popupClose?.addEventListener('click', closePopup);
+        popup?.querySelector('.popup-backdrop')?.addEventListener('click', closePopup);
+        document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closePopup(); });
+
+        document.querySelectorAll('.member-view-btn').forEach(btn=>{
+            btn.addEventListener('click', ()=>{
+                const parent = btn.closest('.group-card-modern');
+                const raw = parent?.dataset.members || '';
+                const lines = raw ? raw.split('||').filter(Boolean) : [];
+                showPopup('멤버 목록', lines);
+            });
+        });
+        document.querySelectorAll('.notice-view-btn').forEach(btn=>{
+            btn.addEventListener('click', ()=>{
+                const parent = btn.closest('.group-card-modern');
+                const name = parent?.querySelector('.group-card__name')?.textContent || '';
+                const count = parent?.dataset.noticeCount || '0';
+                showPopup(`${name} 공지`, [`총 ${count}건`]);
+            });
+        });
+        document.querySelectorAll('.task-view-btn').forEach(btn=>{
+            btn.addEventListener('click', ()=>{
+                const parent = btn.closest('.group-card-modern');
+                const name = parent?.querySelector('.group-card__name')?.textContent || '';
+                const count = parent?.dataset.taskCount || '0';
+                showPopup(`${name} 과제`, [`총 ${count}건`]);
+            });
+        });
+        document.querySelectorAll('.attendance-view-btn').forEach(btn=>{
+            btn.addEventListener('click', ()=>{
+                const parent = btn.closest('.group-card-modern');
+                const name = parent?.querySelector('.group-card__name')?.textContent || '';
+                const count = parent?.dataset.attendanceCount || '0';
+                showPopup(`${name} 출결`, [`최근 1개월 출결 ${count}건`]);
+            });
+        });
+    });
+</script>
+</body>
+</html>

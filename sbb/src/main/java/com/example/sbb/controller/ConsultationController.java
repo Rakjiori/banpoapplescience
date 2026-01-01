@@ -4,6 +4,7 @@ import com.example.sbb.domain.ConsultationRequest;
 import com.example.sbb.domain.user.SiteUser;
 import com.example.sbb.domain.user.UserService;
 import com.example.sbb.repository.ConsultationRequestRepository;
+import com.example.sbb.service.WebPushService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -23,6 +24,7 @@ public class ConsultationController {
 
     private final ConsultationRequestRepository repository;
     private final UserService userService;
+    private final WebPushService webPushService;
 
     @PostMapping("/consultations/request")
     public ResponseEntity<?> create(@RequestBody Map<String, String> payload, Principal principal) {
@@ -35,6 +37,7 @@ public class ConsultationController {
             req.setType(ConsultationRequest.Type.valueOf(type));
             req.setMessage(message);
             repository.save(req);
+            notifyAdmins(req);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("invalid request");
@@ -63,4 +66,19 @@ public class ConsultationController {
         });
         return "redirect:/admin/consultations";
     }
+
+    private void notifyAdmins(ConsultationRequest req) {
+        if (req == null) return;
+        var admins = userService.findAdminsAndRoot();
+        if (admins == null || admins.isEmpty()) return;
+        var payload = new AdminConsultationPayload(
+                "상담 요청 (" + req.getType().name() + ")",
+                req.getMessage() == null ? "" : req.getMessage(),
+                "/admin/consultations",
+                "상담"
+        );
+        admins.forEach(admin -> webPushService.pushNotifications(admin, java.util.List.of(payload)));
+    }
+
+    private record AdminConsultationPayload(String title, String body, String url, String kind) implements WebPushService.PushPayload {}
 }

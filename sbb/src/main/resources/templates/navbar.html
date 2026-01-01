@@ -29,6 +29,9 @@
           <div class="notification-list" id="notificationList">
             <div class="notification-empty">새 알림이 없습니다.</div>
           </div>
+          <div style="padding:8px; text-align:right; border-top:1px solid #e5e7eb;">
+            <a href="/notifications" class="btn btn-outline btn-sm">알림 전체보기</a>
+          </div>
         </div>
       </div>
       <div class="profile-wrapper" th:if="${#authorization.expression('isAuthenticated()')}">
