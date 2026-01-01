@@ -196,27 +196,35 @@ function setupProfileDropdown(){
 }
 
 function setupConsultation(){
-  const btns = [document.getElementById('consultBtn'), document.getElementById('scheduleConsultBtn'), document.getElementById('floatingConsultBtn')].filter(Boolean);
-  const modal = document.getElementById('consultModal');
-  const closeBtn = document.getElementById('consultClose');
-  const form = document.getElementById('consultForm');
+  const btns = [
+    document.getElementById('consultBtn'),
+    document.getElementById('scheduleConsultBtn'),
+    document.getElementById('floatingConsultBtn')
+  ].filter(Boolean);
+
+  const visitCallForm = document.getElementById('visitCallForm');
+
   if(btns.length){
-    btns.forEach(btn => btn.addEventListener('click', () => {
-      if(modal){ modal.style.display = 'flex'; }
-    }));
+    btns.forEach(btn => {
+      // 앵커는 기본 동작(링크 이동)에 맡긴다
+      if(btn.tagName !== 'A'){
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          window.location.href = '/visitcall';
+        });
+      }
+    });
   }
-  closeBtn?.addEventListener('click', ()=> { if(modal) modal.style.display='none'; });
-  if(modal){
-    modal.addEventListener('click', (e)=>{ if(e.target === modal) modal.style.display='none'; });
-  }
-  if(form){
-    form.addEventListener('submit', (e)=>{
+
+  if(visitCallForm){
+    visitCallForm.addEventListener('submit', (e)=>{
       e.preventDefault();
-      const data = new FormData(form);
+      const data = new FormData(visitCallForm);
       const type = data.get('type');
       const phone = (data.get('phone') || '').toString().trim();
       const memo = (data.get('message') || '').toString().trim();
       const message = `[연락처] ${phone}` + (memo ? ` | ${memo}` : '');
+
       fetch('/consultations/request', {
         method:'POST',
         headers:{
@@ -228,8 +236,9 @@ function setupConsultation(){
       }).then(async res=>{
         if(res.ok){
           alert('상담 요청이 접수되었습니다. (관리자에게 알림)');
-          form.reset();
-          if(modal) modal.style.display='none';
+          visitCallForm.reset();
+        } else if(res.status === 401){
+          window.location.href = '/login';
         } else {
           const txt = await res.text();
           alert('요청을 처리하지 못했습니다. ' + (txt || res.status));
@@ -238,6 +247,7 @@ function setupConsultation(){
     });
   }
 }
+
 
 // 폴링 기반 웹 알림 (서버 push 없이도 동작)
 async function pollNotifications(){

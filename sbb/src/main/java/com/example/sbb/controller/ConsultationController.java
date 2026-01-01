@@ -45,6 +45,16 @@ public class ConsultationController {
         }
     }
 
+    @GetMapping("/visitcall")
+    public String visitCall(Principal principal, Model model) {
+        SiteUser actor = principal != null ? userService.getUser(principal.getName()) : null;
+        if (actor == null) {
+            return "redirect:/login";
+        }
+        model.addAttribute("user", actor);
+        return "visitcall";
+    }
+
     @GetMapping("/admin/consultations")
     public String adminPage(Model model, Principal principal) {
         SiteUser actor = principal != null ? userService.getUser(principal.getName()) : null;

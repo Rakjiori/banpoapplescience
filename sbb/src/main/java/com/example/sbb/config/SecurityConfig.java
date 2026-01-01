@@ -11,7 +11,11 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.savedrequest.RequestCache;
 import org.springframework.security.web.util.matcher.RegexRequestMatcher;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.http.HttpStatus;
 
 @Configuration
 @EnableMethodSecurity
@@ -24,7 +28,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/", "/signup", "/login", "/css/**", "/js/**", "/sw.js", "/image/**").permitAll()
+                    .requestMatchers("/", "/signup", "/login", "/css/**", "/js/**", "/sw.js", "/image/**", "/app.js", "/favicon.ico").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/notices/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/questions/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
@@ -44,11 +48,18 @@ public class SecurityConfig {
                     .requestMatchers("/admin/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_ROOT")
                     .anyRequest().authenticated()
             )
+            .requestCache(cache -> cache.requestCache(requestCache()))
             .csrf(csrf -> csrf.ignoringRequestMatchers("/consultations/**"))
+            .exceptionHandling(ex -> ex
+                    .defaultAuthenticationEntryPointFor(
+                            new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                            new AntPathRequestMatcher("/api/**")
+                    )
+            )
             .formLogin(login -> login
                     .loginPage("/login")
                     .loginProcessingUrl("/login")
-                    .defaultSuccessUrl("/", true)
+                    .defaultSuccessUrl("/", true) // always go home after login to avoid stale saved requests
                     .failureUrl("/login?error=true")
                     .permitAll()
             )
@@ -72,5 +83,10 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
+    }
+
+    @Bean
+    public RequestCache requestCache() {
+        return new SelectiveRequestCache();
     }
 }

@@ -534,7 +534,7 @@
         });
     }
 
-    // 간단한 프런트엔드 질문 게시판 (로컬 저장)
+    // 질문 게시판 (DB 연동)
     const boardEl = document.getElementById('questionBoard');
     const form = document.getElementById('questionForm');
     const listEl = document.getElementById('questionList');
@@ -552,74 +552,61 @@
     const closeBtn = document.getElementById('questionCloseBtn');
     const isAdmin = boardEl?.dataset?.admin === 'true';
     const isAuthed = boardEl?.dataset?.auth === 'true';
-    const STORAGE_KEY = 'apple_science_questions_v2';
-    const DEVICE_KEY = 'apple_science_device_id';
-    const DEVICE_ID = (() => {
-        const existing = localStorage.getItem(DEVICE_KEY);
-        if (existing) return existing;
-        const v = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
-        localStorage.setItem(DEVICE_KEY, v);
-        return v;
-    })();
-    let activeQuestionId = null;
+    let posts = [];
+    let activePostId = null;
 
-    const loadQuestions = () => {
-        try {
-            return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        } catch (e) {
-            return [];
-        }
-    };
-    const saveQuestions = (items) => localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    const authRedirect = () => window.location.href = '/login';
+
+    if (editBtn) editBtn.style.display = 'none';
+    if (!isAuthed && commentForm) commentForm.style.display = 'none';
 
     const renderQuestions = () => {
         if (!listEl) return;
-        const items = loadQuestions();
         listEl.querySelectorAll('.question-row:not(.header)').forEach(el => el.remove());
         const fragment = document.createDocumentFragment();
-        items.forEach((q, idx) => {
-            const row = document.createElement('div');
-            row.className = 'question-row';
-            const btn = document.createElement('button');
-            btn.className = 'question-title-btn';
-            btn.type = 'button';
-            btn.textContent = q.title;
-            btn.addEventListener('click', () => openQuestion(q.id));
+        if (!posts.length) {
+            const empty = document.createElement('div');
+            empty.className = 'muted';
+            empty.style.padding = '12px';
+            empty.textContent = '등록된 질문이 없습니다. 첫 질문을 남겨보세요.';
+            fragment.appendChild(empty);
+        } else {
+            posts.forEach((q, idx) => {
+                const row = document.createElement('div');
+                row.className = 'question-row';
+                const btn = document.createElement('button');
+                btn.className = 'question-title-btn';
+                btn.type = 'button';
+                btn.textContent = q.title;
+                btn.addEventListener('click', () => openQuestion(q.id));
 
-            row.appendChild(Object.assign(document.createElement('div'), { className: 'pill-soft', textContent: idx + 1 }));
-            const desc = document.createElement('div');
-            desc.appendChild(btn);
-            desc.appendChild(Object.assign(document.createElement('div'), { className: 'question-meta', textContent: q.content }));
-            row.appendChild(desc);
-            row.appendChild(Object.assign(document.createElement('div'), { className: 'question-meta', textContent: q.date }));
-            fragment.appendChild(row);
-        });
+                row.appendChild(Object.assign(document.createElement('div'), { className: 'pill-soft', textContent: idx + 1 }));
+                const desc = document.createElement('div');
+                desc.appendChild(btn);
+                desc.appendChild(Object.assign(document.createElement('div'), { className: 'question-meta', textContent: q.content }));
+                row.appendChild(desc);
+                row.appendChild(Object.assign(document.createElement('div'), { className: 'question-meta', textContent: q.createdAt || '' }));
+                fragment.appendChild(row);
+            });
+        }
         listEl.appendChild(fragment);
     };
 
-    const openQuestion = (id) => {
-        const q = loadQuestions().find(item => item.id === id);
-        if (!q || !modal) return;
-        activeQuestionId = id;
-        modalTitle.textContent = q.title;
-        modalDate.textContent = q.date;
-        modalContent.textContent = q.content;
-        const isOwner = q.ownerId === DEVICE_ID;
-        deleteBtn.style.display = (isAdmin || isOwner) ? 'inline-flex' : 'none';
-        editBtn.style.display = (isAdmin || isOwner) ? 'inline-flex' : 'none';
-        renderComments(q);
-        modal.classList.add('open');
+    const fetchQuestions = async () => {
+        try {
+            const res = await fetch('/api/questions', { credentials: 'same-origin' });
+            if (!res.ok) throw new Error();
+            posts = await res.json();
+            renderQuestions();
+        } catch (e) {
+            console.error('질문 목록을 불러오지 못했습니다.', e);
+        }
     };
 
-    const closeQuestion = () => {
-        modal?.classList.remove('open');
-        activeQuestionId = null;
-    };
-
-    const renderComments = (q) => {
+    const renderComments = (detail) => {
         if (!commentList) return;
         commentList.innerHTML = '';
-        const items = q.comments || [];
+        const items = detail?.comments || [];
         if (!items.length) {
             const empty = document.createElement('div');
             empty.className = 'muted';
@@ -632,108 +619,142 @@
             el.className = 'comment';
             const meta = document.createElement('div');
             meta.className = 'comment-meta';
-            meta.textContent = `${c.date} · 익명`;
+            meta.textContent = `${c.createdAt || ''} · ${c.author || '익명'}`;
             const body = document.createElement('div');
             body.textContent = c.content;
             el.appendChild(body);
             el.appendChild(meta);
-            const isOwner = c.ownerId === DEVICE_ID;
-            if (isAdmin || isOwner) {
+            if (c.canDelete) {
                 const delBtn = document.createElement('button');
                 delBtn.className = 'cta ghost';
                 delBtn.type = 'button';
                 delBtn.textContent = '삭제';
                 delBtn.style.marginTop = '4px';
-                delBtn.addEventListener('click', () => {
-                    const items = loadQuestions();
-                    const idx = items.findIndex(q => q.id === activeQuestionId);
-                    if (idx === -1) return;
-                    items[idx].comments = (items[idx].comments || []).filter(cc => cc.id !== c.id);
-                    saveQuestions(items);
-                    renderComments(items[idx]);
-                    renderQuestions();
-                });
+                delBtn.addEventListener('click', () => deleteComment(c.id));
                 el.appendChild(delBtn);
             }
             commentList.appendChild(el);
         });
     };
 
-    if (!isAuthed) {
-        if (form) form.style.display = 'none';
-        if (commentForm) commentForm.style.display = 'none';
-        renderQuestions();
-        return;
-    }
+    const openQuestion = async (id) => {
+        try {
+            const res = await fetch(`/api/questions/${id}`, { credentials: 'same-origin' });
+            if (res.status === 401) return authRedirect();
+            if (res.status === 404) {
+                alert('삭제되었거나 존재하지 않는 게시글입니다.');
+                fetchQuestions();
+                return;
+            }
+            const detail = await res.json();
+            activePostId = id;
+            modalTitle.textContent = detail.post.title;
+            modalDate.textContent = detail.post.createdAt || '';
+            modalContent.textContent = detail.post.content;
+            deleteBtn.style.display = detail.post.canDelete ? 'inline-flex' : 'none';
+            renderComments(detail);
+            modal?.classList.add('open');
+        } catch (e) {
+            alert('게시글을 불러오지 못했습니다.');
+        }
+    };
 
-    form?.addEventListener('submit', (e) => {
+    const closeQuestion = () => {
+        modal?.classList.remove('open');
+        activePostId = null;
+    };
+
+    const deleteComment = async (commentId) => {
+        if (!activePostId) return;
+        try {
+            const res = await fetch(`/api/questions/${activePostId}/comments/${commentId}`, {
+                method: 'DELETE',
+                headers: { [window.csrfHeader || 'X-CSRF-TOKEN']: window.csrfToken || '' },
+                credentials: 'same-origin'
+            });
+            if (res.status === 401) return authRedirect();
+            if (!res.ok) return alert('댓글을 삭제하지 못했습니다.');
+            await openQuestion(activePostId);
+        } catch (e) {
+            alert('댓글을 삭제하지 못했습니다.');
+        }
+    };
+
+    form?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const title = titleEl?.value?.trim();
         const content = contentEl?.value?.trim();
         if (!title || !content) return;
-        const now = new Date();
-        const date = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
-        const items = loadQuestions();
-        items.unshift({ id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`, title, content, date, comments: [], ownerId: DEVICE_ID });
-        saveQuestions(items.slice(0, 50));
-        form.reset();
-        renderQuestions();
+        try {
+            const res = await fetch('/api/questions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [window.csrfHeader || 'X-CSRF-TOKEN']: window.csrfToken || ''
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ title, content })
+            });
+            if (res.status === 401) return authRedirect();
+            if (!res.ok) return alert('질문을 등록하지 못했습니다.');
+            const saved = await res.json();
+            form.reset();
+            posts.unshift(saved);
+            renderQuestions();
+            openQuestion(saved.id);
+        } catch (err) {
+            alert('질문을 등록하지 못했습니다.');
+        }
     });
 
-    commentForm?.addEventListener('submit', (e) => {
+    commentForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (!activeQuestionId) return;
+        if (!activePostId) return;
         const text = commentContent?.value?.trim();
         if (!text) return;
-        const now = new Date();
-        const date = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
-        const items = loadQuestions();
-        const idx = items.findIndex(q => q.id === activeQuestionId);
-        if (idx === -1) return;
-        const q = items[idx];
-        q.comments = q.comments || [];
-        q.comments.unshift({ id: `${Date.now()}-${Math.random()}`, content: text, date, ownerId: DEVICE_ID });
-        saveQuestions(items);
-        commentForm.reset();
-        renderComments(q);
-        renderQuestions();
+        try {
+            const res = await fetch(`/api/questions/${activePostId}/comments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [window.csrfHeader || 'X-CSRF-TOKEN']: window.csrfToken || ''
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ content: text })
+            });
+            if (res.status === 401) return authRedirect();
+            if (!res.ok) return alert('댓글을 등록하지 못했습니다.');
+            commentForm.reset();
+            await openQuestion(activePostId);
+        } catch (err) {
+            alert('댓글을 등록하지 못했습니다.');
+        }
     });
 
-    deleteBtn?.addEventListener('click', () => {
-        if (!activeQuestionId) return;
-        const items = loadQuestions();
-        const q = items.find(item => item.id === activeQuestionId);
-        const isOwner = q && q.ownerId === DEVICE_ID;
-        if (!isAdmin && !isOwner) return;
-        const filtered = items.filter(q => q.id !== activeQuestionId);
-        saveQuestions(filtered);
-        closeQuestion();
-        renderQuestions();
-    });
-
-    editBtn?.addEventListener('click', () => {
-        if (!activeQuestionId) return;
-        const items = loadQuestions();
-        const idx = items.findIndex(q => q.id === activeQuestionId);
-        if (idx === -1) return;
-        const q = items[idx];
-        const isOwner = q.ownerId === DEVICE_ID;
-        if (!isAdmin && !isOwner) return;
-        const newTitle = prompt("제목을 수정하세요", q.title);
-        if (newTitle === null) return;
-        const newContent = prompt("내용을 수정하세요", q.content);
-        if (newContent === null) return;
-        items[idx].title = newTitle.trim();
-        items[idx].content = newContent.trim();
-        saveQuestions(items);
-        openQuestion(q.id);
-        renderQuestions();
+    deleteBtn?.addEventListener('click', async () => {
+        if (!activePostId) return;
+        if (!confirm('이 게시글을 삭제하시겠습니까?')) return;
+        const targetId = activePostId;
+        try {
+            const res = await fetch(`/api/questions/${targetId}`, {
+                method: 'DELETE',
+                headers: { [window.csrfHeader || 'X-CSRF-TOKEN']: window.csrfToken || '' },
+                credentials: 'same-origin'
+            });
+            if (res.status === 401) return authRedirect();
+            if (!res.ok) return alert('게시글을 삭제하지 못했습니다.');
+            closeQuestion();
+            posts = posts.filter(p => p.id !== targetId);
+            renderQuestions();
+        } catch (e) {
+            alert('게시글을 삭제하지 못했습니다.');
+        }
     });
 
     closeBtn?.addEventListener('click', closeQuestion);
     modal?.querySelector('.backdrop')?.addEventListener('click', closeQuestion);
 
-    renderQuestions();
+    fetchQuestions();
 </script>
 </body>
 </html>

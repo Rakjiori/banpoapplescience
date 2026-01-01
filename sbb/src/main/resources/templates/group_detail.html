@@ -2,7 +2,7 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
       th:replace="layout :: layout(~{::body})">
 <body>
-<div>
+<div id="groupPage" th:data-group-id="${group.id}">
     <section class="group-hero" style="text-align:center; padding:24px 12px;">
         <a href="/groups" class="ghost-link" style="position:absolute; left:16px; top:16px;">← 그룹 목록</a>
         <h1 class="page-title" th:text="${group.name}" style="font-size:28px; margin:6px 0;">그룹</h1>
@@ -12,14 +12,20 @@
     </section>
 
     <div class="group-grid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; margin-bottom:16px;">
-        <div class="card" style="min-height:200px; padding:14px; background:linear-gradient(135deg,#fff7ed,#fffbeb);">
+        <div class="card" style="min-height:200px; padding:14px; background:#fff; border:1px solid #e2e8f0; box-shadow:0 6px 18px rgba(15,23,42,0.06);">
             <div class="group-accordion__header" style="justify-content:space-between; align-items:center;">
                 <div>
                     <div class="title-md">공지사항</div>
                     <div class="group-accordion__meta">최근 공지를 확인하세요.</div>
                 </div>
             </div>
-            <div class="group-accordion__body" style="margin-top:8px; max-height:240px; overflow:auto;">
+            <form th:if="${canManage}" id="noticeForm" th:action="@{/groups/{gid}/notices(gid=${group.id})}" method="post" class="group-inline-form" style="margin-top:8px; flex-wrap:wrap; gap:6px;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <input type="text" name="title" placeholder="공지 제목" required class="group-input" style="flex:1;">
+                <input type="text" name="content" placeholder="내용 (선택)" class="group-input" style="flex:1;">
+                <button type="submit" class="btn">추가</button>
+            </form>
+            <div id="noticeList" class="group-accordion__body" style="margin-top:8px; max-height:240px; overflow:auto;">
                 <div th:if="${#lists.isEmpty(groupNotices)}" class="muted">등록된 공지가 없습니다.</div>
                 <div th:each="n : ${groupNotices}" class="group-tile">
                     <div style="font-weight:700;" th:text="${n.title}">공지 제목</div>
@@ -36,21 +42,22 @@
                     <div style="white-space:pre-wrap; margin-top:6px;" th:text="${n.content}">내용</div>
                 </div>
             </div>
-            <form th:if="${canManage}" th:action="@{/groups/{gid}/notices(gid=${group.id})}" method="post" class="group-inline-form" style="margin-top:8px; flex-wrap:wrap; gap:6px;">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                <input type="text" name="title" placeholder="공지 제목" required class="group-input" style="flex:1;">
-                <input type="text" name="content" placeholder="내용 (선택)" class="group-input" style="flex:1;">
-                <button type="submit" class="btn">추가</button>
-            </form>
         </div>
-        <div class="card" style="min-height:200px; padding:14px; background:linear-gradient(135deg,#ecfdf3,#e0f7e9);">
+        <div class="card" style="min-height:200px; padding:14px; background:#fff; border:1px solid #e2e8f0; box-shadow:0 6px 18px rgba(15,23,42,0.06);">
             <div class="group-accordion__header" style="justify-content:space-between; align-items:center;">
                 <div>
                     <div class="title-md">그룹 과제</div>
                     <div class="group-accordion__meta">과제와 마감일을 관리하세요.</div>
                 </div>
             </div>
-            <div class="group-accordion__body" style="margin-top:8px; max-height:240px; overflow:auto;">
+            <form th:if="${canManage}" id="taskForm" th:action="@{/groups/{gid}/tasks(gid=${group.id})}" method="post" class="group-inline-form" style="margin-top:8px; flex-wrap:wrap; gap:6px;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <input type="text" name="title" placeholder="과제 제목" required class="group-input" style="flex:1;">
+                <input type="text" name="description" placeholder="내용 (선택)" class="group-input" style="flex:1;">
+                <input type="date" name="dueDate" class="group-input" style="flex:1;">
+                <button type="submit" class="btn">추가</button>
+            </form>
+            <div id="taskList" class="group-accordion__body" style="margin-top:8px; max-height:240px; overflow:auto;">
                 <div th:if="${#lists.isEmpty(groupTasks)}" class="muted">등록된 과제가 없습니다.</div>
                 <div th:each="t : ${groupTasks}" class="group-tile">
                     <div style="font-weight:700;" th:text="${t.title}">제목</div>
@@ -66,42 +73,6 @@
                     </div>
                     <div th:if="${t.description}" style="white-space:pre-wrap; margin-top:6px;" th:text="${t.description}">desc</div>
                 </div>
-            </div>
-            <form th:if="${canManage}" th:action="@{/groups/{gid}/tasks(gid=${group.id})}" method="post" class="group-inline-form" style="margin-top:8px; flex-wrap:wrap; gap:6px;">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                <input type="text" name="title" placeholder="과제 제목" required class="group-input" style="flex:1;">
-                <input type="text" name="description" placeholder="내용 (선택)" class="group-input" style="flex:1;">
-                <input type="date" name="dueDate" class="group-input" style="flex:1;">
-                <button type="submit" class="btn">추가</button>
-            </form>
-        </div>
-    </div>
-
-    <div class="group-accordion is-open">
-        <button type="button" class="group-accordion__header">
-            <div>
-                <div>멤버 목록</div>
-                <div class="group-accordion__meta">새 멤버 가입 순서대로 표시됩니다.</div>
-            </div>
-            <span class="group-accordion__chevron">⌄</span>
-        </button>
-        <div class="group-accordion__body">
-            <div th:if="${#lists.isEmpty(members)}" class="muted">멤버가 없습니다.</div>
-            <div th:each="m : ${members}" class="member-row">
-                <div>
-                    <div class="title-md" th:text="${m.user.username}">username</div>
-                    <div class="member-meta">
-                        <span th:text="${m.role}">ROLE</span>
-                        · <span th:text="${#temporals.format(m.joinedAt, 'yyyy.MM.dd HH:mm')}">date</span>
-                    </div>
-                </div>
-                <form th:if="${isOwner and m.user.id != group.owner.id}"
-                      th:action="@{/groups/{groupId}/members/{memberId}/remove(groupId=${group.id},memberId=${m.id})}"
-                      method="post"
-                      onsubmit="return confirm('해당 멤버를 추방할까요?');">
-                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                    <button type="submit" class="btn btn-outline" style="padding:6px 10px;">삭제</button>
-                </form>
             </div>
         </div>
     </div>
@@ -253,6 +224,141 @@
                         row.style.display = text.includes(term) ? 'flex' : 'none';
                     });
                 });
+            }
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const page = document.getElementById('groupPage');
+            const groupId = page?.dataset?.groupId;
+            const noticeForm = document.getElementById('noticeForm');
+            const taskForm = document.getElementById('taskForm');
+            const noticeList = document.getElementById('noticeList');
+            const taskList = document.getElementById('taskList');
+            const csrfHeader = window.csrfHeader || 'X-CSRF-TOKEN';
+            const csrfToken = window.csrfToken || '';
+
+            const renderNotices = (items = []) => {
+                if (!noticeList) return;
+                noticeList.innerHTML = '';
+                if (!items.length) {
+                    noticeList.innerHTML = '<div class=\"muted\">등록된 공지가 없습니다.</div>';
+                    return;
+                }
+                items.forEach(n => {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'group-tile';
+                    wrapper.innerHTML = `
+                        <div style=\"font-weight:700;\">${n.title || ''}</div>
+                        <div class=\"group-tile__meta\">
+                            <span>${n.createdAt || ''}</span>
+                            ${n.canManage ? `<form data-id=\"${n.id}\" class=\"notice-delete\" method=\"post\" style=\"margin:0;\">
+                                <button type=\"submit\" class=\"btn btn-outline\" style=\"padding:4px 8px;\">삭제</button>
+                            </form>` : ''}
+                        </div>
+                        <div style=\"white-space:pre-wrap; margin-top:6px;\">${n.content || ''}</div>
+                    `;
+                    noticeList.appendChild(wrapper);
+                    const delForm = wrapper.querySelector('form.notice-delete');
+                    if (delForm) {
+                        delForm.addEventListener('submit', async (e) => {
+                            e.preventDefault();
+                            if (!confirm('공지를 삭제할까요?')) return;
+                            await fetch(`/groups/${groupId}/notices/${n.id}/delete`, {
+                                method: 'POST',
+                                headers: { [csrfHeader]: csrfToken }
+                            });
+                            loadNotices();
+                        });
+                    }
+                });
+            };
+
+            const renderTasks = (items = []) => {
+                if (!taskList) return;
+                taskList.innerHTML = '';
+                if (!items.length) {
+                    taskList.innerHTML = '<div class=\"muted\">등록된 과제가 없습니다.</div>';
+                    return;
+                }
+                items.forEach(t => {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'group-tile';
+                    wrapper.innerHTML = `
+                        <div style=\"font-weight:700;\">${t.title || ''}</div>
+                        <div class=\"group-tile__meta\">
+                            <span>${t.dueDate || '마감 없음'}</span>
+                            ${t.canManage ? `<form data-id=\"${t.id}\" class=\"task-delete\" method=\"post\" style=\"margin:0;\">
+                                <button type=\"submit\" class=\"btn btn-outline\" style=\"padding:4px 8px;\">삭제</button>
+                            </form>` : ''}
+                        </div>
+                        ${t.description ? `<div style=\"white-space:pre-wrap; margin-top:6px;\">${t.description}</div>` : ''}
+                    `;
+                    taskList.appendChild(wrapper);
+                    const delForm = wrapper.querySelector('form.task-delete');
+                    if (delForm) {
+                        delForm.addEventListener('submit', async (e) => {
+                            e.preventDefault();
+                            if (!confirm('과제를 삭제할까요?')) return;
+                            await fetch(`/groups/${groupId}/tasks/${t.id}/delete`, {
+                                method: 'POST',
+                                headers: { [csrfHeader]: csrfToken }
+                            });
+                            loadTasks();
+                        });
+                    }
+                });
+            };
+
+            const loadNotices = async () => {
+                if (!groupId) return;
+                const res = await fetch(`/api/groups/${groupId}/notices`, { credentials: 'same-origin' });
+                if (!res.ok) return;
+                const items = await res.json();
+                renderNotices(items);
+            };
+
+            const loadTasks = async () => {
+                if (!groupId) return;
+                const res = await fetch(`/api/groups/${groupId}/tasks`, { credentials: 'same-origin' });
+                if (!res.ok) return;
+                const items = await res.json();
+                renderTasks(items);
+            };
+
+            noticeForm?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(noticeForm);
+                const res = await fetch(noticeForm.action, {
+                    method: 'POST',
+                    headers: { [csrfHeader]: csrfToken },
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+                if (res.ok) {
+                    noticeForm.reset();
+                    await loadNotices();
+                }
+            });
+
+            taskForm?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(taskForm);
+                const res = await fetch(taskForm.action, {
+                    method: 'POST',
+                    headers: { [csrfHeader]: csrfToken },
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+                if (res.ok) {
+                    taskForm.reset();
+                    await loadTasks();
+                }
+            });
+
+            if (groupId) {
+                loadNotices();
+                loadTasks();
             }
         });
     </script>

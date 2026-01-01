@@ -228,3 +228,23 @@ CREATE TABLE IF NOT EXISTS question_discussion (
     CONSTRAINT fk_question_discussion_question FOREIGN KEY (question_id) REFERENCES quiz_question(id),
     CONSTRAINT fk_question_discussion_user FOREIGN KEY (user_id) REFERENCES site_user(id)
 );
+
+-- 질문 게시판 (홈 게시판)
+CREATE TABLE IF NOT EXISTS question_post (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    author_id BIGINT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_question_post_author FOREIGN KEY (author_id) REFERENCES site_user(id)
+);
+
+CREATE TABLE IF NOT EXISTS question_comment (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    post_id BIGINT NOT NULL,
+    author_id BIGINT,
+    content TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_question_comment_post FOREIGN KEY (post_id) REFERENCES question_post(id),
+    CONSTRAINT fk_question_comment_author FOREIGN KEY (author_id) REFERENCES site_user(id)
+);

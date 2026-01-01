@@ -39,20 +39,22 @@ public class GroupApiService {
     }
 
     @Transactional(readOnly = true)
-    public List<GroupNoticeDto> notices(Long groupId) {
+    public List<GroupNoticeDto> notices(Long groupId, SiteUser actor) {
         StudyGroup group = studyGroupRepository.findById(groupId).orElse(null);
         if (group == null) return List.of();
+        boolean canManage = group.getOwner() != null && actor != null && group.getOwner().getId().equals(actor.getId());
         return groupNoticeRepository.findByGroupOrderByCreatedAtDesc(group).stream()
-                .map(this::toNoticeDto)
+                .map(n -> toNoticeDto(n, canManage))
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public List<GroupTaskDto> tasks(Long groupId) {
+    public List<GroupTaskDto> tasks(Long groupId, SiteUser actor) {
         StudyGroup group = studyGroupRepository.findById(groupId).orElse(null);
         if (group == null) return List.of();
+        boolean canManage = group.getOwner() != null && actor != null && group.getOwner().getId().equals(actor.getId());
         return groupTaskRepository.findByGroupOrderByDueDateAscCreatedAtDesc(group).stream()
-                .map(this::toTaskDto)
+                .map(t -> toTaskDto(t, canManage))
                 .toList();
     }
 
@@ -61,16 +63,16 @@ public class GroupApiService {
         return new GroupDto(g.getId(), g.getName(), g.getJoinCode(), memberCount);
     }
 
-    private GroupNoticeDto toNoticeDto(GroupNotice n) {
+    private GroupNoticeDto toNoticeDto(GroupNotice n, boolean canManage) {
         String created = n.getCreatedAt() != null ? n.getCreatedAt().toLocalDate().toString() : null;
         String author = n.getAuthor() != null ? n.getAuthor().getUsername() : null;
-        return new GroupNoticeDto(n.getId(), n.getTitle(), n.getContent(), created, author);
+        return new GroupNoticeDto(n.getId(), n.getTitle(), n.getContent(), created, author, canManage);
     }
 
-    private GroupTaskDto toTaskDto(GroupTask t) {
+    private GroupTaskDto toTaskDto(GroupTask t, boolean canManage) {
         String due = t.getDueDate() != null ? t.getDueDate().toString() : null;
         String created = t.getCreatedAt() != null ? t.getCreatedAt().toLocalDate().toString() : null;
         String author = t.getAuthor() != null ? t.getAuthor().getUsername() : null;
-        return new GroupTaskDto(t.getId(), t.getTitle(), t.getDescription(), due, created, author);
+        return new GroupTaskDto(t.getId(), t.getTitle(), t.getDescription(), due, created, author, canManage);
     }
 }

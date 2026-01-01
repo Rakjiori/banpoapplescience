@@ -3,6 +3,9 @@ package com.example.sbb.service;
 import com.example.sbb.domain.AdminNote;
 import com.example.sbb.domain.AdminNoteComment;
 import com.example.sbb.domain.user.SiteUser;
+import com.example.sbb.service.WebPushService.PushPayload;
+import com.example.sbb.service.WebPushService;
+import com.example.sbb.domain.user.UserService;
 import com.example.sbb.repository.AdminNoteCommentRepository;
 import com.example.sbb.repository.AdminNoteRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +21,8 @@ public class AdminNoteService {
 
     private final AdminNoteRepository adminNoteRepository;
     private final AdminNoteCommentRepository adminNoteCommentRepository;
+    private final WebPushService webPushService;
+    private final UserService userService;
 
     public List<AdminNote> list() {
         return adminNoteRepository.findAllByOrderByCreatedAtDesc();
@@ -37,7 +42,9 @@ public class AdminNoteService {
         note.setTitle(title.trim());
         note.setContent(content.trim());
         note.setAuthor(author);
-        return adminNoteRepository.save(note);
+        AdminNote saved = adminNoteRepository.save(note);
+        notifyAdmins(saved);
+        return saved;
     }
 
     @Transactional
@@ -74,4 +81,18 @@ public class AdminNoteService {
     public void deleteComment(Long commentId) {
         adminNoteCommentRepository.deleteById(commentId);
     }
+
+    private void notifyAdmins(AdminNote note) {
+        if (note == null) return;
+        var admins = userService.findAdminsAndRoot();
+        if (admins == null || admins.isEmpty()) return;
+        var payload = new AdminNotePayload(
+                "[관리자 공지] " + note.getTitle(),
+                note.getAuthor() != null ? note.getAuthor().getUsername() : "",
+                "/admin/notes/" + note.getId()
+        );
+        admins.forEach(admin -> webPushService.pushNotifications(admin, List.of(payload)));
+    }
+
+    private record AdminNotePayload(String title, String body, String url) implements PushPayload {}
 }

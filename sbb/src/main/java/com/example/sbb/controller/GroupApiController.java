@@ -34,12 +34,14 @@ public class GroupApiController {
     @GetMapping("/{groupId}/notices")
     public ResponseEntity<List<GroupNoticeDto>> notices(@PathVariable Long groupId, Principal principal) {
         if (principal == null) return ResponseEntity.status(401).build();
-        return ResponseEntity.ok(groupApiService.notices(groupId));
+        SiteUser user = userService.getUser(principal.getName());
+        return ResponseEntity.ok(groupApiService.notices(groupId, user));
     }
 
     @GetMapping("/{groupId}/tasks")
     public ResponseEntity<List<GroupTaskDto>> tasks(@PathVariable Long groupId, Principal principal) {
         if (principal == null) return ResponseEntity.status(401).build();
-        return ResponseEntity.ok(groupApiService.tasks(groupId));
+        SiteUser user = userService.getUser(principal.getName());
+        return ResponseEntity.ok(groupApiService.tasks(groupId, user));
     }
 }

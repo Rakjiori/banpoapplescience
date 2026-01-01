@@ -1676,7 +1676,7 @@ select:focus {
 .glow-btn::after {
   content: "";
   position: absolute;
-  inset: -60%;
+  inset: -30% auto auto -20%;
   background: conic-gradient(from 180deg, rgba(255,255,255,0.25), rgba(255,255,255,0));
   animation: rotate 6s linear infinite;
   pointer-events: none;

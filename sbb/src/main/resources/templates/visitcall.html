@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout :: layout (~{::body})"
+      th:with="content='this :: content'">
+
+<body>
+<div th:fragment="content">
+    <div class="container" style="max-width:420px;">
+        <div class="card" style="padding:28px 26px;">
+            <h1 class="page-title" style="margin-bottom:6px; text-align:center;">상담 예약</h1>
+            <p style="text-align:center; color:#6b7280; font-size:14px; margin-bottom:20px;">
+                전화/방문 상담을 예약하면 관리자에게 바로 전달됩니다.
+            </p>
+
+            <form id="visitCallForm" style="display:flex; flex-direction:column; gap:12px;">
+                <div>
+                    <label for="type" style="font-size:14px; font-weight:500; margin-bottom:4px; display:block;">
+                        상담 종류
+                    </label>
+                    <select id="type" name="type" required>
+                        <option value="CALL">전화 요청</option>
+                        <option value="VISIT">방문 예약</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="phone" style="font-size:14px; font-weight:500; margin-bottom:4px; display:block;">
+                        연락처
+                    </label>
+                    <input type="tel" id="phone" name="phone" placeholder="예: 010-1234-5678" required>
+                </div>
+
+                <div>
+                    <label for="message" style="font-size:14px; font-weight:500; margin-bottom:4px; display:block;">
+                        메모 (선택)
+                    </label>
+                    <textarea id="message" name="message" rows="3" placeholder="희망 시간이나 방문 일정을 적어주세요"></textarea>
+                </div>
+
+                <button type="submit" class="btn" style="width:100%; margin-top:10px;">
+                    요청 보내기
+                </button>
+            </form>
+
+            <div style="margin-top:12px; color:#6b7280; font-size:13px; text-align:center;">
+                애플과학 ☎ 02-532-1706
+            </div>
+        </div>
+
+        <p style="text-align:center; font-size:13px; color:#6b7280; margin-top:10px;">
+            로그인된 상태에서만 예약이 완료됩니다.
+        </p>
+    </div>
+</div>
+</body>
+</html>
