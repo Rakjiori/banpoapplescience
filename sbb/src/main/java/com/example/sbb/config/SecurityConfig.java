@@ -11,7 +11,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.RegexRequestMatcher;
 
 @Configuration
 @EnableMethodSecurity
@@ -28,6 +28,12 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/api/notices/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/schedules/**").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/notices/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_ROOT")
+                    .requestMatchers(HttpMethod.PUT, "/api/notices/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_ROOT")
+                    .requestMatchers(HttpMethod.DELETE, "/api/notices/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_ROOT")
+                    .requestMatchers(HttpMethod.DELETE, "/api/reviews/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_ROOT")
+                    .requestMatchers(HttpMethod.POST, "/api/schedules/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_ROOT")
+                    .requestMatchers(HttpMethod.DELETE, "/api/schedules/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_ROOT")
                     .requestMatchers("/api/groups/**").authenticated()
                     .requestMatchers("/admin/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_ROOT")
                     .anyRequest().authenticated()
@@ -40,8 +46,8 @@ public class SecurityConfig {
                     .permitAll()
             )
             .logout(logout -> logout
-                    // ✅ GET 요청으로 로그아웃도 허용 (개발환경 편의)
-                    .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                    // ✅ GET 로그아웃 허용 (AntPathRequestMatcher 제거)
+                    .logoutRequestMatcher(new RegexRequestMatcher("^/logout$", "GET"))
                     .logoutSuccessUrl("/")   // 로그아웃 후 홈으로 이동
                     .invalidateHttpSession(true)
                     .deleteCookies("JSESSIONID")

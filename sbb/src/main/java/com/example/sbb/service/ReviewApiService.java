@@ -24,6 +24,14 @@ public class ReviewApiService {
                 .toList();
     }
 
+    @Transactional
+    public void delete(Long id) {
+        if (id == null) return;
+        if (courseReviewRepository.existsById(id)) {
+            courseReviewRepository.deleteById(id);
+        }
+    }
+
     private ReviewDto toDto(CourseReview r) {
         String created = r.getCreatedAt() != null ? r.getCreatedAt().toLocalDate().toString() : null;
         return new ReviewDto(r.getId(), r.getAuthor(), r.getRating(), r.getContent(), created);
