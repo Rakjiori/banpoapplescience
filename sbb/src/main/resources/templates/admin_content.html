@@ -278,8 +278,25 @@
                     <label>게시일(선택)
                         <input type="date" name="publishedAt">
                     </label>
-                    <label>내용
-                        <textarea name="content" rows="4" placeholder="공지 내용을 입력하세요" required></textarea>
+                    <label style="display:block;">내용
+                        <div class="notice-editor-wrap">
+                            <div class="editor-toolbar">
+                                <button type="button" data-cmd="bold">굵게</button>
+                                <button type="button" data-cmd="underline">밑줄</button>
+                                <button type="button" data-cmd="italic">기울임</button>
+                                <button type="button" data-cmd="insertUnorderedList">불릿</button>
+                                <button type="button" data-cmd="insertOrderedList">번호</button>
+                                <select data-cmd="fontSize" id="fontSizeSelect">
+                                    <option value="">글자 크기</option>
+                                    <option value="3">보통</option>
+                                    <option value="4">조금 큼</option>
+                                    <option value="5">크게</option>
+                                </select>
+                                <button type="button" data-cmd="removeFormat">서식 초기화</button>
+                            </div>
+                            <div id="noticeEditor" class="editor-area" contenteditable="true" data-placeholder="공지 내용을 입력하세요. (굵게, 밑줄, 글자 크기 등 서식 적용 가능)"></div>
+                        </div>
+                        <textarea name="content" id="noticeContentInput" hidden required></textarea>
                     </label>
                     <div style="display:flex; justify-content:flex-end;">
                         <button type="submit" class="btn">추가</button>
@@ -294,7 +311,7 @@
                     <div>
                         <div class="title-md" th:text="${n.title}">제목</div>
                         <div class="muted" th:text="${n.publishedAt != null ? n.publishedAt : #temporals.format(n.createdAt, 'yyyy-MM-dd')}">날짜</div>
-                        <div th:text="${n.content}" style="margin-top:6px; white-space:pre-wrap;"></div>
+                        <div th:utext="${n.content}" style="margin-top:6px; white-space:pre-wrap;"></div>
                     </div>
                     <form th:action="@{/admin/content/announcements/{id}/delete(id=${n.id})}" method="post"
                           onsubmit="return confirm('삭제할까요?');">
@@ -340,6 +357,24 @@
   }
   .admin-modal__header { display:flex; align-items:center; justify-content:space-between; gap:12px; position:sticky; top:0; background:#fff; padding-bottom:8px; z-index:2; }
   .admin-modal__body { margin-top:10px; display:flex; flex-direction:column; gap:12px; }
+  .editor-toolbar {
+    display:flex; gap:8px; flex-wrap:wrap; margin:8px 0;
+    position:sticky; top:0; background:#fff; padding:8px 0; z-index:2;
+  }
+  .editor-toolbar button, .editor-toolbar select {
+    padding:6px 10px; border:1px solid #cbd5e1; border-radius:8px; background:#f8fafc; cursor:pointer; font-weight:700;
+  }
+  .notice-editor-wrap {
+    border:1px solid #e2e8f0; border-radius:12px; padding:0 10px 10px; background:#fff; max-height:320px; overflow:auto;
+  }
+  .editor-area {
+    min-height:160px; border:1px solid #e2e8f0; border-radius:12px; padding:10px;
+    background:#f8fafc; line-height:1.6; font-size:14px;
+  }
+  .editor-area:empty:before {
+    content: attr(data-placeholder);
+    color:#94a3b8;
+  }
 </style>
 
 <script>
@@ -384,6 +419,68 @@
   document.addEventListener('keydown', (e)=>{
     if(e.key === 'Escape'){
       document.querySelectorAll('.admin-modal').forEach(m=> closeModal(m));
+    }
+  });
+
+  // 공지사항 리치 텍스트 편집기
+  const noticeEditor = document.getElementById('noticeEditor');
+  const noticeContentInput = document.getElementById('noticeContentInput');
+  const noticeForm = noticeEditor?.closest('form');
+  const fontSizeSelect = document.getElementById('fontSizeSelect');
+  let savedRange = null;
+
+  function saveSelection(){
+    const sel = window.getSelection();
+    if(sel && sel.rangeCount > 0){
+      savedRange = sel.getRangeAt(0);
+    }
+  }
+  function restoreSelection(){
+    if(savedRange){
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(savedRange);
+    }
+  }
+  function syncNoticeContent(){
+    if(noticeContentInput && noticeEditor){
+      noticeContentInput.value = noticeEditor.innerHTML.trim();
+    }
+  }
+  document.querySelectorAll('.editor-toolbar [data-cmd]').forEach(btn=>{
+    const handler = ()=>{
+      const cmd = btn.dataset.cmd;
+      const value = btn.tagName === 'SELECT' ? btn.value : undefined;
+      if(!cmd) return;
+      restoreSelection();
+      noticeEditor?.focus();
+      document.execCommand(cmd, false, value || null);
+      syncNoticeContent();
+      if(btn.tagName === 'SELECT'){
+        btn.blur();
+      }
+    };
+    if(btn.tagName === 'SELECT'){
+      btn.addEventListener('change', ()=>{
+        handler();
+        if(btn === fontSizeSelect) btn.value = ''; // 항상 placeholder로 되돌려 다음 선택 가능
+      });
+    } else {
+      btn.addEventListener('click', handler);
+    }
+  });
+  noticeEditor?.addEventListener('keyup', saveSelection);
+  noticeEditor?.addEventListener('mouseup', saveSelection);
+  noticeEditor?.addEventListener('input', ()=>{
+    saveSelection();
+    syncNoticeContent();
+  });
+  noticeEditor?.addEventListener('blur', syncNoticeContent);
+  noticeForm?.addEventListener('submit', (e)=>{
+    syncNoticeContent();
+    if(noticeContentInput?.value === ''){
+      e.preventDefault();
+      alert('공지 내용을 입력해주세요.');
     }
   });
 </script>

@@ -19,7 +19,7 @@
         <article class="card" th:each="n : ${announcements}" style="padding:14px; background:linear-gradient(160deg, #ffffff, #f5f8ff); border:1px solid #e2e8f0;">
             <div class="muted" th:text="${n.publishedAt != null ? n.publishedAt : #temporals.format(n.createdAt, 'yyyy.MM.dd')}">날짜</div>
             <h2 style="margin:6px 0; font-size:18px;" th:text="${n.title}">공지 제목</h2>
-            <p class="muted" style="margin:0;" th:text="${n.content}">내용</p>
+            <p class="muted" style="margin:0;" th:utext="${n.content}">내용</p>
         </article>
     </div>
 </div>

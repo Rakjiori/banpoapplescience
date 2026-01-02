@@ -92,11 +92,15 @@
         .time-row:last-child { border-bottom:none; }
         .label-ghost { padding:4px 8px; background:#0f172a; color:#e2e8f0; border-radius:10px; font-size:12px; }
 
+        .notice-grid-wrap { max-height: 360px; overflow:auto; padding-right:6px; }
         .notice-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
-        .notice-card { border:1px solid #d9e4f2; border-radius:14px; padding:14px; background: linear-gradient(160deg, #ffffff, #f5f8ff); box-shadow:0 12px 24px rgba(15,23,42,0.06); }
-        .notice-date { font-size:12px; color:#64748b; }
-        .notice-title { font-weight:800; margin:6px 0; color:#0f172a; }
-        .notice-body { color:#475569; font-size:13px; }
+        .notice-card { border:1px solid #d9e4f2; border-radius:14px; padding:16px; background:#ffffff; box-shadow:0 12px 28px rgba(15,23,42,0.08); position:relative; overflow:hidden; display:flex; flex-direction:column; gap:8px; cursor:pointer; transition:0.16s ease; }
+        .notice-card::after { content:''; position:absolute; inset:-18% auto auto -8%; width:120px; height:120px; background:radial-gradient(circle, rgba(155,215,255,0.24), transparent 55%); transform:rotate(4deg); filter: blur(2px); }
+        .notice-card:hover { transform: translateY(-2px); box-shadow:0 16px 32px rgba(15,23,42,0.12); }
+        .notice-chip { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; background:rgba(155,215,255,0.32); color:#0f172a; font-weight:800; font-size:12px; width:max-content; }
+        .notice-date { font-size:12px; color:#1e3a8a; font-weight:800; position:relative; }
+        .notice-title { font-weight:900; margin:4px 0; color:#0f172a; font-size:16px; line-height:1.45; position:relative; }
+        .notice-body { color:#0f172a; font-size:14px; line-height:1.6; white-space:pre-line; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; position:relative; }
 
         .review-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
         .review-card { border:1px solid #d9e4f2; border-radius:14px; padding:16px; background:#ffffff; box-shadow:0 12px 28px rgba(15,23,42,0.08); position:relative; overflow:hidden; }
@@ -262,15 +266,37 @@
                 </div>
                 <a class="btn btn-outline" href="/announcements" style="padding:8px 12px;">전체 공지 보기 →</a>
             </div>
-            <div class="notice-grid" th:if="${not #lists.isEmpty(announcements)}">
-                <article class="notice-card" th:each="n : ${announcements}">
-                    <div class="notice-date" th:text="${n.publishedAt != null ? n.publishedAt : #temporals.format(n.createdAt, 'yyyy.MM.dd')}">날짜</div>
-                    <div class="notice-title" th:text="${n.title}">공지 제목</div>
-                    <div class="notice-body" th:text="${n.content}">내용</div>
-                </article>
+            <div class="notice-grid-wrap" th:if="${not #lists.isEmpty(announcements)}">
+                <div class="notice-grid">
+                    <article class="notice-card"
+                             th:each="n : ${announcements}"
+                             th:with="noticeDate=${n.publishedAt != null ? n.publishedAt : #temporals.format(n.createdAt, 'yyyy.MM.dd')}"
+                             th:data-title="${n.title}"
+                             th:data-content="${n.content}"
+                             th:data-date="${noticeDate}"
+                             role="button" tabindex="0">
+                        <div class="notice-chip">공지</div>
+                        <div class="notice-title" th:text="${n.title}">공지 제목</div>
+                        <div class="notice-body" th:utext="${n.content}">내용</div>
+                        <div class="notice-date" th:text="${noticeDate}">날짜</div>
+                    </article>
+                </div>
             </div>
             <div th:if="${#lists.isEmpty(announcements)}" class="muted">공지사항이 준비 중입니다.</div>
         </section>
+
+        <div class="review-modal" id="noticeModal" hidden>
+            <div class="review-modal__backdrop"></div>
+            <div class="review-modal__card">
+                <button class="review-modal__close" type="button" aria-label="닫기">✕</button>
+                <div class="review-modal__header">
+                    <div class="pill">공지사항</div>
+                    <h2 id="noticeModalTitle" style="margin:6px 0 0; font-size:18px;">공지 제목</h2>
+                    <p class="section-sub" id="noticeModalDate" style="margin:4px 0 0;">날짜</p>
+                </div>
+                <div class="review-modal__body" id="noticeModalContent">내용</div>
+            </div>
+        </div>
 
         <section class="landing-section" id="reviews">
             <div class="section-head">
@@ -530,6 +556,36 @@
                 modalContent.textContent = content;
                 modalRating.textContent = '★'.repeat(rating) + '☆'.repeat(5 - rating);
                 reviewModal.removeAttribute('hidden');
+            });
+        });
+    }
+
+    // 공지사항 팝업 (후기 모달 스타일 재사용)
+    const noticeModal = document.getElementById('noticeModal');
+    if (noticeModal) {
+        const noticeTitle = document.getElementById('noticeModalTitle');
+        const noticeDate = document.getElementById('noticeModalDate');
+        const noticeContent = document.getElementById('noticeModalContent');
+        const closeNoticeModal = () => noticeModal.setAttribute('hidden', '');
+        const openNoticeModal = (card) => {
+            if (!card) return;
+            noticeTitle.textContent = card.dataset.title || '';
+            noticeDate.textContent = card.dataset.date || '';
+            noticeContent.innerHTML = (card.dataset.content || '').trim();
+            noticeModal.removeAttribute('hidden');
+        };
+
+        noticeModal.querySelector('.review-modal__backdrop')?.addEventListener('click', closeNoticeModal);
+        noticeModal.querySelector('.review-modal__close')?.addEventListener('click', closeNoticeModal);
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeNoticeModal(); });
+        document.querySelectorAll('.notice-card').forEach(card => {
+            const open = () => openNoticeModal(card);
+            card.addEventListener('click', open);
+            card.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    open();
+                }
             });
         });
     }
