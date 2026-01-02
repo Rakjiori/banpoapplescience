@@ -91,22 +91,27 @@ public class GroupController {
                          RedirectAttributes rttr) {
         if (principal == null) return "redirect:/login";
         SiteUser user = userService.getUser(principal.getName());
+        boolean isAdmin = userService.isAdminOrRoot(user);
         List<GroupMember> memberships = groupService.memberships(user);
         Optional<StudyGroup> groupOpt = memberships.stream()
                 .map(GroupMember::getGroup)
                 .filter(g -> g.getId().equals(id))
                 .findFirst();
-        if (groupOpt.isEmpty()) {
+        if (groupOpt.isEmpty() && !isAdmin) {
             rttr.addFlashAttribute("error", "그룹에 속해 있지 않습니다.");
             return "redirect:/groups";
         }
-        StudyGroup group = groupOpt.get();
+        StudyGroup group = groupOpt.orElseGet(() -> groupService.findById(id));
+        if (group == null) {
+            rttr.addFlashAttribute("error", "그룹을 찾을 수 없습니다.");
+            return "redirect:/groups";
+        }
         model.addAttribute("group", group);
         model.addAttribute("sharedQuestions", groupService.listShared(group));
         model.addAttribute("memberships", memberships);
         model.addAttribute("members", groupService.membersOf(group));
         model.addAttribute("isOwner", groupService.isOwner(group, user));
-        boolean canManage = groupService.isOwner(group, user) || userService.isAdminOrRoot(user);
+        boolean canManage = groupService.isOwner(group, user) || isAdmin;
         model.addAttribute("canManage", canManage);
         var memberUserIds = groupService.membersOf(group).stream()
                 .filter(m -> m.getUser() != null)
@@ -241,17 +246,22 @@ public class GroupController {
                                  RedirectAttributes rttr) {
         if (principal == null) return "redirect:/login";
         SiteUser actor = userService.getUser(principal.getName());
+        boolean isAdmin = userService.isAdminOrRoot(actor);
         List<GroupMember> memberships = groupService.memberships(actor);
         Optional<StudyGroup> groupOpt = memberships.stream()
                 .map(GroupMember::getGroup)
                 .filter(g -> g.getId().equals(groupId))
                 .findFirst();
-        if (groupOpt.isEmpty()) {
+        if (groupOpt.isEmpty() && !isAdmin) {
             rttr.addFlashAttribute("error", "수업에 속해 있지 않습니다.");
             return "redirect:/groups";
         }
-        StudyGroup group = groupOpt.get();
-        boolean canManage = groupService.isOwner(group, actor) || userService.isAdminOrRoot(actor);
+        StudyGroup group = groupOpt.orElseGet(() -> groupService.findById(groupId));
+        if (group == null) {
+            rttr.addFlashAttribute("error", "그룹을 찾을 수 없습니다.");
+            return "redirect:/groups";
+        }
+        boolean canManage = groupService.isOwner(group, actor) || isAdmin;
         if (!canManage) {
             rttr.addFlashAttribute("error", "출석을 체크할 권한이 없습니다.");
             return "redirect:/groups/" + groupId;

@@ -128,11 +128,11 @@
                     <td style="padding:6px; border-bottom:1px solid #f1f5f9; font-weight:700;" th:text="${m.user.username}">user</td>
                     <td th:each="d : ${weekDates}" style="padding:6px; border-bottom:1px solid #f1f5f9; text-align:center;">
                         <div th:switch="${weekAttendance[m.user.id + '_' + d]}">
-                            <span th:case="${T(com.example.sbb.domain.group.AttendanceStatus).PRESENT}" class="pill-soft" style="background:#ecfdf3; color:#166534;">출석</span>
-                            <span th:case="${T(com.example.sbb.domain.group.AttendanceStatus).ABSENT}" class="pill-soft" style="background:#fef2f2; color:#991b1b;">결석</span>
-                            <span th:case="*">-</span>
+                            <span th:case="${T(com.example.sbb.domain.group.AttendanceStatus).PRESENT}" class="pill-soft attendance-state" style="background:#ecfdf3; color:#166534;">출석</span>
+                            <span th:case="${T(com.example.sbb.domain.group.AttendanceStatus).ABSENT}" class="pill-soft attendance-state" style="background:#fef2f2; color:#991b1b;">결석</span>
+                            <span th:case="*" class="attendance-state">-</span>
                         </div>
-                        <form th:if="${canManage}" th:action="@{/groups/{gid}/attendance(gid=${group.id})}" method="post" style="margin-top:4px; display:flex; gap:4px; justify-content:center;">
+                        <form th:if="${canManage}" th:action="@{/groups/{gid}/attendance(gid=${group.id})}" method="post" style="margin-top:4px; display:flex; gap:4px; justify-content:center;" data-attendance="true">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                             <input type="hidden" name="studentId" th:value="${m.user.id}">
                             <input type="hidden" name="date" th:value="${d}">
@@ -235,8 +235,8 @@
             const taskForm = document.getElementById('taskForm');
             const noticeList = document.getElementById('noticeList');
             const taskList = document.getElementById('taskList');
-            const csrfHeader = window.csrfHeader || 'X-CSRF-TOKEN';
-            const csrfToken = window.csrfToken || '';
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.content || '';
 
             const renderNotices = (items = []) => {
                 if (!noticeList) return;
@@ -338,6 +338,8 @@
                 if (res.ok) {
                     noticeForm.reset();
                     await loadNotices();
+                } else {
+                    alert('공지 등록에 실패했습니다.');
                 }
             });
 
@@ -353,6 +355,8 @@
                 if (res.ok) {
                     taskForm.reset();
                     await loadTasks();
+                } else {
+                    alert('과제 등록에 실패했습니다.');
                 }
             });
 
@@ -360,6 +364,41 @@
                 loadNotices();
                 loadTasks();
             }
+
+            // 출석/결 버튼 Ajax 반영 (클릭한 버튼의 status 값을 명시적으로 전송)
+            document.querySelectorAll('form[data-attendance="true"]').forEach(form => {
+                const buttons = form.querySelectorAll('button[name="status"]');
+                buttons.forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        const status = btn.value;
+                        const fd = new FormData(form);
+                        fd.set('status', status);
+                        const stateEl = form.parentElement?.querySelector('.attendance-state');
+                        const res = await fetch(form.action, {
+                            method: 'POST',
+                            headers: { [csrfHeader]: csrfToken },
+                            body: fd,
+                            credentials: 'same-origin'
+                        });
+                        if (res.ok && stateEl) {
+                            if (status === 'PRESENT') {
+                                stateEl.textContent = '출석';
+                                stateEl.className = 'pill-soft attendance-state';
+                                stateEl.style.background = '#ecfdf3';
+                                stateEl.style.color = '#166534';
+                            } else {
+                                stateEl.textContent = '결석';
+                                stateEl.className = 'pill-soft attendance-state';
+                                stateEl.style.background = '#fef2f2';
+                                stateEl.style.color = '#991b1b';
+                            }
+                        } else {
+                            alert('출석 처리에 실패했습니다.');
+                        }
+                    });
+                });
+            });
         });
     </script>
 </div>

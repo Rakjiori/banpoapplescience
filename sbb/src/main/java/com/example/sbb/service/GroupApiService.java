@@ -42,7 +42,8 @@ public class GroupApiService {
     public List<GroupNoticeDto> notices(Long groupId, SiteUser actor) {
         StudyGroup group = studyGroupRepository.findById(groupId).orElse(null);
         if (group == null) return List.of();
-        boolean canManage = group.getOwner() != null && actor != null && group.getOwner().getId().equals(actor.getId());
+        boolean canManage = actor != null && (group.getOwner() != null && group.getOwner().getId().equals(actor.getId())
+                || actor.getRole() != null && (actor.getRole().equals("ROLE_ADMIN") || actor.getRole().equals("ROLE_ROOT")));
         return groupNoticeRepository.findByGroupOrderByCreatedAtDesc(group).stream()
                 .map(n -> toNoticeDto(n, canManage))
                 .toList();
@@ -52,7 +53,8 @@ public class GroupApiService {
     public List<GroupTaskDto> tasks(Long groupId, SiteUser actor) {
         StudyGroup group = studyGroupRepository.findById(groupId).orElse(null);
         if (group == null) return List.of();
-        boolean canManage = group.getOwner() != null && actor != null && group.getOwner().getId().equals(actor.getId());
+        boolean canManage = actor != null && (group.getOwner() != null && group.getOwner().getId().equals(actor.getId())
+                || actor.getRole() != null && (actor.getRole().equals("ROLE_ADMIN") || actor.getRole().equals("ROLE_ROOT")));
         return groupTaskRepository.findByGroupOrderByDueDateAscCreatedAtDesc(group).stream()
                 .map(t -> toTaskDto(t, canManage))
                 .toList();

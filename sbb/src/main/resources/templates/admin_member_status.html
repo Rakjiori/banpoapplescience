@@ -6,8 +6,8 @@
     <div class="page-header">
         <div>
             <div class="pill">관리자 전용</div>
-            <h1 class="page-title">그룹별 수업/출석/회비 관리</h1>
-            <p class="muted">그룹에 속한 멤버들의 출석과 학습시간, 회비 납부 현황을 확인하고 기록합니다.</p>
+            <h1 class="page-title">그룹별 출결/결제 현황</h1>
+            <p class="muted">그룹별 멤버 목록, 학교/학년, 누적 출석, 출석 요일, 마지막 결제일/비고를 확인합니다.</p>
         </div>
         <a class="btn btn-outline" href="/admin/users">← 계정 관리</a>
     </div>
@@ -34,50 +34,63 @@
 
     <div th:if="${selectedGroup != null}" class="card" style="padding:0;">
         <div style="overflow:auto;">
-            <div class="table-row" style="display:grid; grid-template-columns: 120px 120px 160px 140px 160px 220px; align-items:center; gap:8px; padding:10px; border-bottom:1px solid #e5e7eb; font-weight:600; background:#f8fafc;">
-                <div>아이디</div>
-                <div>이름</div>
-                <div>학교/학년</div>
-                <div>누적 출석</div>
-                <div>출석 기록</div>
-                <div>회비 관리</div>
+                <div class="table-row" style="display:grid; grid-template-columns: 120px 120px 180px 120px 220px 220px; align-items:center; gap:8px; padding:10px; border-bottom:1px solid #e5e7eb; font-weight:600; background:#f8fafc;">
+                    <div>아이디</div>
+                    <div>이름</div>
+                    <div>학교/학년</div>
+                    <div>누적 출석</div>
+                    <div>출석 요일</div>
+                    <div>결제/비고</div>
             </div>
             <div th:each="m : ${members}"
                  class="table-row"
-                 style="display:grid; grid-template-columns: 120px 120px 160px 140px 160px 220px; align-items:center; gap:8px; padding:10px; border-bottom:1px solid #f1f5f9;">
+                 style="display:grid; grid-template-columns: 120px 120px 180px 120px 220px 220px; align-items:center; gap:8px; padding:10px; border-bottom:1px solid #f1f5f9;">
                 <div class="title-md" th:text="${m.user.username}">username</div>
                 <div class="muted" th:text="${m.user.fullName}">이름</div>
                 <div class="muted" th:text="${(m.user.schoolName != null ? m.user.schoolName : '-') + ' / ' + (m.user.grade != null ? m.user.grade : '-')}">학교/학년</div>
-                <div class="pill-soft" th:text="${totalAttendance[m.user.id] != null ? totalAttendance[m.user.id] + '회' : '0회'}">0회</div>
-                <div>
-                    <form th:action="@{'/admin/members/' + ${selectedGroup.id} + '/attendance'}" method="post" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                        <input type="hidden" name="memberId" th:value="${m.id}">
-                        <select name="status">
-                            <option value="PRESENT"
-                                    th:selected="${todayAttendance[m.user.id] != null && todayAttendance[m.user.id].name() == 'PRESENT'}">출석</option>
-                            <option value="ABSENT"
-                                    th:selected="${todayAttendance[m.user.id] != null && todayAttendance[m.user.id].name() == 'ABSENT'}">결석</option>
-                        </select>
-                        <button type="submit" class="btn btn-outline" style="padding:8px 14px;">저장</button>
-                    </form>
+            <div class="pill-soft" th:text="${totalAttendance[m.user.id] != null ? totalAttendance[m.user.id] + '회' : '0회'}"
+                 style="font-size:13px; padding:3px 6px; display:inline-flex; align-items:center; justify-content:center; border-radius:10px;">0회</div>
+                <div style="display:flex; flex-wrap:wrap; gap:6px; font-size:12px; line-height:1.4;">
+                    <span class="muted" th:if="${attendanceDays[m.user.id] == null or #lists.isEmpty(attendanceDays[m.user.id])}">출석 기록이 없습니다.</span>
+                    <span class="pill-soft"
+                          th:each="d : ${attendanceDays[m.user.id]}"
+                          th:text="${d}"
+                          style="background:#e0f2fe; color:#0ea5e9; padding:5px 8px; border-radius:12px; font-size:11px;"></span>
                 </div>
-                <div class="muted">
-                    <span th:text="${latestFee[m.user.id] != null ? latestFee[m.user.id].amount + '원' : '-'}">-</span>
-                    <span th:if="${latestFee[m.user.id] != null}" class="muted" style="display:block; font-size:12px; color:#6b7280;"
-                          th:text="${latestFee[m.user.id].paidAt}"></span>
-                    <form th:action="@{'/admin/members/' + ${selectedGroup.id} + '/fee'}" method="post" style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:6px;">
+                <div style="display:flex; flex-direction:column; gap:6px;">
+                    <form th:action="@{'/admin/members/' + ${selectedGroup.id} + '/fee'}" method="post" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                         <input type="hidden" name="memberId" th:value="${m.id}">
-                        <input type="number" name="amount" placeholder="금액" min="0" style="width:90px;" required>
-                        <input type="date" name="paidAt" style="width:130px;">
-                        <input type="text" name="note" placeholder="비고" style="width:120px;">
-                        <button type="submit" class="btn btn-outline" style="padding:6px 10px;">기록</button>
+                        <input type="hidden" name="amount" value="0">
+                        <label for="paidAt" style="font-size:13px; font-weight:600;">마지막 결제일</label>
+                        <input id="paidAt" type="date" name="paidAt" style="width:150px;" required autocomplete="off" aria-label="마지막 결제일">
+                        <label for="note" class="sr-only">비고</label>
+                        <input id="note" type="text" name="note" placeholder="비고" style="width:140px;" autocomplete="off" aria-label="비고">
+                        <button type="submit" class="btn btn-outline" style="padding:6px 10px;">저장</button>
                     </form>
+                    <div class="muted" style="font-size:13px;">
+                        <div th:if="${latestFee[m.user.id] != null}">
+                            <div th:text="'마지막 결제일: ' + ${latestFee[m.user.id].paidAt}">-</div>
+                            <div th:if="${latestFee[m.user.id].note != null}" th:text="'비고: ' + ${latestFee[m.user.id].note}"></div>
+                        </div>
+                        <div th:if="${latestFee[m.user.id] == null}">마지막 결제일: -</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<style>
+    .sr-only {
+        position:absolute;
+        width:1px;
+        height:1px;
+        padding:0;
+        margin:-1px;
+        overflow:hidden;
+        clip:rect(0,0,0,0);
+        border:0;
+    }
+</style>
 </body>
 </html>

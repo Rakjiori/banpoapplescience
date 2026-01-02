@@ -27,6 +27,9 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Controller
 @RequestMapping("/admin/members")
@@ -66,8 +69,8 @@ public class AdminMemberStatusController {
 
         List<GroupMember> members = groupMemberRepository.findByGroupOrderByJoinedAtAsc(selected);
         LocalDate today = LocalDate.now();
-        Map<Long, AttendanceStatus> todayAttendance = new HashMap<>();
-        attendanceService.listForDate(selected, today).forEach(r -> todayAttendance.put(r.getStudent().getId(), r.getStatus()));
+        Map<Long, Boolean> todayPresent = new HashMap<>();
+        attendanceService.listForDate(selected, today).forEach(r -> todayPresent.put(r.getStudent().getId(), r.getStatus() == AttendanceStatus.PRESENT));
 
         Map<Long, Long> totalAttendance = new HashMap<>();
         attendanceRecordRepository.findByGroup(selected).forEach(r -> {
@@ -76,6 +79,23 @@ public class AdminMemberStatusController {
             }
         });
 
+        java.time.LocalDate cutoff = LocalDate.now().minusMonths(2);
+        Map<Long, List<String>> attendanceDays = attendanceRecordRepository.findByGroup(selected).stream()
+                .filter(r -> r.getStudent() != null && r.getStatus() == AttendanceStatus.PRESENT && r.getDate() != null && !r.getDate().isBefore(cutoff))
+                .collect(Collectors.groupingBy(
+                        r -> r.getStudent().getId(),
+                        Collectors.mapping(r -> r.getDate().format(java.time.format.DateTimeFormatter.ofPattern("MM/dd")), Collectors.toList())
+                ));
+        Map<Long, String> attendanceDaysJoined = attendanceDays.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> e.getValue().stream()
+                                .filter(Objects::nonNull)
+                                .collect(Collectors.toCollection(java.util.TreeSet::new))
+                                .stream()
+                                .collect(Collectors.joining(","))
+                ));
+
         Map<Long, com.example.sbb.domain.group.FeePayment> latestFee = new HashMap<>();
         for (GroupMember member : members) {
             feePaymentService.latest(selected, member.getUser())
@@ -83,10 +103,20 @@ public class AdminMemberStatusController {
         }
 
         model.addAttribute("members", members);
-        model.addAttribute("todayAttendance", todayAttendance);
+        model.addAttribute("todayPresent", todayPresent);
         model.addAttribute("totalAttendance", totalAttendance);
+        model.addAttribute("attendanceDays", attendanceDays);
+        model.addAttribute("attendanceDaysJoined", attendanceDaysJoined);
         model.addAttribute("latestFee", latestFee);
+        model.addAttribute("todayDate", today);
+        model.addAttribute("recentDates", recentDates(today));
         return "admin_member_status";
+    }
+
+    private List<LocalDate> recentDates(LocalDate today) {
+        return IntStream.rangeClosed(0, 29)
+                .mapToObj(today::minusDays)
+                .toList();
     }
 
     @PostMapping("/{groupId}/attendance")

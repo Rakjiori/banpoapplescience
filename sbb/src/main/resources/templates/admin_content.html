@@ -19,51 +19,24 @@
     </div>
 
     <div class="admin-grid" style="display:grid; gap:14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
-        <div class="admin-tile" data-modal="scheduleModal" style="min-height:180px;">
-            <div class="pill-soft">시간표</div>
-            <h3>시간표 관리</h3>
-            <p class="muted">과목/학교/과정 + 회차 추가</p>
-            <div class="tile-meta">
-                <span th:text="${#lists.size(schedules)} + '개 과목'">0개 과목</span>
-                <span th:text="${#lists.size(slots)} + '개 회차'">0개 회차</span>
-            </div>
+        <div class="admin-tile" data-modal="scheduleModal" style="min-height:150px; text-align:center; padding-top:12px;">
+            <h3 style="text-align:center; font-size:20px; margin:0 0 6px 0;">시간표</h3>
             <button type="button" class="btn" data-open-modal="scheduleModal">열기</button>
         </div>
-        <div class="admin-tile" data-modal="reviewModal" style="min-height:180px;">
-            <div class="pill-soft">수강후기</div>
-            <h3>수강후기 관리</h3>
-            <p class="muted">별점과 후기를 등록/삭제</p>
-            <div class="tile-meta">
-                <span th:text="${#lists.size(reviews)} + '개 등록'">0개 등록</span>
-            </div>
+        <div class="admin-tile" data-modal="reviewModal" style="min-height:150px; text-align:center; padding-top:12px;">
+            <h3 style="text-align:center; font-size:20px; margin:0 0 6px 0;">수강후기</h3>
             <button type="button" class="btn" data-open-modal="reviewModal">열기</button>
         </div>
-        <div class="admin-tile" data-modal="noticeModal" style="min-height:180px;">
-            <div class="pill-soft">공지사항</div>
-            <h3>공지사항 관리</h3>
-            <p class="muted">공지 작성 · 날짜 설정</p>
-            <div class="tile-meta">
-                <span th:text="${#lists.size(announcements)} + '개 등록'">0개 등록</span>
-            </div>
+        <div class="admin-tile" data-modal="noticeModal" style="min-height:150px; text-align:center; padding-top:12px;">
+            <h3 style="text-align:center; font-size:20px; margin:0 0 6px 0;">공지사항</h3>
             <button type="button" class="btn" data-open-modal="noticeModal">열기</button>
         </div>
-        <div class="admin-tile">
-            <div class="pill-soft">그룹 관리</div>
-            <h3>전체 그룹 관리</h3>
-            <p class="muted">그룹/멤버/공지/과제 현황 확인</p>
-            <div class="tile-meta">
-                <span th:text="${groupCount} + '개 그룹'">0개 그룹</span>
-                <span th:text="${memberCount} + '명 멤버'">0명 멤버</span>
-            </div>
+        <div class="admin-tile" style="text-align:center; min-height:150px; padding-top:12px;">
+            <h3 style="text-align:center; font-size:20px; margin:0 0 6px 0;">그룹 관리</h3>
             <a class="btn" href="/admin/groups">열기</a>
         </div>
-        <div class="admin-tile" style="min-height:180px;">
-            <div class="pill-soft">상담</div>
-            <h3>상담 요청 관리</h3>
-            <p class="muted">학생/학부모 상담 신청 모아보기</p>
-            <div class="tile-meta">
-                <span>미처리 상담을 빠르게 확인하세요.</span>
-            </div>
+        <div class="admin-tile" style="min-height:150px; text-align:center; padding-top:12px;">
+            <h3 style="text-align:center; font-size:20px; margin:0 0 6px 0;">상담</h3>
             <a class="btn" href="/admin/consultations">열기</a>
         </div>
     </div>
@@ -76,7 +49,6 @@
         <div class="admin-modal__header">
             <div>
                 <div class="pill-soft">시간표</div>
-                <h2>시간표 관리</h2>
             </div>
             <button type="button" class="icon-button" data-close-modal aria-label="닫기">✕</button>
         </div>
@@ -204,7 +176,6 @@
         <div class="admin-modal__header">
             <div>
                 <div class="pill-soft">수강후기</div>
-                <h2>수강후기 관리</h2>
             </div>
             <button type="button" class="icon-button" data-close-modal aria-label="닫기">✕</button>
         </div>
@@ -263,7 +234,6 @@
         <div class="admin-modal__header">
             <div>
                 <div class="pill-soft">공지사항</div>
-                <h2>공지사항 관리</h2>
             </div>
             <button type="button" class="icon-button" data-close-modal aria-label="닫기">✕</button>
         </div>

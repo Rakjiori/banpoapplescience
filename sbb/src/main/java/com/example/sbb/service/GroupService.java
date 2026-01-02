@@ -98,6 +98,11 @@ public class GroupService {
         return groupTaskRepository.findByGroupOrderByDueDateAscCreatedAtDesc(group);
     }
 
+    public StudyGroup findById(Long id) {
+        if (id == null) return null;
+        return studyGroupRepository.findById(id).orElse(null);
+    }
+
     @Transactional
     public boolean shareQuestion(Long groupId, Long questionId, SiteUser user) {
         StudyGroup group = studyGroupRepository.findById(groupId).orElse(null);
