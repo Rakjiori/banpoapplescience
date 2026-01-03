@@ -69,4 +69,9 @@ public class HomeController {
         model.addAttribute("announcements", contentService.listAnnouncements());
         return "announcements";
     }
+
+    @GetMapping("/questions")
+    public String questions() {
+        return "questions";
+    }
 }
