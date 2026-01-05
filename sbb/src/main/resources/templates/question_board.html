@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout :: layout(~{::body})">
+<body>
+<div class="page-card">
+    <div class="page-header">
+        <div>
+            <div class="pill-soft">질문게시판</div>
+            <h1 class="page-title">무엇이든 자유롭게 질문하세요</h1>
+            <p class="muted">수업 중 궁금했던 점, 추가 자료 요청 등 무엇이든 남기면 답변을 도와드릴게요.</p>
+        </div>
+    </div>
+
+    <div class="card" id="questionBoard"
+         th:data-admin="${#authorization.expression('hasAnyAuthority(''ROLE_ADMIN'',''ROLE_ROOT'')')}"
+         th:data-auth="${#authorization.expression('isAuthenticated()')}">
+        <form class="question-form" id="questionForm" th:if="${#authorization.expression('isAuthenticated()')}"
+              style="display:grid; gap:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px; margin-bottom:12px;">
+            <input type="text" id="questionTitle" placeholder="제목" required>
+            <textarea id="questionContent" placeholder="궁금한 점을 작성해주세요." required style="min-height:100px;"></textarea>
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+                <button class="btn btn-outline" type="reset">초기화</button>
+                <button class="btn" type="submit">등록</button>
+            </div>
+        </form>
+        <div th:if="${#authorization.expression('!isAuthenticated()')}" class="muted" style="padding:8px 0;">로그인 후 질문을 남길 수 있습니다.</div>
+        <div class="question-list" id="questionList" style="border:1px solid #e2e8f0; border-radius:12px; overflow:hidden;">
+            <div class="question-row header" style="display:grid; grid-template-columns:68px 1fr 140px; padding:10px; background:#f8fafc; font-weight:700;">
+                <div>#</div>
+                <div>제목</div>
+                <div>작성일</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="question-modal" id="questionModal" aria-hidden="true" style="position:fixed; inset:0; display:none; align-items:center; justify-content:center; padding:16px; z-index:60;">
+    <div class="backdrop" style="position:absolute; inset:0; background:rgba(15,23,42,0.4);"></div>
+    <div class="question-dialog" role="dialog" aria-modal="true"
+         style="position:relative; background:#ffffff; padding:18px; width:min(640px, 100%); border-radius:14px; box-shadow:0 24px 48px rgba(15,23,42,0.2); z-index:1; display:grid; gap:12px;">
+        <div class="section-head" style="margin-bottom:0;">
+            <div>
+                <div class="pill">질문 상세</div>
+                <h2 id="modalQuestionTitle" style="margin:6px 0 0; font-size:18px;">제목</h2>
+                <p class="section-sub" id="modalQuestionDate" style="margin:4px 0 0;">날짜</p>
+            </div>
+            <div class="question-actions" style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button class="cta ghost" type="button" id="questionEditBtn" style="display:none;">수정</button>
+                <button class="cta ghost" type="button" id="questionDeleteBtn" style="display:none;">삭제</button>
+                <button class="cta outline" type="button" id="questionCloseBtn">닫기</button>
+            </div>
+        </div>
+        <div class="card" style="padding:12px; border:1px solid #e2e8f0; box-shadow:none; background:#f8fafc;">
+            <p class="muted" id="modalQuestionContent" style="margin:0;">내용</p>
+        </div>
+        <div>
+            <div class="title-md" style="margin-bottom:6px;">댓글</div>
+            <div class="comment-list" id="commentList" style="display:grid; gap:10px; max-height:240px; overflow:auto; padding-right:4px;"></div>
+            <form class="comment-form" id="commentForm" style="display:grid; gap:8px;">
+                <textarea id="commentContent" placeholder="익명으로 댓글을 남겨주세요." required></textarea>
+                <div style="display:flex; justify-content:flex-end; gap:8px;">
+                    <button class="cta primary" type="submit">댓글 등록</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .question-row { display:grid; grid-template-columns:68px 1fr 140px; padding:10px; border-bottom:1px solid #e5e7eb; }
+    .question-row:last-child { border-bottom:none; }
+    .question-title-btn { background:none; border:none; padding:0; text-align:left; color:#0f172a; font-weight:800; cursor:pointer; }
+    .question-title-btn:hover { text-decoration:underline; }
+    .question-meta { font-size:12px; color:#64748b; }
+    .pill-soft { display:inline-flex; align-items:center; justify-content:center; background:#eef2ff; color:#4338ca; border-radius:999px; padding:4px 8px; font-weight:700; }
+    .comment { border:1px solid #e2e8f0; border-radius:12px; padding:10px; background:#f8fafc; }
+    .comment-meta { font-size:12px; color:#94a3b8; }
+</style>
+
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', () => {
+        const boardEl = document.getElementById('questionBoard');
+        const form = document.getElementById('questionForm');
+        const listEl = document.getElementById('questionList');
+        const titleEl = document.getElementById('questionTitle');
+        const contentEl = document.getElementById('questionContent');
+        const modal = document.getElementById('questionModal');
+        const modalTitle = document.getElementById('modalQuestionTitle');
+        const modalDate = document.getElementById('modalQuestionDate');
+        const modalContent = document.getElementById('modalQuestionContent');
+        const commentList = document.getElementById('commentList');
+        const commentForm = document.getElementById('commentForm');
+        const commentContent = document.getElementById('commentContent');
+        const deleteBtn = document.getElementById('questionDeleteBtn');
+        const closeBtn = document.getElementById('questionCloseBtn');
+        const backdrop = modal?.querySelector('.backdrop');
+        const isAdmin = boardEl?.dataset?.admin === 'true';
+        const isAuthed = boardEl?.dataset?.auth === 'true';
+        let posts = [];
+        let activePostId = null;
+
+        const authRedirect = () => window.location.href = '/login';
+
+        const renderQuestions = () => {
+            if (!listEl) return;
+            listEl.querySelectorAll('.question-row:not(.header)').forEach(el => el.remove());
+            const fragment = document.createDocumentFragment();
+            if (!posts.length) {
+                const empty = document.createElement('div');
+                empty.className = 'muted';
+                empty.style.padding = '12px';
+                empty.textContent = '등록된 질문이 없습니다. 첫 질문을 남겨보세요.';
+                fragment.appendChild(empty);
+            } else {
+                posts.forEach((q, idx) => {
+                    const row = document.createElement('div');
+                    row.className = 'question-row';
+                    const btn = document.createElement('button');
+                    btn.className = 'question-title-btn';
+                    btn.type = 'button';
+                    btn.textContent = q.title;
+                    btn.addEventListener('click', () => openQuestion(q.id));
+
+                    row.appendChild(Object.assign(document.createElement('div'), { className: 'pill-soft', textContent: idx + 1 }));
+                    const desc = document.createElement('div');
+                    desc.appendChild(btn);
+                    desc.appendChild(Object.assign(document.createElement('div'), { className: 'question-meta', textContent: q.content }));
+                    row.appendChild(desc);
+                    row.appendChild(Object.assign(document.createElement('div'), { className: 'question-meta', textContent: q.createdAt || '' }));
+                    fragment.appendChild(row);
+                });
+            }
+            listEl.appendChild(fragment);
+        };
+
+        const fetchQuestions = async () => {
+            try {
+                const res = await fetch('/api/questions', { credentials: 'same-origin' });
+                if (res.status === 401) return authRedirect();
+                if (!res.ok) throw new Error();
+                posts = await res.json();
+                renderQuestions();
+            } catch (e) {
+                console.error('질문 목록을 불러오지 못했습니다.', e);
+            }
+        };
+
+        const renderComments = (detail) => {
+            if (!commentList) return;
+            commentList.innerHTML = '';
+            const items = detail?.comments || [];
+            if (!items.length) {
+                const empty = document.createElement('div');
+                empty.className = 'muted';
+                empty.textContent = '아직 댓글이 없습니다. 첫 댓글을 남겨보세요.';
+                commentList.appendChild(empty);
+                return;
+            }
+            items.forEach(c => {
+                const el = document.createElement('div');
+                el.className = 'comment';
+                const meta = document.createElement('div');
+                meta.className = 'comment-meta';
+                meta.textContent = `${c.createdAt || ''} · ${c.author || '익명'}`;
+                const body = document.createElement('div');
+                body.textContent = c.content;
+                el.appendChild(body);
+                el.appendChild(meta);
+                if (c.canDelete) {
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'cta ghost';
+                    delBtn.type = 'button';
+                    delBtn.textContent = '삭제';
+                    delBtn.style.marginTop = '4px';
+                    delBtn.addEventListener('click', () => deleteComment(c.id));
+                    el.appendChild(delBtn);
+                }
+                commentList.appendChild(el);
+            });
+        };
+
+        const openQuestion = async (id) => {
+            try {
+                const res = await fetch(`/api/questions/${id}`, { credentials: 'same-origin' });
+                if (res.status === 401) return authRedirect();
+                if (res.status === 404) {
+                    alert('삭제되었거나 존재하지 않는 게시글입니다.');
+                    fetchQuestions();
+                    return;
+                }
+                const detail = await res.json();
+                activePostId = id;
+                modalTitle.textContent = detail.post.title;
+                modalDate.textContent = detail.post.createdAt || '';
+                modalContent.textContent = detail.post.content;
+                deleteBtn.style.display = detail.post.canDelete ? 'inline-flex' : 'none';
+                renderComments(detail);
+                modal.style.display = 'flex';
+            } catch (e) {
+                alert('게시글을 불러오지 못했습니다.');
+            }
+        };
+
+        const closeQuestion = () => {
+            modal.style.display = 'none';
+            activePostId = null;
+        };
+
+        const deleteComment = async (commentId) => {
+            if (!activePostId) return;
+            try {
+                const res = await fetch(`/api/questions/${activePostId}/comments/${commentId}`, {
+                    method: 'DELETE',
+                    headers: { [window.csrfHeader || 'X-CSRF-TOKEN']: window.csrfToken || '' },
+                    credentials: 'same-origin'
+                });
+                if (res.status === 401) return authRedirect();
+                if (!res.ok) return alert('댓글을 삭제하지 못했습니다.');
+                await openQuestion(activePostId);
+            } catch (e) {
+                alert('댓글을 삭제하지 못했습니다.');
+            }
+        };
+
+        form?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = titleEl?.value?.trim();
+            const content = contentEl?.value?.trim();
+            if (!title || !content) return;
+            try {
+                const res = await fetch('/api/questions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [window.csrfHeader || 'X-CSRF-TOKEN']: window.csrfToken || ''
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ title, content })
+                });
+                if (res.status === 401) return authRedirect();
+                if (!res.ok) return alert('질문을 등록하지 못했습니다.');
+                const saved = await res.json();
+                form.reset();
+                posts.unshift(saved);
+                renderQuestions();
+                openQuestion(saved.id);
+            } catch (err) {
+                alert('질문을 등록하지 못했습니다.');
+            }
+        });
+
+        commentForm?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!activePostId) return;
+            const text = commentContent?.value?.trim();
+            if (!text) return;
+            try {
+                const res = await fetch(`/api/questions/${activePostId}/comments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [window.csrfHeader || 'X-CSRF-TOKEN']: window.csrfToken || ''
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ content: text })
+                });
+                if (res.status === 401) return authRedirect();
+                if (!res.ok) return alert('댓글을 등록하지 못했습니다.');
+                commentForm.reset();
+                await openQuestion(activePostId);
+            } catch (err) {
+                alert('댓글을 등록하지 못했습니다.');
+            }
+        });
+
+        deleteBtn?.addEventListener('click', async () => {
+            if (!activePostId) return;
+            if (!confirm('이 게시글을 삭제하시겠습니까?')) return;
+            const targetId = activePostId;
+            try {
+                const res = await fetch(`/api/questions/${targetId}`, {
+                    method: 'DELETE',
+                    headers: { [window.csrfHeader || 'X-CSRF-TOKEN']: window.csrfToken || '' },
+                    credentials: 'same-origin'
+                });
+                if (res.status === 401) return authRedirect();
+                if (!res.ok) return alert('게시글을 삭제하지 못했습니다.');
+                closeQuestion();
+                posts = posts.filter(p => p.id !== targetId);
+                renderQuestions();
+            } catch (e) {
+                alert('게시글을 삭제하지 못했습니다.');
+            }
+        });
+
+        closeBtn?.addEventListener('click', closeQuestion);
+        backdrop?.addEventListener('click', closeQuestion);
+
+        fetchQuestions();
+    });
+</script>
+</body>
+</html>

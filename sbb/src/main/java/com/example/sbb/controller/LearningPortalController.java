@@ -16,7 +16,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -31,25 +33,34 @@ public class LearningPortalController {
         SiteUser user = userService.getUser(principal.getName());
         List<GroupMember> memberships = groupService.memberships(user);
 
-        List<PortalTask> tasks = new ArrayList<>();
-        List<PortalNotice> notices = new ArrayList<>();
+        Map<Long, PortalTaskSection> taskSections = new LinkedHashMap<>();
+        Map<Long, PortalNoticeSection> noticeSections = new LinkedHashMap<>();
+        int taskCount = 0;
+        int noticeCount = 0;
+
         for (GroupMember membership : memberships) {
             StudyGroup group = membership.getGroup();
             if (group == null) continue;
-            groupService.listTasks(group).forEach(task -> tasks.add(new PortalTask(group, task)));
-            groupService.listNotices(group).forEach(notice -> notices.add(new PortalNotice(group, notice)));
+            var tasks = new ArrayList<>(groupService.listTasks(group));
+            tasks.sort(Comparator.comparing((GroupTask t) -> t.getDueDate() == null ? java.time.LocalDate.MAX : t.getDueDate())
+                    .thenComparing(GroupTask::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())));
+            taskSections.put(group.getId(), new PortalTaskSection(group, tasks));
+            taskCount += tasks.size();
+
+            var notices = new ArrayList<>(groupService.listNotices(group));
+            notices.sort(Comparator.comparing(GroupNotice::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())));
+            noticeSections.put(group.getId(), new PortalNoticeSection(group, notices));
+            noticeCount += notices.size();
         }
 
-        tasks.sort(Comparator.comparing((PortalTask t) -> t.task().getDueDate() == null ? java.time.LocalDate.MAX : t.task().getDueDate())
-                .thenComparing(t -> t.task().getCreatedAt(), Comparator.nullsLast(Comparator.reverseOrder())));
-        notices.sort(Comparator.comparing((PortalNotice n) -> n.notice().getCreatedAt(), Comparator.nullsLast(Comparator.reverseOrder())));
-
         model.addAttribute("memberships", memberships);
-        model.addAttribute("portalTasks", tasks);
-        model.addAttribute("portalNotices", notices);
+        model.addAttribute("taskSections", taskSections.values());
+        model.addAttribute("noticeSections", noticeSections.values());
+        model.addAttribute("taskCount", taskCount);
+        model.addAttribute("noticeCount", noticeCount);
         return "learning_portal";
     }
 
-    public record PortalTask(StudyGroup group, GroupTask task) {}
-    public record PortalNotice(StudyGroup group, GroupNotice notice) {}
+    public record PortalTaskSection(StudyGroup group, List<GroupTask> tasks) {}
+    public record PortalNoticeSection(StudyGroup group, List<GroupNotice> notices) {}
 }

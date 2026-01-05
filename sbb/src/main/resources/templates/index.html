@@ -72,11 +72,13 @@
         .panel-desc { color:#334155; font-size:13px; }
         .panel-metrics { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
         .metric { background: rgba(219,234,254,0.6); border:1px solid rgba(148,163,184,0.35); border-radius:10px; padding:10px 12px; display:flex; align-items:center; gap:10px; color:#0f172a; font-weight:700; font-size:12px; text-decoration:none; transition:0.18s ease; }
+        .metric { width:100%; min-height:78px; }
         .metric-icon { width:24px; height:24px; display:grid; place-items:center; background:rgba(255,255,255,0.95); border-radius:8px; color:#1e3a8a; font-size:13px; }
         .metric-title { font-weight:800; font-size:13px; }
         .metric-sub { font-weight:600; color:#1e293b; opacity:0.8; font-size:12px; }
         .metric.clickable { cursor:pointer; }
         .metric.clickable:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(15,23,42,0.14); }
+        .hero-shortcuts { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:8px; width:100%; max-width:540px; margin:0 auto; }
 
         .landing-section { margin-top: 28px; padding: 24px; background: #ffffff; border-radius: 18px; border:1px solid #e2e8f0; box-shadow:0 18px 38px rgba(15,23,42,0.08); }
         .section-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-bottom:16px; }
@@ -84,12 +86,11 @@
         .section-sub { color:#64748b; margin:4px 0 0; font-size:14px; }
         .pill { padding:8px 12px; border-radius:12px; background:rgba(155,215,255,0.4); color:#0f172a; font-weight:800; font-size:12px; }
 
-        .schedule-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; }
-        .schedule-card { border:1px solid #d9e4f2; border-radius:14px; padding:16px; background:linear-gradient(160deg, #f8fbff, #eef5ff); box-shadow:0 10px 24px rgba(15,23,42,0.08); }
-        .schedule-title { font-weight:800; margin:0 0 6px; color:#0f172a; }
-        .schedule-meta { color:#0f766e; font-size:13px; font-weight:700; margin-bottom:10px; }
-        .time-row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px dashed #d6e3f0; font-size:13px; }
-        .time-row:last-child { border-bottom:none; }
+        .schedule-gallery { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
+        .schedule-box { background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:14px; box-shadow:0 12px 28px rgba(15,23,42,0.08); display:flex; flex-direction:column; gap:8px; }
+        .schedule-box h3 { margin:0; font-size:16px; color:#0f172a; }
+        .schedule-box p { margin:0; color:#475569; font-size:13px; }
+        .schedule-box .btn { align-self:flex-start; }
         .label-ghost { padding:4px 8px; background:#0f172a; color:#e2e8f0; border-radius:10px; font-size:12px; }
 
         .notice-grid-wrap { max-height: 360px; overflow:auto; padding-right:6px; }
@@ -122,29 +123,6 @@
         .callout-inner { display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap; }
         .callout-actions { display:flex; gap:10px; flex-wrap:wrap; }
 
-        .question-board { display:grid; gap:12px; }
-        .question-form { display:grid; gap:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:14px; box-shadow:0 10px 24px rgba(15,23,42,0.08); }
-        .question-form input, .question-form textarea { width:100%; border:1px solid #d9e4f2; border-radius:10px; padding:10px; font-size:14px; }
-        .question-form textarea { min-height:110px; }
-        .question-list { border:1px solid #e2e8f0; border-radius:14px; overflow:hidden; box-shadow:0 10px 24px rgba(15,23,42,0.08); }
-        .question-row { display:grid; grid-template-columns: 68px 1fr 140px; align-items:center; gap:10px; padding:10px; border-bottom:1px solid #e5e7eb; }
-        .question-row.header { background:#f8fafc; font-weight:700; }
-        .question-row:last-child { border-bottom:none; }
-        .question-title { font-weight:700; color:#0f172a; }
-        .question-meta { font-size:12px; color:#64748b; }
-        .question-actions { display:flex; gap:8px; justify-content:flex-end; }
-        .question-title-btn { background:none; border:none; padding:0; text-align:left; color:#0f172a; font-weight:800; cursor:pointer; }
-        .question-title-btn:hover { text-decoration:underline; }
-
-        .question-modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; padding:16px; z-index:50; }
-        .question-modal.open { display:flex; }
-        .question-modal .backdrop { position:absolute; inset:0; background:rgba(15,23,42,0.4); backdrop-filter:blur(4px); }
-        .question-dialog { position:relative; background:#ffffff; padding:18px; width:min(620px, 100%); border-radius:16px; box-shadow:0 24px 48px rgba(15,23,42,0.2); z-index:1; border:1px solid #e2e8f0; display:grid; gap:12px; }
-        .comment-list { display:grid; gap:10px; max-height:220px; overflow:auto; padding-right:4px; }
-        .comment { border:1px solid #e2e8f0; border-radius:12px; padding:10px; background:#f8fafc; }
-        .comment-meta { font-size:12px; color:#94a3b8; }
-        .comment-form { display:grid; gap:8px; }
-
         .portal-modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; padding:16px; z-index:40; }
         .portal-modal.open { display:flex; }
         .portal-backdrop { position:absolute; inset:0; background:rgba(15,23,42,0.38); backdrop-filter: blur(4px); }
@@ -153,6 +131,31 @@
         .portal-link { display:flex; justify-content:space-between; align-items:center; gap:10px; border:1px solid #e2e8f0; border-radius:12px; padding:12px; background:linear-gradient(135deg, #f8fbff, #eef2ff); }
         .portal-name { font-weight:800; color:#0f172a; }
         .portal-desc { font-size:13px; color:#475569; }
+
+        .schedule-gallery { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
+        .schedule-box { background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:14px; box-shadow:0 12px 28px rgba(15,23,42,0.08); display:flex; flex-direction:column; gap:8px; }
+        .schedule-box h3 { margin:0; font-size:16px; color:#0f172a; }
+        .schedule-box p { margin:0; color:#475569; font-size:13px; }
+        .schedule-box .btn { align-self:flex-start; }
+        .schedule-modal { position:fixed; inset:0; display:none; align-items:flex-start; justify-content:center; padding:72px 18px 18px; z-index:70; }
+        .schedule-modal.open { display:flex; }
+        .schedule-backdrop { position:absolute; inset:0; background:rgba(15,23,42,0.45); backdrop-filter: blur(3px); }
+        .schedule-dialog { position:relative; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 28px 56px rgba(15,23,42,0.28); width:min(840px, 96vw); max-height:90vh; display:flex; flex-direction:column; }
+        .schedule-dialog .img-wrap { flex:1; overflow:auto; display:flex; justify-content:center; align-items:center; background:#000; }
+        .schedule-dialog img { display:block; max-width:100%; max-height:75vh; width:auto; height:auto; }
+        .schedule-dialog .actions { display:flex; justify-content:flex-end; gap:8px; padding:10px; background:#0f172a; }
+        .schedule-dialog .actions button { border:none; background:rgba(255,255,255,0.1); color:#e2e8f0; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:700; }
+        .schedule-dialog .actions button:hover { background:rgba(255,255,255,0.2); }
+
+        .banner-modal { position:fixed; inset:0; display:none; align-items:flex-start; justify-content:center; padding:72px 16px 16px; z-index:99999; }
+        .banner-modal.open { display:flex; }
+        .banner-backdrop { position:absolute; inset:0; background:rgba(15,23,42,0.45); backdrop-filter: blur(3px); }
+        .banner-card { position:relative; background:#ffffff; padding:0; border-radius:12px; overflow:hidden; box-shadow:0 28px 56px rgba(15,23,42,0.25); width:min(720px, 96vw); max-height:90vh; display:flex; flex-direction:column; }
+        .banner-card .banner-img-wrap { flex:1; overflow:auto; display:flex; justify-content:center; align-items:center; background:#000; }
+        .banner-card img { display:block; max-width:100%; max-height:75vh; width:auto; height:auto; }
+        .banner-actions { display:flex; justify-content:flex-end; gap:6px; padding:10px; background:#0f172a; color:#e2e8f0; }
+        .banner-btn { border:none; background:rgba(255,255,255,0.1); color:#e2e8f0; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:700; }
+        .banner-btn:hover { background:rgba(255,255,255,0.2); }
 
         @keyframes float { 0%,100% { transform:translateY(0);} 50% { transform:translateY(-8px);} }
         @keyframes aurora { 0% { transform: translateX(-10px) scale(1); } 100% { transform: translateX(14px) scale(1.05); } }
@@ -185,52 +188,44 @@
             <div class="hero-grid">
                 <div>
                     <p class="eyebrow">애플과학</p>
-                    <h1>개념이 선명해지는 순간,<br>성적이 달라집니다.</h1>
-                    <div class="hero-kicker">개념을 완성하고, 문제를 쌓는다.</div>
-                    <p class="hero-sub">모든 학생에게 같은 수업은 없습니다. 1:1 클리닉이 기본입니다. 공부를 관리받는 순간, 목표는 현실이 됩니다.</p>
-                    <div class="hero-tags">
-                        <span class="hero-tag">1:1 클리닉</span>
-                        <span class="hero-tag">맞춤 수업</span>
-                    </div>
+                    <h1>개념을 완성하고 문제를 쌓는다.</h1>
+                    <p class="hero-sub">모든 학생에게 같은 수업은 없습니다. 1:1 클리닉을 통해 학생에 맞는 수업으로 관리합니다.</p>
                     <div class="hero-actions">
                         <a class="cta primary" href="#schedule" data-scroll>시간표 보기</a>
                         <a class="cta ghost" href="#notice" data-scroll>공지사항</a>
                     </div>
-                    <div class="hero-footnote">
-                        <span>문의 02-532-1706</span>
-                        <span>고속버스터미널 8-2번 출구 앞</span>
-                    </div>
                 </div>
-                <div class="hero-panel">
+                <div class="hero-panel" style="gap:10px;">
                     <div class="panel-header">
-                        <span class="panel-badge">오늘 수업 시간표</span>
-                        <span>1:1 클리닉 / 실험</span>
+                        <span class="panel-badge">바로가기</span>
                     </div>
-                    <div class="panel-row">
-                        <div class="panel-time">화 18:00</div>
-                        <div class="panel-desc">세화고1 시험 직전 보충 수업</div>
-                    </div>
-                    <div class="panel-row">
-                        <div class="panel-time">목 19:30</div>
-                        <div class="panel-desc">고1 내신 대비 · 학교별 기출+빈칸 노트 정리</div>
-                    </div>
-                    <div class="panel-row">
-                        <div class="panel-time">토 14:00</div>
-                        <div class="panel-desc">고3 파이널 모의 · 개인 오답 리포트 피드백</div>
-                    </div>
-                    <div class="panel-metrics">
-                        <a class="metric clickable" href="/learning">
+                    <div class="hero-shortcuts">
+                        <a class="metric clickable" href="/learning" style="text-decoration:none;">
                             <div class="metric-icon">📚</div>
                             <div>
                                 <div class="metric-title">학습 포털</div>
-                                <div class="metric-sub">출결 · 숙제 · 공지 한 번에</div>
+                                <div class="metric-sub">출결·숙제·공지 모아보기</div>
                             </div>
                         </a>
-                        <button class="metric clickable" type="button" id="portalLinksTrigger">
+                        <a class="metric clickable" href="/questions" style="text-decoration:none;">
+                            <div class="metric-icon">❓</div>
+                            <div>
+                                <div class="metric-title">질문게시판</div>
+                                <div class="metric-sub">질문·답변 남기기</div>
+                            </div>
+                        </a>
+                        <button class="metric clickable" type="button" id="portalLinksTrigger" style="width:100%;">
                             <div class="metric-icon">🌐</div>
                             <div>
-                                <div class="metric-title">온라인 포털 연동</div>
-                                <div class="metric-sub">공부 사이트 바로가기</div>
+                                <div class="metric-title">온라인 포털</div>
+                                <div class="metric-sub">학습 사이트 바로가기</div>
+                            </div>
+                        </button>
+                        <button class="metric clickable" type="button" data-room-view>
+                            <div class="metric-icon">🏫</div>
+                            <div>
+                                <div class="metric-title">강의실 안내</div>
+                                <div class="metric-sub">강의실 이미지를 확인하세요</div>
                             </div>
                         </button>
                     </div>
@@ -242,20 +237,27 @@
             <div class="section-head">
                 <div>
                     <div class="pill">시간표</div>
-                    <h2>주중·주말 운영, 1:1 클리닉 중심 편성</h2>
-                    <p class="section-sub">과목별 1:1 클리닉과 실험 수업을 함께 운영합니다.</p>
+                    <h2 style="margin:0;">시간표 이미지 보기</h2>
+                    <p class="section-sub">예비고1 / 세화고2 / 세화여고2 시간표를 클릭해 크게 확인하세요.</p>
                 </div>
             </div>
-            <div class="schedule-grid" th:if="${not #lists.isEmpty(schedules)}">
-                <div class="schedule-card" th:each="s : ${schedules}">
-                    <div class="schedule-title" th:text="${s.subject}">과목</div>
-                    <div class="schedule-meta">
-                        <span class="label-ghost" th:text="${s.school}">학교</span>
-                        <span class="label-ghost" style="margin-left:6px;" th:text="${s.courseType}">과정</span>
-                    </div>
+            <div class="schedule-gallery">
+                <div class="schedule-box" data-img="/image/시간표예비고1.jpg" data-title="예비고1 시간표">
+                    <h3>예비고1</h3>
+                    <p>예비 고1 시간표를 이미지로 확인합니다.</p>
+                    <button class="btn" type="button" data-schedule-view>크게 보기</button>
+                </div>
+                <div class="schedule-box" data-img="/image/시간표세화고2.jpg" data-title="세화고2 시간표">
+                    <h3>세화고2</h3>
+                    <p>세화고 2학년 시간표를 이미지로 확인합니다.</p>
+                    <button class="btn" type="button" data-schedule-view>크게 보기</button>
+                </div>
+                <div class="schedule-box" data-img="/image/시간표세화여고2.jpg" data-title="세화여고2 시간표">
+                    <h3>세화여고2</h3>
+                    <p>세화여고 2학년 시간표를 이미지로 확인합니다.</p>
+                    <button class="btn" type="button" data-schedule-view>크게 보기</button>
                 </div>
             </div>
-            <div th:if="${#lists.isEmpty(schedules)}" class="muted">관리자가 시간표를 준비 중입니다.</div>
         </section>
 
         <section class="landing-section" id="notice">
@@ -368,69 +370,6 @@
             </div>
         </section>
 
-        <section class="landing-section" id="questions">
-            <div class="section-head">
-                <div>
-                    <div class="pill">질문게시판</div>
-                    <h2>무엇이든 자유롭게 질문하세요</h2>
-                    <p class="section-sub">수업 중 궁금했던 점, 추가 자료 요청 등 무엇이든 남기면 답변을 도와드릴게요.</p>
-                </div>
-            </div>
-            <div class="question-board" id="questionBoard"
-                 th:data-admin="${#authorization.expression('hasAnyAuthority(''ROLE_ADMIN'',''ROLE_ROOT'')')}"
-                 th:data-auth="${#authorization.expression('isAuthenticated()')}">
-                <form class="question-form" id="questionForm" th:if="${#authorization.expression('isAuthenticated()')}">
-                    <div style="display:grid; gap:8px;">
-                        <input type="text" id="questionTitle" placeholder="제목" required>
-                        <textarea id="questionContent" placeholder="궁금한 점을 작성해주세요." required></textarea>
-                        <div style="display:flex; justify-content:flex-end; gap:8px;">
-                            <button class="cta ghost" type="reset">초기화</button>
-                            <button class="cta primary" type="submit">등록</button>
-                        </div>
-                    </div>
-                </form>
-                <div th:if="${#authorization.expression('!isAuthenticated()')}" class="muted" style="padding:12px;">로그인 후 질문을 남길 수 있습니다.</div>
-                <div class="question-list" id="questionList">
-                    <div class="question-row header">
-                        <div>#</div>
-                        <div>제목</div>
-                        <div>작성일</div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <div class="question-modal" id="questionModal" aria-hidden="true">
-            <div class="backdrop"></div>
-            <div class="question-dialog" role="dialog" aria-modal="true">
-                <div class="section-head" style="margin-bottom:0;">
-                    <div>
-                        <div class="pill">질문 상세</div>
-                        <h2 id="modalQuestionTitle" style="margin:6px 0 0; font-size:18px;">제목</h2>
-                        <p class="section-sub" id="modalQuestionDate" style="margin:4px 0 0;">날짜</p>
-                    </div>
-                    <div class="question-actions">
-                        <button class="cta ghost" type="button" id="questionEditBtn" style="display:none;">수정</button>
-                        <button class="cta ghost" type="button" id="questionDeleteBtn" style="display:none;">삭제</button>
-                        <button class="cta outline" type="button" id="questionCloseBtn">닫기</button>
-                    </div>
-                </div>
-                <div class="card" style="padding:12px; border:1px solid #e2e8f0; box-shadow:none; background:#f8fafc;">
-                    <p class="muted" id="modalQuestionContent" style="margin:0;">내용</p>
-                </div>
-                <div>
-                    <div class="title-md" style="margin-bottom:6px;">댓글</div>
-                    <div class="comment-list" id="commentList"></div>
-                    <form class="comment-form" id="commentForm">
-                        <textarea id="commentContent" placeholder="익명으로 댓글을 남겨주세요." required></textarea>
-                        <div style="display:flex; justify-content:flex-end; gap:8px;">
-                            <button class="cta primary" type="submit">댓글 등록</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
         <div class="portal-modal" id="portalModal" aria-hidden="true">
             <div class="portal-backdrop"></div>
             <div class="portal-dialog" role="dialog" aria-modal="true">
@@ -492,6 +431,44 @@
                         <a class="cta primary" href="https://apps.ankiweb.net/" target="_blank" rel="noreferrer">바로가기</a>
                     </li>
                 </ul>
+            </div>
+        </div>
+
+        <div class="banner-modal" id="bannerModal" aria-hidden="true">
+            <div class="banner-backdrop"></div>
+            <div class="banner-card">
+                <div class="banner-img-wrap" id="bannerImageWrap">
+                    <img id="bannerImage" src="/image/banner1.jpg" alt="공지 배너">
+                </div>
+                <div class="banner-actions">
+                    <button class="banner-btn" type="button" id="bannerPrev">◀</button>
+                    <button class="banner-btn" type="button" id="bannerNext">▶</button>
+                    <button class="banner-btn" type="button" id="bannerHideToday">오늘 하루 보지 않기</button>
+                    <button class="banner-btn" type="button" id="bannerClose">닫기</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="schedule-modal" id="scheduleModal" aria-hidden="true">
+            <div class="schedule-backdrop"></div>
+            <div class="schedule-dialog">
+                <div class="img-wrap">
+                    <img id="scheduleImage" src="" alt="시간표 이미지">
+                </div>
+                <div class="actions">
+                    <button type="button" id="scheduleClose">닫기</button>
+                </div>
+            </div>
+        </div>
+        <div class="schedule-modal" id="roomModal" aria-hidden="true">
+            <div class="schedule-backdrop"></div>
+            <div class="schedule-dialog">
+                <div class="img-wrap">
+                    <img id="roomImage" src="/image/강의실.jpg" alt="강의실 안내">
+                </div>
+                <div class="actions">
+                    <button type="button" id="roomClose">닫기</button>
+                </div>
             </div>
         </div>
 
@@ -590,227 +567,93 @@
         });
     }
 
-    // 질문 게시판 (DB 연동)
-    const boardEl = document.getElementById('questionBoard');
-    const form = document.getElementById('questionForm');
-    const listEl = document.getElementById('questionList');
-    const titleEl = document.getElementById('questionTitle');
-    const contentEl = document.getElementById('questionContent');
-    const modal = document.getElementById('questionModal');
-    const modalTitle = document.getElementById('modalQuestionTitle');
-    const modalDate = document.getElementById('modalQuestionDate');
-    const modalContent = document.getElementById('modalQuestionContent');
-    const commentList = document.getElementById('commentList');
-    const commentForm = document.getElementById('commentForm');
-    const commentContent = document.getElementById('commentContent');
-    const deleteBtn = document.getElementById('questionDeleteBtn');
-    const editBtn = document.getElementById('questionEditBtn');
-    const closeBtn = document.getElementById('questionCloseBtn');
-    const isAdmin = boardEl?.dataset?.admin === 'true';
-    const isAuthed = boardEl?.dataset?.auth === 'true';
-    let posts = [];
-    let activePostId = null;
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', ()=>{
+        // 배너 모달 (오늘 하루 보지 않기 + 다중 배너)
+        const bannerModal = document.getElementById('bannerModal');
+        const bannerClose = document.getElementById('bannerClose');
+        const bannerHideToday = document.getElementById('bannerHideToday');
+        const bannerPrev = document.getElementById('bannerPrev');
+        const bannerNext = document.getElementById('bannerNext');
+        const bannerImage = document.getElementById('bannerImage');
+        const banners = ["/image/banner1.jpg", "/image/banner2.jpg"];
+        let bannerIndex = 0;
+        const BANNER_KEY = 'banner1_hide_until';
 
-    const authRedirect = () => window.location.href = '/login';
+        const shouldShowBanner = () => {
+            const until = localStorage.getItem(BANNER_KEY);
+            if (!until) return true;
+            const now = Date.now();
+            return now > Number(until);
+        };
 
-    if (editBtn) editBtn.style.display = 'none';
-    if (!isAuthed && commentForm) commentForm.style.display = 'none';
+        const updateBannerImage = () => {
+            if (!bannerImage) return;
+            bannerImage.src = banners[bannerIndex] || banners[0];
+        };
 
-    const renderQuestions = () => {
-        if (!listEl) return;
-        listEl.querySelectorAll('.question-row:not(.header)').forEach(el => el.remove());
-        const fragment = document.createDocumentFragment();
-        if (!posts.length) {
-            const empty = document.createElement('div');
-            empty.className = 'muted';
-            empty.style.padding = '12px';
-            empty.textContent = '등록된 질문이 없습니다. 첫 질문을 남겨보세요.';
-            fragment.appendChild(empty);
-        } else {
-            posts.forEach((q, idx) => {
-                const row = document.createElement('div');
-                row.className = 'question-row';
-                const btn = document.createElement('button');
-                btn.className = 'question-title-btn';
-                btn.type = 'button';
-                btn.textContent = q.title;
-                btn.addEventListener('click', () => openQuestion(q.id));
-
-                row.appendChild(Object.assign(document.createElement('div'), { className: 'pill-soft', textContent: idx + 1 }));
-                const desc = document.createElement('div');
-                desc.appendChild(btn);
-                desc.appendChild(Object.assign(document.createElement('div'), { className: 'question-meta', textContent: q.content }));
-                row.appendChild(desc);
-                row.appendChild(Object.assign(document.createElement('div'), { className: 'question-meta', textContent: q.createdAt || '' }));
-                fragment.appendChild(row);
-            });
-        }
-        listEl.appendChild(fragment);
-    };
-
-    const fetchQuestions = async () => {
-        try {
-            const res = await fetch('/api/questions', { credentials: 'same-origin' });
-            if (!res.ok) throw new Error();
-            posts = await res.json();
-            renderQuestions();
-        } catch (e) {
-            console.error('질문 목록을 불러오지 못했습니다.', e);
-        }
-    };
-
-    const renderComments = (detail) => {
-        if (!commentList) return;
-        commentList.innerHTML = '';
-        const items = detail?.comments || [];
-        if (!items.length) {
-            const empty = document.createElement('div');
-            empty.className = 'muted';
-            empty.textContent = '아직 댓글이 없습니다. 첫 댓글을 남겨보세요.';
-            commentList.appendChild(empty);
-            return;
-        }
-        items.forEach(c => {
-            const el = document.createElement('div');
-            el.className = 'comment';
-            const meta = document.createElement('div');
-            meta.className = 'comment-meta';
-            meta.textContent = `${c.createdAt || ''} · ${c.author || '익명'}`;
-            const body = document.createElement('div');
-            body.textContent = c.content;
-            el.appendChild(body);
-            el.appendChild(meta);
-            if (c.canDelete) {
-                const delBtn = document.createElement('button');
-                delBtn.className = 'cta ghost';
-                delBtn.type = 'button';
-                delBtn.textContent = '삭제';
-                delBtn.style.marginTop = '4px';
-                delBtn.addEventListener('click', () => deleteComment(c.id));
-                el.appendChild(delBtn);
+        const openBanner = () => {
+            if (bannerModal && shouldShowBanner()) {
+                updateBannerImage();
+                bannerModal.classList.add('open');
             }
-            commentList.appendChild(el);
+        };
+        const closeBanner = () => bannerModal?.classList.remove('open');
+        const hideToday = () => {
+            const tomorrow = new Date();
+            tomorrow.setHours(23, 59, 59, 999);
+            localStorage.setItem(BANNER_KEY, String(tomorrow.getTime()));
+            closeBanner();
+        };
+
+        bannerClose?.addEventListener('click', closeBanner);
+        bannerHideToday?.addEventListener('click', hideToday);
+        bannerModal?.querySelector('.banner-backdrop')?.addEventListener('click', closeBanner);
+        bannerPrev?.addEventListener('click', () => {
+            bannerIndex = (bannerIndex - 1 + banners.length) % banners.length;
+            updateBannerImage();
         });
-    };
+        bannerNext?.addEventListener('click', () => {
+            bannerIndex = (bannerIndex + 1) % banners.length;
+            updateBannerImage();
+        });
 
-    const openQuestion = async (id) => {
-        try {
-            const res = await fetch(`/api/questions/${id}`, { credentials: 'same-origin' });
-            if (res.status === 401) return authRedirect();
-            if (res.status === 404) {
-                alert('삭제되었거나 존재하지 않는 게시글입니다.');
-                fetchQuestions();
-                return;
-            }
-            const detail = await res.json();
-            activePostId = id;
-            modalTitle.textContent = detail.post.title;
-            modalDate.textContent = detail.post.createdAt || '';
-            modalContent.textContent = detail.post.content;
-            deleteBtn.style.display = detail.post.canDelete ? 'inline-flex' : 'none';
-            renderComments(detail);
-            modal?.classList.add('open');
-        } catch (e) {
-            alert('게시글을 불러오지 못했습니다.');
-        }
-    };
+        openBanner();
 
-    const closeQuestion = () => {
-        modal?.classList.remove('open');
-        activePostId = null;
-    };
-
-    const deleteComment = async (commentId) => {
-        if (!activePostId) return;
-        try {
-            const res = await fetch(`/api/questions/${activePostId}/comments/${commentId}`, {
-                method: 'DELETE',
-                headers: { [window.csrfHeader || 'X-CSRF-TOKEN']: window.csrfToken || '' },
-                credentials: 'same-origin'
+        // 시간표 이미지 모달
+        const scheduleModal = document.getElementById('scheduleModal');
+        const scheduleBackdrop = scheduleModal?.querySelector('.schedule-backdrop');
+        const scheduleClose = document.getElementById('scheduleClose');
+        const scheduleImage = document.getElementById('scheduleImage');
+        const scheduleButtons = document.querySelectorAll('[data-schedule-view]');
+        const openSchedule = (imgSrc) => {
+            if (!scheduleModal || !scheduleImage || !imgSrc) return;
+            scheduleImage.src = imgSrc;
+            scheduleModal.classList.add('open');
+        };
+        const closeSchedule = () => scheduleModal?.classList.remove('open');
+        scheduleButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const parent = btn.closest('.schedule-box');
+                const img = parent?.dataset?.img;
+                openSchedule(img);
             });
-            if (res.status === 401) return authRedirect();
-            if (!res.ok) return alert('댓글을 삭제하지 못했습니다.');
-            await openQuestion(activePostId);
-        } catch (e) {
-            alert('댓글을 삭제하지 못했습니다.');
-        }
-    };
+        });
+        scheduleBackdrop?.addEventListener('click', closeSchedule);
+        scheduleClose?.addEventListener('click', closeSchedule);
 
-    form?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const title = titleEl?.value?.trim();
-        const content = contentEl?.value?.trim();
-        if (!title || !content) return;
-        try {
-            const res = await fetch('/api/questions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    [window.csrfHeader || 'X-CSRF-TOKEN']: window.csrfToken || ''
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify({ title, content })
-            });
-            if (res.status === 401) return authRedirect();
-            if (!res.ok) return alert('질문을 등록하지 못했습니다.');
-            const saved = await res.json();
-            form.reset();
-            posts.unshift(saved);
-            renderQuestions();
-            openQuestion(saved.id);
-        } catch (err) {
-            alert('질문을 등록하지 못했습니다.');
-        }
+        // 강의실 안내 이미지
+        const roomModal = document.getElementById('roomModal');
+        const roomBackdrop = roomModal?.querySelector('.schedule-backdrop');
+        const roomClose = document.getElementById('roomClose');
+        const roomBtn = document.querySelector('[data-room-view]');
+        const openRoom = () => roomModal?.classList.add('open');
+        const closeRoom = () => roomModal?.classList.remove('open');
+        roomBtn?.addEventListener('click', openRoom);
+        roomBackdrop?.addEventListener('click', closeRoom);
+        roomClose?.addEventListener('click', closeRoom);
     });
-
-    commentForm?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (!activePostId) return;
-        const text = commentContent?.value?.trim();
-        if (!text) return;
-        try {
-            const res = await fetch(`/api/questions/${activePostId}/comments`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    [window.csrfHeader || 'X-CSRF-TOKEN']: window.csrfToken || ''
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify({ content: text })
-            });
-            if (res.status === 401) return authRedirect();
-            if (!res.ok) return alert('댓글을 등록하지 못했습니다.');
-            commentForm.reset();
-            await openQuestion(activePostId);
-        } catch (err) {
-            alert('댓글을 등록하지 못했습니다.');
-        }
-    });
-
-    deleteBtn?.addEventListener('click', async () => {
-        if (!activePostId) return;
-        if (!confirm('이 게시글을 삭제하시겠습니까?')) return;
-        const targetId = activePostId;
-        try {
-            const res = await fetch(`/api/questions/${targetId}`, {
-                method: 'DELETE',
-                headers: { [window.csrfHeader || 'X-CSRF-TOKEN']: window.csrfToken || '' },
-                credentials: 'same-origin'
-            });
-            if (res.status === 401) return authRedirect();
-            if (!res.ok) return alert('게시글을 삭제하지 못했습니다.');
-            closeQuestion();
-            posts = posts.filter(p => p.id !== targetId);
-            renderQuestions();
-        } catch (e) {
-            alert('게시글을 삭제하지 못했습니다.');
-        }
-    });
-
-    closeBtn?.addEventListener('click', closeQuestion);
-    modal?.querySelector('.backdrop')?.addEventListener('click', closeQuestion);
-
-    fetchQuestions();
 </script>
 </body>
 </html>

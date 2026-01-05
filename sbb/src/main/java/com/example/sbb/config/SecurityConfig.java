@@ -28,7 +28,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/", "/signup", "/login", "/css/**", "/js/**", "/sw.js", "/image/**", "/app.js", "/favicon.ico").permitAll()
+                    .requestMatchers("/", "/signup", "/login", "/privacy", "/privacy.html", "/css/**", "/js/**", "/sw.js", "/image/**", "/app.js", "/favicon.ico").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/notices/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/questions/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
@@ -39,6 +39,7 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.POST, "/api/notices/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_ROOT")
                     .requestMatchers(HttpMethod.PUT, "/api/notices/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_ROOT")
                     .requestMatchers(HttpMethod.DELETE, "/api/notices/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_ROOT")
+                    .requestMatchers("/sms/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_ROOT")
                     .requestMatchers(HttpMethod.DELETE, "/api/reviews/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_ROOT")
                     .requestMatchers(HttpMethod.POST, "/api/schedules/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_ROOT")
                     .requestMatchers(HttpMethod.DELETE, "/api/schedules/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_ROOT")

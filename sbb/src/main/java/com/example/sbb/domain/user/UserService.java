@@ -544,4 +544,43 @@ public class UserService {
         userRepository.save(target);
         return true;
     }
+
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public java.util.List<SiteUser> findParentsForBulkSms(String schoolFilter, String gradeFilter) {
+        String school = trimToNull(schoolFilter);
+        String grade = trimToNull(gradeFilter);
+        return userRepository.findAll().stream()
+                .filter(u -> u.getAccountType() == AccountType.STUDENT || u.getAccountType() == AccountType.PARENT)
+                .filter(u -> StringUtils.hasText(trimToNull(u.getParentPhone())))
+                .filter(u -> {
+                    if (!StringUtils.hasText(school)) return true;
+                    return StringUtils.hasText(u.getSchoolName()) && u.getSchoolName().contains(school);
+                })
+                .filter(u -> {
+                    if (!StringUtils.hasText(grade)) return true;
+                    return StringUtils.hasText(u.getGrade()) && u.getGrade().contains(grade);
+                })
+                .sorted((a, b) -> {
+                    String sa = a.getSchoolName() == null ? "" : a.getSchoolName();
+                    String sb = b.getSchoolName() == null ? "" : b.getSchoolName();
+                    int cmp = sa.compareTo(sb);
+                    if (cmp != 0) return cmp;
+                    String ga = a.getGrade() == null ? "" : a.getGrade();
+                    String gb = b.getGrade() == null ? "" : b.getGrade();
+                    cmp = ga.compareTo(gb);
+                    if (cmp != 0) return cmp;
+                    String na = a.getFullName() == null ? "" : a.getFullName();
+                    String nb = b.getFullName() == null ? "" : b.getFullName();
+                    return na.compareTo(nb);
+                })
+                .toList();
+    }
+
+    public java.util.List<String> getAllowedSchools() {
+        return ALLOWED_SCHOOLS;
+    }
+
+    public java.util.List<String> getAllowedGrades() {
+        return ALLOWED_GRADES;
+    }
 }

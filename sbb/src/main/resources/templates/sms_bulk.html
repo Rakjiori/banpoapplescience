@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout :: layout(~{::body})">
+<body>
+<div class="page-card">
+    <div class="page-header">
+        <div>
+            <div class="pill-soft">관리자 전용</div>
+            <h1 class="page-title">단체문자 보내기 (문자나라)</h1>
+            <p class="muted">학교·학년을 선택해 학부모 전화번호 CSV를 내려받은 뒤, 문자나라 엑셀 전송 프로그램으로 업로드하세요.</p>
+            <p class="muted" style="margin-top:6px;">
+                프로그램 안내 및 다운로드:
+                <a href="https://www.munjanara.co.kr/PROGRAM/excel.htm" target="_blank" rel="noreferrer">문자나라 엑셀 전송 프로그램</a>
+            </p>
+        </div>
+    </div>
+
+    <form method="get" action="/sms/bulk" class="card" style="display:grid; gap:10px; padding:14px;">
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <div style="min-width:160px;">
+                <label class="muted" for="school">학교</label>
+                <select id="school" name="school">
+                    <option value="">전체</option>
+                    <option th:each="s : ${schools}" th:value="${s}" th:text="${s}" th:selected="${s == school}"></option>
+                </select>
+            </div>
+            <div style="min-width:160px;">
+                <label class="muted" for="grade">학년</label>
+                <select id="grade" name="grade">
+                    <option value="">전체</option>
+                    <option th:each="g : ${grades}" th:value="${g}" th:text="${g}" th:selected="${g == grade}"></option>
+                </select>
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:6px;">
+                <button class="btn" type="submit">적용</button>
+                <a class="btn btn-outline" th:href="@{/sms/bulk/export(school=${school}, grade=${grade})}">엑셀 파일 다운로드</a>
+            </div>
+        </div>
+        <div class="muted">현재 결과: <span th:text="${resultCount}">0</span>건</div>
+    </form>
+
+    <div class="card" style="margin-top:12px; padding:14px;">
+        <div class="section-head" style="margin-bottom:10px;">
+            <div>
+                <div class="pill">미리보기</div>
+                <h2 style="margin:6px 0 0;">학부모 연락처 목록</h2>
+                <p class="section-sub">학생 이름과 학부모 전화번호만 표시됩니다.</p>
+            </div>
+        </div>
+        <div th:if="${#lists.isEmpty(rows)}" class="muted">결과가 없습니다. 학교/학년을 선택하거나 데이터가 있는지 확인해주세요.</div>
+        <div th:if="${not #lists.isEmpty(rows)}" style="max-height:360px; overflow:auto;">
+            <table class="table" style="width:100%; border-collapse:collapse;">
+                <thead>
+                <tr>
+                    <th style="text-align:left; padding:8px; border-bottom:1px solid #e2e8f0;">학생 이름</th>
+                    <th style="text-align:left; padding:8px; border-bottom:1px solid #e2e8f0;">학교</th>
+                    <th style="text-align:left; padding:8px; border-bottom:1px solid #e2e8f0;">학년</th>
+                    <th style="text-align:left; padding:8px; border-bottom:1px solid #e2e8f0;">학부모 전화번호</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="u : ${rows}">
+                    <td style="padding:8px; border-bottom:1px solid #f1f5f9;" th:text="${u.fullName}">이름</td>
+                    <td style="padding:8px; border-bottom:1px solid #f1f5f9;" th:text="${u.schoolName}">학교</td>
+                    <td style="padding:8px; border-bottom:1px solid #f1f5f9;" th:text="${u.grade}">학년</td>
+                    <td style="padding:8px; border-bottom:1px solid #f1f5f9;" th:text="${u.parentPhone}">010-</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

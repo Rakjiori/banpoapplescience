@@ -13,7 +13,7 @@
       <li><a th:href="@{/#notice}" data-scroll>공지사항</a></li>
       <li><a th:href="@{/#reviews}" data-scroll>수강후기</a></li>
       <li><a th:href="@{/#location}" data-scroll>오시는길</a></li>
-      <li><a th:href="@{/#questions}" data-scroll>질문게시판</a></li>
+      <li><a th:href="@{/questions}">질문게시판</a></li>
     </ul>
 
     <!-- 우측 로그인/상태 -->
@@ -49,17 +49,16 @@
             </div>
           </div>
           <div class="profile-list">
-            <a href="/learning" class="profile-item">학습 포털</a>
-            <a href="/groups" class="profile-item">내 그룹 보기</a>
-            <a href="/account" class="profile-item">내 정보 수정</a>
+            <a href="/groups" class="profile-item">그룹 보기</a>
             <a href="/admin/content" class="profile-item"
                th:if="${#authorization.expression('hasAnyAuthority(''ROLE_ADMIN'',''ROLE_ROOT'')')}">학원 콘텐츠 관리</a>
-            <a href="/admin/users" class="profile-item"
-               th:if="${#authorization.expression('hasAnyAuthority(''ROLE_ADMIN'',''ROLE_ROOT'')')}">관리자/계정 현황</a>
+            <a href="/sms/bulk" class="profile-item"
+               th:if="${#authorization.expression('hasAnyAuthority(''ROLE_ADMIN'',''ROLE_ROOT'')')}">단체문자 보내기</a>
             <a href="/admin/members" class="profile-item"
                th:if="${#authorization.expression('hasAnyAuthority(''ROLE_ADMIN'',''ROLE_ROOT'')')}">학원생 출석/회비 관리</a>
             <a href="/admin/notes" class="profile-item"
                th:if="${#authorization.expression('hasAnyAuthority(''ROLE_ADMIN'',''ROLE_ROOT'')')}">관리자 인수인계 게시판</a>
+            <a href="/account" class="profile-item">정보 수정</a>
             <a href="/logout" class="profile-item">로그아웃</a>
           </div>
         </div>
